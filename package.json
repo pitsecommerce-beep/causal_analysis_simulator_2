@@ -3,17 +3,22 @@
   "version": "1.0.0",
   "description": "Simulador de Análisis Causal ETF Bank - IPADE Business School",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "datos:verificar": "npx tsx src/servidor/consola/verificar-datos.ts",
     "test": "npx vitest run",
     "motor:consola": "npx tsx src/servidor/consola/arnes.ts",
     "dev:server": "npx tsx --watch src/servidor/index.ts",
     "dev:client": "npx vite",
-    "build": "npx tsc && npx vite build",
+    "build": "npx tsc && npx vite build && mkdir -p dist/src/servidor/db/migraciones && cp src/servidor/db/migraciones/*.sql dist/src/servidor/db/migraciones/",
     "start": "node dist/src/servidor/index.js",
-    "salud": "npx tsx src/servidor/consola/salud.ts"
+    "salud": "npx tsx src/servidor/consola/salud.ts",
+    "voz:probar": "npx tsx src/servidor/consola/probar-voz.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/source-serif-4": "^5.3.0",

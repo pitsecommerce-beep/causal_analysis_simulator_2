@@ -12,11 +12,13 @@ export function obtenerPool(): pg.Pool {
     if (!connectionString) {
       throw new Error('DATABASE_URL no está configurada');
     }
+    const necesitaSSL = connectionString.includes('sslmode=require')
+      || connectionString.includes('supabase')
+      || connectionString.includes('.railway.');
     pool = new Pool({
       connectionString,
-      ssl: connectionString.includes('sslmode=require') || connectionString.includes('supabase')
-        ? { rejectUnauthorized: false }
-        : undefined,
+      ssl: necesitaSSL ? { rejectUnauthorized: false } : undefined,
+      connectionTimeoutMillis: 10_000,
     });
   }
   return pool;
@@ -28,6 +30,8 @@ export async function conectarDB(): Promise<boolean> {
     await p.query('SELECT 1');
     return true;
   } catch (err) {
+    console.warn('  Error conectando a Postgres:', (err as Error).message);
+    pool = null;
     return false;
   }
 }
@@ -43,7 +47,10 @@ export async function ejecutarMigraciones(): Promise<void> {
     )
   `);
 
-  const dir = resolve('src/servidor/db/migraciones');
+  let dir = resolve('src/servidor/db/migraciones');
+  if (!existsSync(dir)) {
+    dir = resolve('dist/src/servidor/db/migraciones');
+  }
   if (!existsSync(dir)) return;
 
   const archivos = readdirSync(dir)

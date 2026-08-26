@@ -13,7 +13,8 @@ async function main(): Promise<void> {
   };
 
   const opcionales: Record<string, [string, string]> = {
-    ANTHROPIC_MODEL: ['Modelo de Anthropic', 'claude-sonnet-5'],
+    ANTHROPIC_MODEL_PENSAR: ['Modelo para analizar/pensar (Sonnet)', 'claude-sonnet-5'],
+    ANTHROPIC_MODEL_REDACTAR: ['Modelo para redactar respuestas (Haiku)', 'claude-haiku-4-5'],
     PORT: ['Puerto del servidor', '3000'],
   };
 
