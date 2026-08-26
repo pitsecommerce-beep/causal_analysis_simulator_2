@@ -1,9 +1,11 @@
 import { useState, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
 import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, RolEquipo, MiembroEquipo } from './lib/tipos';
+import { socket } from './lib/socket';
 
 const EscenaApp = lazy(() => import('./escena/EscenaApp').then(m => ({ default: m.EscenaApp })));
 const ConsolaApp = lazy(() => import('./consola/ConsolaApp').then(m => ({ default: m.ConsolaApp })));
+const ProfesorApp = lazy(() => import('./profesor/ProfesorApp').then(m => ({ default: m.ProfesorApp })));
 
 interface DatosSesion {
   estadoMotor: EstadoMotorCliente;
@@ -21,12 +23,13 @@ interface DatosRol {
   miNombre: string;
 }
 
-type Pantalla = 'unirse' | 'escena' | 'consola';
+type Pantalla = 'unirse' | 'escena' | 'consola' | 'profesor';
 
 export function App() {
   const [sesion, setSesion] = useState<DatosSesion | null>(null);
   const [pantalla, setPantalla] = useState<Pantalla>('unirse');
   const [datosRol, setDatosRol] = useState<DatosRol | null>(null);
+  const [profesorData, setProfesorData] = useState<{ codigoSala: string; clave: string } | null>(null);
 
   function onUnido(datos: DatosSesion) {
     setSesion(datos);
@@ -38,8 +41,29 @@ export function App() {
     }
   }
 
-  if (pantalla === 'unirse' || !sesion) {
-    return <UnirseEquipo onUnido={onUnido} />;
+  function onProfesor(codigoSala: string, clave: string) {
+    socket.connect();
+    socket.emit('profesor:crear_sesion', { clave }, (resp: any) => {
+      if (resp?.error) {
+        alert(resp.error);
+        return;
+      }
+      setProfesorData({ codigoSala: resp.codigoSala, clave });
+      setPantalla('profesor');
+    });
+  }
+
+  function onProfesorUnirse(codigoSala: string, clave: string) {
+    socket.connect();
+    socket.emit('profesor:estado', { clave, codigoSala }, (resp: any) => {
+      if (resp?.error) {
+        alert(resp.error);
+        return;
+      }
+      socket.emit('profesor:crear_sesion', { clave }, () => {});
+      setProfesorData({ codigoSala, clave });
+      setPantalla('profesor');
+    });
   }
 
   const cargando = (
@@ -50,6 +74,24 @@ export function App() {
       </div>
     </div>
   );
+
+  if (pantalla === 'profesor' && profesorData) {
+    return (
+      <Suspense fallback={cargando}>
+        <ProfesorApp codigoSala={profesorData.codigoSala} clave={profesorData.clave} />
+      </Suspense>
+    );
+  }
+
+  if (pantalla === 'unirse' || !sesion) {
+    return (
+      <UnirseEquipo
+        onUnido={onUnido}
+        onProfesor={onProfesor}
+        onProfesorUnirse={onProfesorUnirse}
+      />
+    );
+  }
 
   if (pantalla === 'escena') {
     return (

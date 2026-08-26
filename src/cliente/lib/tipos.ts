@@ -193,6 +193,55 @@ export const DESC_ROLES: Record<RolEquipo, string> = {
   voz_cliente: 'Marca evidencia de comentarios de cliente',
 };
 
+export interface ResultadoPuntuacion {
+  diagnostico: number;
+  rigor: number;
+  impacto: number;
+  velocidad: number;
+  eficiencia: number;
+  penalizaciones: number;
+  total: number;
+  final: string;
+  desglose: Record<string, number>;
+}
+
+export interface PreguntaConsejo {
+  pregunta: string;
+  angulo: string;
+}
+
+export interface EquipoTablero {
+  nombre: string;
+  trimestre: number;
+  presupuesto: number;
+  creditos: number;
+  intervenciones: string[];
+  kpis: KPIsCliente;
+  historialKPIs: KPIsCliente[];
+  resultado: ResultadoPuntuacion | null;
+  miembros: MiembroEquipo[];
+}
+
+export interface DiagnosticoForm {
+  ventanaCapturaEsCuello: boolean;
+  reprocesoEsMecanismo: boolean;
+  fugaPlastico: boolean;
+  trabajoPerdidoBuro: boolean;
+  causasEspurias: string[];
+  concentracionSinMasa: boolean;
+}
+
+export const NOMBRES_FINALES: Record<string, string> = {
+  A: 'Reconversion',
+  B: 'Buen proyecto incompleto',
+  C: 'Ataque al mediador',
+  D: 'La metrica traicionera',
+  E: 'El incentivo perverso',
+  F: 'Dispersion',
+  G: 'Paralisis por analisis',
+  H: 'Falso positivo',
+};
+
 export const NOMBRES_FASES: Record<string, string> = {
   espera: 'Esperando inicio',
   sala_juntas: 'Sala de juntas',

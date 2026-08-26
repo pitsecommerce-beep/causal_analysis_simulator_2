@@ -16,7 +16,8 @@
     "start": "node dist/src/servidor/index.js",
     "salud": "npx tsx src/servidor/consola/salud.ts",
     "voz:respaldo": "npx tsx src/servidor/consola/generar-respaldo.ts",
-    "voz:probar": "npx tsx src/servidor/consola/probar-voz.ts"
+    "voz:probar": "npx tsx src/servidor/consola/probar-voz.ts",
+    "tablero:demo": "npx tsx src/servidor/consola/tablero-demo.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

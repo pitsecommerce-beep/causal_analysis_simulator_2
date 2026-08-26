@@ -3,7 +3,7 @@ import { socket } from '../lib/socket';
 import type {
   EstadoMotorCliente, EstadoReloj, IntervencionCatalogo,
   SolicitudCliente, ResultadoConsulta, EntradaBitacoraLocal,
-  RolEquipo, MiembroEquipo,
+  RolEquipo, MiembroEquipo, ResultadoPuntuacion, PreguntaConsejo,
 } from '../lib/tipos';
 import { NOMBRES_ROLES } from '../lib/tipos';
 import { Reloj } from './Reloj';
@@ -11,6 +11,8 @@ import { PanelKPIs } from './PanelKPIs';
 import { PanelConsultas } from './PanelConsultas';
 import { GraficaResultado } from './GraficaResultado';
 import { Bitacora } from './Bitacora';
+import { FormDiagnostico } from './FormDiagnostico';
+import { TableroFinal } from './TableroFinal';
 
 interface Props {
   estadoInicial: EstadoMotorCliente;
@@ -36,12 +38,16 @@ export function ConsolaApp({
   const [bitacora, setBitacora] = useState<EntradaBitacoraLocal[]>([]);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [roster, setRoster] = useState<MiembroEquipo[]>(miembros);
+  const [puntuacion, setPuntuacion] = useState<ResultadoPuntuacion | null>(null);
+  const [preguntas, setPreguntas] = useState<PreguntaConsejo[]>([]);
+  const [dagRevelado, setDagRevelado] = useState(false);
 
   const tieneRoles = roster.length > 0;
   const esAnalista = miRol === 'analista';
   const esPatrocinador = miRol === 'patrocinador';
   const esLider = miRol === 'lider';
   const esVozCliente = miRol === 'voz_cliente' || (tamanoEquipo <= 3 && miRol === 'lider');
+  const esConsejoOFin = reloj.fase === 'consejo' || reloj.fase === 'finalizado';
 
   useEffect(() => {
     function onTick(data: EstadoReloj) {
@@ -71,6 +77,12 @@ export function ConsolaApp({
     function onRolesAsignados(data: { miembros: MiembroEquipo[] }) {
       setRoster(data.miembros);
     }
+    function onConsejoPreguntas(data: { preguntas: PreguntaConsejo[] }) {
+      setPreguntas(data.preguntas);
+    }
+    function onDagRevelado() {
+      setDagRevelado(true);
+    }
 
     socket.on('reloj:tick', onTick);
     socket.on('reloj:fase_cambio', onFaseCambio);
@@ -78,6 +90,8 @@ export function ConsolaApp({
     socket.on('sesion:estado', onEstado);
     socket.on('sesion:trimestre_avanzado', onTrimestreAvanzado);
     socket.on('equipo:roles_asignados', onRolesAsignados);
+    socket.on('consejo:preguntas', onConsejoPreguntas);
+    socket.on('sesion:dag_revelado', onDagRevelado);
 
     return () => {
       socket.off('reloj:tick', onTick);
@@ -86,6 +100,8 @@ export function ConsolaApp({
       socket.off('sesion:estado', onEstado);
       socket.off('sesion:trimestre_avanzado', onTrimestreAvanzado);
       socket.off('equipo:roles_asignados', onRolesAsignados);
+      socket.off('consejo:preguntas', onConsejoPreguntas);
+      socket.off('sesion:dag_revelado', onDagRevelado);
     };
   }, []);
 
@@ -110,6 +126,25 @@ export function ConsolaApp({
   const handleSeleccionarBitacora = useCallback((entrada: EntradaBitacoraLocal) => {
     if (entrada.resultado) setResultado(entrada.resultado);
   }, []);
+
+  if (puntuacion) {
+    return (
+      <div className="consola consola--tablero">
+        <header className="consola__header">
+          <h1>{nombreEquipo}</h1>
+          <Reloj reloj={reloj} />
+        </header>
+        <main className="consola__tablero-main">
+          <TableroFinal
+            resultado={puntuacion}
+            preguntas={preguntas}
+            historialKPIs={estado.historialKPIs}
+            nombreEquipo={nombreEquipo}
+          />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="consola">
@@ -147,6 +182,16 @@ export function ConsolaApp({
           puedeIntervenir={!tieneRoles || esPatrocinador}
           esVozCliente={esVozCliente}
         />
+        {esConsejoOFin && (
+          <FormDiagnostico
+            puedeEnviar={!tieneRoles || esLider}
+            onResultado={(r) => {
+              setPuntuacion(r);
+              setEstado(prev => ({ ...prev, trimestre: 3 }));
+            }}
+            onPreguntas={setPreguntas}
+          />
+        )}
       </aside>
 
       <main className="consola__resultados">

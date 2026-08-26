@@ -9,6 +9,7 @@ export default defineConfig({
       output: {
         manualChunks(id: string) {
           if (id.includes('/escena/')) return 'escena';
+          if (id.includes('/profesor/')) return 'profesor';
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'recharts';
         },
       },

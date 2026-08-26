@@ -11,6 +11,7 @@ import {
 } from './reloj.js';
 import * as db from '../db/consultas.js';
 import { precalentarEscena, estadoEscena, obtenerEscena, limpiarCache } from '../voz/escena.js';
+import { generarPreguntasConsejo, type PreguntaConsejo } from '../voz/anthropic.js';
 
 const ROLES_VALIDOS: RolEquipo[] = ['patrocinador', 'lider', 'analista', 'voz_cliente'];
 
@@ -21,6 +22,8 @@ interface EquipoActivo {
   miembros: MiembroEquipo[];
   evidencias: Array<{ comentarioId: string; hipotesis: string; registradoPor: string }>;
   consultasRealizadas: Set<string>;
+  resultado: import('../motor/tipos.js').ResultadoPuntuacion | null;
+  preguntasConsejo: PreguntaConsejo[] | null;
 }
 
 interface SesionActiva {
@@ -195,6 +198,49 @@ export function configurarSockets(
       });
     });
 
+    socket.on('profesor:tablero', (payload, ack) => {
+      if (!validarClaveProfesor(payload?.clave)) {
+        return ack?.({ error: 'Clave de profesor incorrecta' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
+
+      const equipos = Array.from(sesion.equipos.values()).map(e => ({
+        nombre: e.nombre,
+        trimestre: e.estadoMotor.trimestre,
+        presupuesto: e.estadoMotor.presupuesto,
+        creditos: e.estadoMotor.creditosIndagacion,
+        intervenciones: e.estadoMotor.intervenciones.map(i => i.nombre),
+        kpis: e.estadoMotor.kpis,
+        historialKPIs: e.estadoMotor.historialKPIs,
+        resultado: e.resultado,
+        miembros: e.miembros,
+      }));
+
+      ack?.({
+        reloj: obtenerEstadoReloj(sesion.reloj, config),
+        equipos,
+        escena: estadoEscena(sesion.codigoSala),
+      });
+    });
+
+    socket.on('profesor:revelar_dag', (payload, ack) => {
+      if (!validarClaveProfesor(payload?.clave)) {
+        return ack?.({ error: 'Clave de profesor incorrecta' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
+
+      if (sesion.reloj.faseActual !== 'consejo' && sesion.reloj.faseActual !== 'finalizado') {
+        return ack?.({ error: 'El DAG solo se revela en la fase de consejo' });
+      }
+
+      io.to(`sala:${sesion.codigoSala}`).emit('sesion:dag_revelado', {
+        verdadOculta: datos.verdadOculta,
+      });
+      ack?.({ ok: true });
+    });
+
     socket.on('equipo:unirse', async (payload, ack) => {
       const codigo = payload?.codigoSala?.toUpperCase();
       const nombre = payload?.nombre?.trim();
@@ -206,7 +252,7 @@ export function configurarSockets(
       let equipo = sesion.equipos.get(nombre);
       if (!equipo) {
         const estadoMotor = crearEstadoInicial(config);
-        equipo = { dbId: null, nombre, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set() };
+        equipo = { dbId: null, nombre, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null };
         if (dbDisponible && sesion.dbId) {
           try {
             const row = await db.crearEquipo(sesion.dbId, nombre, estadoMotor);
@@ -450,6 +496,7 @@ export function configurarSockets(
       equipo.estadoMotor = estado;
 
       const resultado = calcularPuntuacion(estado, diagnostico, rigor, config);
+      equipo.resultado = resultado;
 
       if (dbDisponible && equipo.dbId) {
         try {
@@ -457,6 +504,26 @@ export function configurarSockets(
           await db.actualizarEstadoMotor(equipo.dbId, estado);
         } catch (_) { /* sin persistencia */ }
       }
+
+      const diagnosticoTexto = [
+        diagnostico.ventanaCapturaEsCuello ? 'La ventana de captura es el cuello de botella del proceso.' : null,
+        diagnostico.reprocesoEsMecanismo ? 'El reproceso por errores de captura es el mecanismo principal.' : null,
+        diagnostico.fugaPlastico ? 'Hay fuga de plásticos aprobados que nunca se envían.' : null,
+        diagnostico.trabajoPerdidoBuro ? 'Se pierde trabajo en casos que el buró rechazará.' : null,
+        diagnostico.concentracionSinMasa ? 'La concentración en pocas sucursales no tiene masa real.' : null,
+        ...(diagnostico.causasEspurias || []).map((c: string) => `Causa identificada: ${c}`),
+      ].filter(Boolean).join('\n');
+
+      const intervencionesTexto = estado.intervenciones
+        .map(i => `- ${i.nombre} (T${i.trimestre})`)
+        .join('\n') || 'Ninguna intervención aplicada.';
+
+      generarPreguntasConsejo(diagnosticoTexto, intervencionesTexto, 15000)
+        .then(({ preguntas }) => {
+          equipo.preguntasConsejo = preguntas;
+          io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('consejo:preguntas', { preguntas });
+        })
+        .catch(() => {});
 
       io.to(`profesor:${info.codigoSala}`).emit('sesion:equipo_diagnostico', {
         equipo: info.nombre,
