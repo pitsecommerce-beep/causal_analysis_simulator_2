@@ -7,12 +7,31 @@ import { cargarConfig } from './motor/dag.js';
 import { cargarTodosDatos } from './datos/cargador.js';
 import { conectarDB, ejecutarMigraciones, cerrarDB } from './db/conexion.js';
 import { configurarSockets } from './sockets/sala.js';
+import { TESTIMONIOS_RESPALDO, validarTestimoniosContraDatos } from './voz/guiones.js';
+import { sortearComentarios } from './voz/anthropic.js';
 
 async function main(): Promise<void> {
   console.log('Cargando configuración y datos...');
   const config = cargarConfig();
   const datos = cargarTodosDatos();
   console.log(`  ${datos.solicitudes.length} solicitudes, ${datos.comentarios.length} comentarios cargados`);
+
+  const erroresTestimonios = validarTestimoniosContraDatos(
+    TESTIMONIOS_RESPALDO,
+    datos.comentarios,
+    datos.solicitudes,
+    datos.verdadOculta.semilla,
+    sortearComentarios,
+  );
+  if (erroresTestimonios.length > 0) {
+    console.warn('⚠ Testimonios de respaldo NO coinciden con datos reales:');
+    for (const e of erroresTestimonios) {
+      console.warn(`  [${e.indice}] ${e.campo}: esperado="${e.esperado}" encontrado="${e.encontrado}"`);
+    }
+    console.warn('  Ejecuta "npm run voz:respaldo" para regenerarlos.');
+  } else {
+    console.log('  Testimonios de respaldo validados contra datos reales ✓');
+  }
 
   const app = express();
   app.use(express.json());
