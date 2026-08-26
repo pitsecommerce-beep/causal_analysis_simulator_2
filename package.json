@@ -15,6 +15,7 @@
     "build": "npx tsc && npx vite build && mkdir -p dist/src/servidor/db/migraciones && cp src/servidor/db/migraciones/*.sql dist/src/servidor/db/migraciones/",
     "start": "node dist/src/servidor/index.js",
     "salud": "npx tsx src/servidor/consola/salud.ts",
+    "voz:respaldo": "npx tsx src/servidor/consola/generar-respaldo.ts",
     "voz:probar": "npx tsx src/servidor/consola/probar-voz.ts"
   },
   "dependencies": {

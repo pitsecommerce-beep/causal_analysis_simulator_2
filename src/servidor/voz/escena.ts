@@ -201,9 +201,7 @@ function construirEscenaRespaldo(): EscenaCompleta {
 
     return {
       rol: 'cliente' as const,
-      nombre: t.genero === 'F'
-        ? ['Patricia', 'Laura'][i % 2]
-        : ['Jorge', 'Roberto'][i % 2],
+      nombre: t.nombre,
       estado: t.estado,
       sucursal: t.sucursal,
       genero: t.genero,

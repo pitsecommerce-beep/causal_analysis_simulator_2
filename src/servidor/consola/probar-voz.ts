@@ -6,11 +6,26 @@ import {
   generarDiscursoDirector,
   generarParlamentosClientes,
   validarTerminosProhibidos,
+  sortearComentarios,
+  nombreFicticio,
 } from '../voz/anthropic.js';
 import { textoAAudio, vozDirector, vozCliente } from '../voz/deepgram.js';
-import { DISCURSO_DIRECTOR, TESTIMONIOS_RESPALDO } from '../voz/guiones.js';
+import {
+  DISCURSO_DIRECTOR,
+  TESTIMONIOS_RESPALDO,
+  validarTestimoniosContraDatos,
+} from '../voz/guiones.js';
 
 const modoRespaldo = process.argv.includes('--respaldo');
+
+function esPlaceholder(buf: Buffer): boolean {
+  if (buf.length === 0) return true;
+  let ceros = 0;
+  for (let i = 2; i < Math.min(buf.length, 512); i++) {
+    if (buf[i] === 0) ceros++;
+  }
+  return ceros > 400;
+}
 
 async function main(): Promise<void> {
   const config = cargarConfig();
@@ -26,7 +41,7 @@ async function main(): Promise<void> {
   console.log('╠══════════════════════════════════════════════════════════════╣');
 
   if (modoRespaldo) {
-    await probarRespaldo(outDir, voz);
+    await probarRespaldo(outDir, datos, voz);
   } else {
     await probarIA(outDir, datos, voz, totalSucursales);
   }
@@ -131,59 +146,132 @@ async function probarIA(
 
 async function probarRespaldo(
   outDir: string,
+  datos: ReturnType<typeof cargarTodosDatos>,
   voz: NonNullable<ReturnType<typeof cargarConfig>['voz']>,
 ): Promise<void> {
   console.log('║');
-  console.log('║  ── Verificación de archivos de respaldo ──');
+  console.log('║  ── Validación de testimonios contra datos reales ──');
+  console.log('║');
 
-  const archivos = [
-    'discurso-director.txt',
-    'discurso-director.mp3',
-    'testimonios.json',
-    'cliente-0.mp3',
-    'cliente-1.mp3',
-    'cliente-2.mp3',
-    'cliente-3.mp3',
-  ];
+  const errores = validarTestimoniosContraDatos(
+    TESTIMONIOS_RESPALDO,
+    datos.comentarios,
+    datos.solicitudes,
+    datos.verdadOculta.semilla,
+    sortearComentarios,
+  );
 
-  let todoOk = true;
-  for (const archivo of archivos) {
-    const ruta = resolve('src/servidor/voz/respaldo', archivo);
-    const existe = existsSync(ruta);
-    const marca = existe ? '✓' : '✗';
-    if (!existe) todoOk = false;
-    const tam = existe
-      ? ` (${(readFileSync(ruta).length / 1024).toFixed(1)} KB)`
-      : '';
-    console.log(`║  ${marca} ${archivo}${tam}`);
+  const seleccionados = sortearComentarios(datos.comentarios, datos.verdadOculta.semilla);
+  const indiceSol = new Map(datos.solicitudes.map(s => [s.id, s]));
+
+  for (let i = 0; i < TESTIMONIOS_RESPALDO.length; i++) {
+    const t = TESTIMONIOS_RESPALDO[i];
+    const real = seleccionados[i];
+    const sol = real ? indiceSol.get(real.solicitudId) : null;
+    const generoBase = sol ? sol.genero.toLowerCase() : '';
+    const generoEsperado = generoBase.includes('female') || generoBase.includes('femenin') ? 'F' : 'M';
+    const nombreEsperado = real ? nombreFicticio(real.id, generoEsperado, i) : '?';
+
+    console.log(`║  Testimonio ${i + 1}:`);
+    const campos = [
+      { campo: 'commentId', respaldo: t.commentId, real: real?.id ?? '?' },
+      { campo: 'solicitudId', respaldo: String(t.solicitudId), real: real ? String(real.solicitudId) : '?' },
+      { campo: 'estado', respaldo: t.estado, real: real?.estado ?? '?' },
+      { campo: 'sucursal', respaldo: String(t.sucursal), real: real ? String(real.sucursal) : '?' },
+      { campo: 'genero', respaldo: t.genero, real: generoEsperado },
+      { campo: 'nombre', respaldo: t.nombre, real: nombreEsperado },
+      { campo: 'texto(50)', respaldo: t.texto.slice(0, 50), real: real ? real.comentario.slice(0, 50) : '?' },
+    ];
+
+    for (const c of campos) {
+      const ok = c.respaldo === c.real;
+      const marca = ok ? '✓' : '✗';
+      console.log(`║    ${marca} ${c.campo.padEnd(14)} respaldo="${c.respaldo}" ${ok ? '' : `real="${c.real}"`}`);
+    }
+    console.log('║');
+  }
+
+  if (errores.length === 0) {
+    console.log('║  ✓ TODOS LOS CAMPOS COINCIDEN CON DATOS REALES');
+  } else {
+    console.log(`║  ✗ ${errores.length} DISCREPANCIA(S) ENCONTRADA(S)`);
+    console.log('║  Ejecuta "npm run voz:respaldo" para regenerar.');
   }
 
   console.log('║');
+  console.log('║  ── Verificación de archivos de respaldo ──');
+  console.log('║');
+
+  const archivos = [
+    { nombre: 'discurso-director.txt', esAudio: false },
+    { nombre: 'discurso-director.mp3', esAudio: true },
+    { nombre: 'testimonios.json', esAudio: false },
+    { nombre: 'cliente-0.mp3', esAudio: true },
+    { nombre: 'cliente-1.mp3', esAudio: true },
+    { nombre: 'cliente-2.mp3', esAudio: true },
+    { nombre: 'cliente-3.mp3', esAudio: true },
+  ];
+
+  let todoOk = true;
+  let hayPlaceholders = false;
+  for (const archivo of archivos) {
+    const ruta = resolve('src/servidor/voz/respaldo', archivo.nombre);
+    const existe = existsSync(ruta);
+    if (!existe) {
+      todoOk = false;
+      console.log(`║  ✗ ${archivo.nombre} — NO ENCONTRADO`);
+      continue;
+    }
+
+    const buf = readFileSync(ruta);
+    const tam = (buf.length / 1024).toFixed(1);
+
+    if (archivo.esAudio) {
+      const placeholder = esPlaceholder(buf);
+      if (placeholder) {
+        hayPlaceholders = true;
+        console.log(`║  ⚠ ${archivo.nombre} (${tam} KB) — PLACEHOLDER, no apto para sesión real`);
+      } else {
+        console.log(`║  ✓ ${archivo.nombre} (${tam} KB)`);
+      }
+    } else {
+      console.log(`║  ✓ ${archivo.nombre} (${tam} KB)`);
+    }
+  }
+
+  console.log('║');
+
+  if (hayPlaceholders) {
+    console.log('║  ⚠ Hay MP3 placeholder. Para generar audio real:');
+    console.log('║    1. Configura DEEPGRAM_API_KEY en .env');
+    console.log('║    2. Ejecuta "npm run voz:respaldo"');
+    console.log('║');
+  }
+
   console.log('║  ── Texto de respaldo del director ──');
   const textoDir = readFileSync(resolve('src/servidor/voz/respaldo/discurso-director.txt'), 'utf-8');
   const palabras = textoDir.split(/\s+/).length;
   console.log(`║  Palabras: ${palabras}`);
   const valido = validarTerminosProhibidos(textoDir, voz.terminos_prohibidos);
   console.log(`║  Validación términos prohibidos: ${valido ? 'PASÓ' : 'FALLÓ'}`);
-
-  writeFileSync(resolve(outDir, 'director.txt'), textoDir);
-
   console.log('║');
-  console.log('║  ── Testimonios de respaldo ──');
-  const testimoniosRaw = readFileSync(resolve('src/servidor/voz/respaldo/testimonios.json'), 'utf-8');
-  const testimonios = JSON.parse(testimoniosRaw) as Array<{
-    nombre: string; genero: string; sucursal: number; estado: string; texto: string;
-  }>;
 
-  for (let i = 0; i < testimonios.length; i++) {
-    const t = testimonios[i];
-    console.log(`║  ${t.nombre} (${t.genero}, suc ${t.sucursal}, ${t.estado}): ${t.texto.slice(0, 60)}...`);
-    writeFileSync(resolve(outDir, `cliente-${i}.txt`), t.texto);
+  console.log('║  ── Textos de testimonios de respaldo ──');
+  for (let i = 0; i < TESTIMONIOS_RESPALDO.length; i++) {
+    const t = TESTIMONIOS_RESPALDO[i];
+    const valT = validarTerminosProhibidos(t.texto, voz.terminos_prohibidos);
+    console.log(`║  ${t.nombre} (${t.genero}, suc ${t.sucursal}, ${t.estado}): ${valT ? 'PASÓ' : 'FALLÓ'}`);
+    console.log(`║    "${t.texto.slice(0, 70)}..."`);
   }
 
   console.log('║');
-  console.log(`║  Resultado: ${todoOk ? 'TODOS LOS ARCHIVOS PRESENTES' : 'FALTAN ARCHIVOS'}`);
+  console.log(`║  Resultado: ${todoOk && errores.length === 0 ? 'RESPALDO VÁLIDO' : 'HAY PROBLEMAS — ver arriba'}`);
   console.log('║');
+
+  writeFileSync(resolve(outDir, 'director.txt'), textoDir);
+  for (let i = 0; i < TESTIMONIOS_RESPALDO.length; i++) {
+    writeFileSync(resolve(outDir, `cliente-${i}.txt`), TESTIMONIOS_RESPALDO[i].texto);
+  }
 }
 
 main().catch(err => {
