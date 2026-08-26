@@ -4,3 +4,7 @@ dist/
 *.mp3
 *.wav
 tmp_voz_prueba/
+salida/
+
+# Allow fallback audio files
+!src/servidor/voz/respaldo/*.mp3

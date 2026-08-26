@@ -116,7 +116,7 @@ export function configurarSockets(
       socket.join(`sala:${codigo}`);
       socket.join(`profesor:${codigo}`);
 
-      precalentarEscena(codigo, datos).then(() => {
+      precalentarEscena(codigo, datos, config).then(() => {
         io.to(`profesor:${codigo}`).emit('escena:estado', {
           estado: estadoEscena(codigo),
         });
@@ -355,6 +355,8 @@ export function configurarSockets(
           clientes: escena.clientes.map(c => ({
             nombre: c.nombre,
             genero: c.genero,
+            estado: c.estado,
+            sucursal: c.sucursal,
             texto: c.texto,
             fuenteTexto: c.fuenteTexto,
             tieneAudio: c.audio.length > 0,

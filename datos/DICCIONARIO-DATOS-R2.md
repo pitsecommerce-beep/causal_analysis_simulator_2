@@ -54,6 +54,7 @@ Es el campo más importante y el único que registra los errores. Formato: event
 | `error de catura` | Error de captura (typo presente en la base real) |
 | `incomplete documents` | Documentos incompletos |
 | `illegible document` | Documento ilegible |
+| `Documentos ilegibles` | Documento ilegible (variante en español presente en R1) |
 | `invalid id` | Documentos incompletos (variante rara) |
 
 **Eventos de cierre, no son errores:** `authorized for ...`, `authorized for loan for ...`, `de autoriza el loan for ...`, `Envío de plástico. Authorized for ...`, `bureau rejected`, `Bureau Rejected`, `Score Rejected`.
@@ -65,7 +66,7 @@ Es el campo más importante y el único que registra los errores. Formato: event
 - Puede haber espacio final en la cadena.
 - Un `Comments` vacío significa que no hubo eventos registrados.
 
-**Invariante:** `# of tries` = 1 + número de eventos de error en `Comments`.
+**Relación aproximada:** `# of tries` = 1 + número de eventos de error en `Comments` se cumple en cerca del 96% de los casos (1,437 de 1,500 en R2). Falla en 63 solicitudes, todas ellas atoradas en sucursal (`Last Status` = `Documents received` o `Branch Executive task`) cuya bitácora nunca se cerró: el sistema registró un intento adicional al reabrir el caso sin que la descripción en `Comments` detalle un error explícito. R1 presenta la misma excepción en 10 de 103 casos.
 
 ## Campos derivados
 

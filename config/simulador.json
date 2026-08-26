@@ -211,5 +211,35 @@
       "presupuesto_agotado_sin_efecto": -100
     }
   },
-  "desempate": ["diagnostico", "impacto", "velocidad"]
+  "desempate": ["diagnostico", "impacto", "velocidad"],
+  "voz": {
+    "clientes_por_sesion": 4,
+    "max_palabras_director": 320,
+    "max_palabras_testimonio": 70,
+    "timeout_ms": 12000,
+    "terminos_prohibidos": [
+      "ventana de captura",
+      "reproceso",
+      "sucursal 110",
+      "sucursal 676",
+      "sucursal 728",
+      "atorado",
+      "atorados",
+      "fuga de plástico",
+      "buró antes",
+      "checklist",
+      "error de captura",
+      "causa raíz",
+      "cuello de botella",
+      "quiebre",
+      "capacitación",
+      "ilegible",
+      "incompleto"
+    ],
+    "voces": {
+      "director": "aura-2-javier-es",
+      "clienteM": ["aura-2-aquila-es", "aura-2-javier-es"],
+      "clienteF": ["aura-2-carina-es", "aura-2-diana-es", "aura-2-selena-es"]
+    }
+  }
 }

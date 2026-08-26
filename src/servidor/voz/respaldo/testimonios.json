@@ -1,0 +1,38 @@
+[
+  {
+    "commentId": "C-012",
+    "solicitudId": 234,
+    "estado": "Jalisco",
+    "sucursal": 110,
+    "genero": "F",
+    "nombre": "Patricia",
+    "texto": "Fui tres veces a la sucursal a dejar los mismos papeles. Tres veces. Cada vez me decían que algo estaba mal, que faltaba una firma, que la copia no se leía. Al final le pregunté al ejecutivo si ellos no tenían una lista de lo que necesitaban, y me dijo que sí pero que había cambiado. Llevo dos meses esperando."
+  },
+  {
+    "commentId": "C-027",
+    "solicitudId": 489,
+    "estado": "Nuevo León",
+    "sucursal": 676,
+    "genero": "M",
+    "nombre": "Jorge",
+    "texto": "Ya van cuatro intentos para meter mi solicitud. Cuatro. Cada vez me piden algo diferente. La primera vez faltaba el comprobante de domicilio, la segunda que la identificación estaba borrosa. Siento que estoy peleando contra el sistema en lugar de solicitar una tarjeta."
+  },
+  {
+    "commentId": "C-045",
+    "solicitudId": 891,
+    "estado": "CDMX",
+    "sucursal": 302,
+    "genero": "M",
+    "nombre": "Roberto",
+    "texto": "Me aprobaron la tarjeta hace mes y medio y todavía no me llega. Llamé al banco tres veces, y cada vez me dicen que está en proceso. En proceso de qué, si ya me la aprobaron. Mientras tanto, la oferta que quería aprovechar ya se venció."
+  },
+  {
+    "commentId": "C-068",
+    "solicitudId": 1102,
+    "estado": "Puebla",
+    "sucursal": 728,
+    "genero": "F",
+    "nombre": "Laura",
+    "texto": "Completé todo el proceso, llevé todos mis documentos, esperé semanas, y al final me rechazaron por el buró. Si desde el principio podían ver mi historial crediticio, ¿por qué me hicieron perder todo ese tiempo? No entiendo la lógica."
+  }
+]

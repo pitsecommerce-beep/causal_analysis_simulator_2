@@ -10,6 +10,18 @@ export interface ConfigSimulador {
   eventos: ConfigEvento[];
   puntuacion: ConfigPuntuacion;
   desempate: string[];
+  voz?: {
+    clientes_por_sesion: number;
+    max_palabras_director: number;
+    max_palabras_testimonio: number;
+    timeout_ms: number;
+    terminos_prohibidos: string[];
+    voces: {
+      director: string;
+      clienteM: string[];
+      clienteF: string[];
+    };
+  };
 }
 
 export interface ConfigIntervencion {

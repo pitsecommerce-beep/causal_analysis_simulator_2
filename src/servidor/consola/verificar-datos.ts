@@ -176,7 +176,7 @@ const resumen = `${okCount}/${verificaciones.length} verificaciones correctas`;
 console.log('║ ' + resumen.padEnd(72) + ' ║');
 console.log('╚════════════════════════════════════════════════════════════════════════════╝');
 
-// Invariant check: # of tries = 1 + number of error events
+// Approximate relationship: # of tries = 1 + error events (~96% of cases)
 let invarianteOk = 0;
 let invarianteFallo = 0;
 for (const s of solicitudes) {
@@ -187,10 +187,11 @@ for (const s of solicitudes) {
     invarianteFallo++;
   }
 }
-console.log(`\nInvariante: # of tries = 1 + errores en Comments`);
-console.log(`  Correctos: ${invarianteOk}/${solicitudes.length}`);
+const pctCumple = ((invarianteOk / solicitudes.length) * 100).toFixed(1);
+console.log(`\nRelación # of tries = 1 + errores en Comments`);
+console.log(`  Cumple: ${invarianteOk}/${solicitudes.length} (${pctCumple}%)`);
 if (invarianteFallo > 0) {
-  console.log(`  FALLOS: ${invarianteFallo}`);
+  console.log(`  Excepciones: ${invarianteFallo} (solicitudes atoradas con bitácora sin cerrar)`);
 }
 
 console.log(`\nComentarios de clientes: ${comentarios.length} registros cargados`);
