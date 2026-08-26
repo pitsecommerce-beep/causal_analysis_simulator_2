@@ -1,0 +1,71 @@
+import pg from 'pg';
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import { resolve, join } from 'path';
+
+const { Pool } = pg;
+
+let pool: pg.Pool | null = null;
+
+export function obtenerPool(): pg.Pool {
+  if (!pool) {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error('DATABASE_URL no está configurada');
+    }
+    pool = new Pool({
+      connectionString,
+      ssl: connectionString.includes('sslmode=require') || connectionString.includes('supabase')
+        ? { rejectUnauthorized: false }
+        : undefined,
+    });
+  }
+  return pool;
+}
+
+export async function conectarDB(): Promise<boolean> {
+  try {
+    const p = obtenerPool();
+    await p.query('SELECT 1');
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+export async function ejecutarMigraciones(): Promise<void> {
+  const p = obtenerPool();
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS migraciones (
+      id SERIAL PRIMARY KEY,
+      nombre VARCHAR(255) NOT NULL UNIQUE,
+      aplicada_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  const dir = resolve('src/servidor/db/migraciones');
+  if (!existsSync(dir)) return;
+
+  const archivos = readdirSync(dir)
+    .filter(f => f.endsWith('.sql'))
+    .sort();
+
+  const { rows } = await p.query('SELECT nombre FROM migraciones');
+  const aplicadas = new Set(rows.map((r: { nombre: string }) => r.nombre));
+
+  for (const archivo of archivos) {
+    if (!aplicadas.has(archivo)) {
+      const sql = readFileSync(join(dir, archivo), 'utf-8');
+      await p.query(sql);
+      await p.query('INSERT INTO migraciones (nombre) VALUES ($1)', [archivo]);
+      console.log(`  Migración aplicada: ${archivo}`);
+    }
+  }
+}
+
+export async function cerrarDB(): Promise<void> {
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
+}
