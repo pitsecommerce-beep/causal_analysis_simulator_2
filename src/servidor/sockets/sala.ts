@@ -1,6 +1,6 @@
 import type { Server as SocketServer, Socket } from 'socket.io';
 import type { ConfigSimulador, EstadoMotor } from '../motor/tipos.js';
-import type { DatosCargados } from '../datos/tipos.js';
+import type { DatosCargados, Solicitud } from '../datos/tipos.js';
 import { crearEstadoInicial, avanzarTrimestre } from '../motor/dag.js';
 import { aplicarIntervencion, listarIntervencionesDisponibles } from '../motor/intervenciones.js';
 import { calcularPuntuacion } from '../puntuacion/reglas.js';
@@ -47,6 +47,43 @@ const FASES_TRIMESTRE: Record<string, number> = {
   trimestre_3: 2,
   consejo: 3,
 };
+
+function fechaISO(d: Date | null): string | null {
+  return d ? d.toISOString() : null;
+}
+
+function prepararDatosCliente(solicitudes: Solicitud[]): unknown[] {
+  return solicitudes.map(s => ({
+    id: s.id,
+    clienteId: s.clienteId,
+    edad: s.edad,
+    estadoCivil: s.estadoCivil,
+    genero: s.genero,
+    estado: s.estado,
+    sucursal: s.sucursal,
+    aniosCliente: s.aniosCliente,
+    scoreBuro: s.scoreBuro,
+    scoreETF: s.scoreETF,
+    intentos: s.intentos,
+    fechaPrimerCaptura: s.fechaPrimerCaptura.toISOString(),
+    fechaUltimaCaptura: s.fechaUltimaCaptura.toISOString(),
+    ventanaCaptura: s.ventanaCaptura,
+    fechaEnvioDocumentos: fechaISO(s.fechaEnvioDocumentos),
+    fechaRecepcionCrOP: fechaISO(s.fechaRecepcionCrOP),
+    resultadoBuro: s.resultadoBuro,
+    fechaBuro: fechaISO(s.fechaBuro),
+    resultadoScoreETF: s.resultadoScoreETF,
+    fechaScoreETF: fechaISO(s.fechaScoreETF),
+    fechaPlastico: fechaISO(s.fechaPlastico),
+    ultimoEstatus: s.ultimoEstatus,
+    lineaCredito: s.lineaCredito,
+    comentariosRaw: s.comentariosRaw,
+    erroresCaptura: s.erroresCaptura,
+    incompletos: s.incompletos,
+    ilegibles: s.ilegibles,
+    mes: s.mes,
+  }));
+}
 
 export function configurarSockets(
   io: SocketServer,
@@ -175,6 +212,7 @@ export function configurarSockets(
         estadoMotor: equipo.estadoMotor,
         reloj: obtenerEstadoReloj(sesion.reloj, config),
         intervencionesCatalogo: listarIntervencionesDisponibles(equipo.estadoMotor, config),
+        solicitudes: prepararDatosCliente(datos.solicitudes),
       });
     });
 
