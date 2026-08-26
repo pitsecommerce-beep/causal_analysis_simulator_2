@@ -6,13 +6,22 @@
   "scripts": {
     "datos:verificar": "npx tsx src/servidor/consola/verificar-datos.ts",
     "test": "npx vitest run",
-    "motor:consola": "npx tsx src/servidor/consola/arnes.ts"
+    "motor:consola": "npx tsx src/servidor/consola/arnes.ts",
+    "dev:server": "npx tsx --watch src/servidor/index.ts",
+    "build": "npx tsc",
+    "start": "node dist/src/servidor/index.js",
+    "salud": "npx tsx src/servidor/consola/salud.ts"
   },
   "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.23.0",
+    "socket.io": "^4.8.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^20.14.0",
+    "@types/pg": "^8.23.1",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0",
     "vitest": "^4.1.11"
