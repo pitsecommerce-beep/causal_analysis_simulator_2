@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
-import { EscenaApp } from './escena/EscenaApp';
-import { ConsolaApp } from './consola/ConsolaApp';
 import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente } from './lib/tipos';
+
+const EscenaApp = lazy(() => import('./escena/EscenaApp').then(m => ({ default: m.EscenaApp })));
+const ConsolaApp = lazy(() => import('./consola/ConsolaApp').then(m => ({ default: m.ConsolaApp })));
 
 interface DatosSesion {
   estadoMotor: EstadoMotorCliente;
@@ -33,23 +34,37 @@ export function App() {
     return <UnirseEquipo onUnido={onUnido} />;
   }
 
+  const cargando = (
+    <div className="escena">
+      <div className="escena__cargando">
+        <div className="escena__spinner" />
+        <span>Cargando...</span>
+      </div>
+    </div>
+  );
+
   if (pantalla === 'escena') {
     return (
-      <EscenaApp
-        codigoSala={sesion.codigoSala}
-        onTerminar={() => setPantalla('consola')}
-      />
+      <Suspense fallback={cargando}>
+        <EscenaApp
+          codigoSala={sesion.codigoSala}
+          nombreEquipo={sesion.nombreEquipo}
+          onTerminar={() => setPantalla('consola')}
+        />
+      </Suspense>
     );
   }
 
   return (
-    <ConsolaApp
-      estadoInicial={sesion.estadoMotor}
-      relojInicial={sesion.reloj}
-      catalogoInicial={sesion.catalogo}
-      solicitudes={sesion.solicitudes}
-      codigoSala={sesion.codigoSala}
-      nombreEquipo={sesion.nombreEquipo}
-    />
+    <Suspense fallback={cargando}>
+      <ConsolaApp
+        estadoInicial={sesion.estadoMotor}
+        relojInicial={sesion.reloj}
+        catalogoInicial={sesion.catalogo}
+        solicitudes={sesion.solicitudes}
+        codigoSala={sesion.codigoSala}
+        nombreEquipo={sesion.nombreEquipo}
+      />
+    </Suspense>
   );
 }

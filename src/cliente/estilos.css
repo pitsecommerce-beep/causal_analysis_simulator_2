@@ -578,7 +578,7 @@ input, select, textarea, button {
   border-color: var(--azul-700);
 }
 
-/* — Escena sala de juntas — */
+/* — Escena — */
 .escena {
   display: flex;
   flex-direction: column;
@@ -588,7 +588,10 @@ input, select, textarea, button {
   background: var(--gris-900);
   color: var(--blanco);
   padding: 24px;
+  gap: 0;
 }
+
+/* — Pantalla 1: Sala de juntas — */
 .escena__sala {
   position: relative;
   width: 100%;
@@ -600,16 +603,6 @@ input, select, textarea, button {
   overflow: hidden;
   image-rendering: pixelated;
 }
-.escena__mesa {
-  position: absolute;
-  bottom: 20%;
-  left: 15%;
-  right: 15%;
-  height: 18%;
-  background: #5a4a3a;
-  border: 2px solid #4a3a2a;
-  border-radius: 4px;
-}
 .escena__pared {
   position: absolute;
   top: 0;
@@ -619,20 +612,57 @@ input, select, textarea, button {
   background: linear-gradient(180deg, #3a4a5c 0%, #2d3748 100%);
   border-bottom: 3px solid #4a5568;
 }
+.escena__ventanales {
+  position: absolute;
+  top: 4%;
+  left: 5%;
+  display: flex;
+  gap: 6px;
+}
+.escena__ventanal {
+  width: 24px;
+  height: 28px;
+  background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%);
+  border: 1px solid #5a7a9a;
+  border-radius: 2px;
+}
 .escena__pantalla {
   position: absolute;
-  top: 5%;
+  top: 4%;
   left: 30%;
   right: 30%;
-  height: 22%;
-  background: #1a202c;
+  height: 24%;
+  background: #0d1117;
   border: 2px solid #718096;
+  border-radius: 2px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
+}
+.escena__pantalla-logo {
   font-family: var(--fuente-mono);
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--azul-600);
+  letter-spacing: 2px;
+}
+.escena__pantalla-sub {
+  font-family: var(--fuente-mono);
+  font-size: 7px;
+  color: var(--gris-500);
+}
+.escena__mesa {
+  position: absolute;
+  bottom: 18%;
+  left: 12%;
+  right: 12%;
+  height: 16%;
+  background: linear-gradient(180deg, #6b5340 0%, #4a3828 100%);
+  border: 2px solid #3a2818;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
 }
 .escena__personaje {
   position: absolute;
@@ -641,9 +671,16 @@ input, select, textarea, button {
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: transform 0.2s;
+}
+.escena__personaje--activo {
+  transform: translateY(-3px);
 }
 .escena__personaje--activo .escena__cabeza {
-  box-shadow: 0 0 8px 2px var(--azul-600);
+  box-shadow: 0 0 10px 3px var(--azul-600);
+}
+.escena__personaje--director {
+  z-index: 2;
 }
 .escena__cabeza {
   width: 16px;
@@ -651,6 +688,7 @@ input, select, textarea, button {
   border-radius: 2px;
   background: #d4a574;
   border: 1px solid #b8956a;
+  transition: box-shadow 0.3s;
 }
 .escena__cuerpo {
   width: 20px;
@@ -678,40 +716,236 @@ input, select, textarea, button {
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
-.escena__dialogo {
+/* — Pantalla 2: Voz del cliente — */
+.escena__voz {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
   width: 100%;
-  max-width: 800px;
-  margin-top: 16px;
+  max-width: 700px;
+}
+.escena__voz-escenario {
+  flex-shrink: 0;
+  position: relative;
+  width: 120px;
+  height: 160px;
+  background: radial-gradient(ellipse at center bottom, #2d3748 0%, #1a202c 70%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.escena__avatar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.escena__avatar-cabeza {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: #d4a574;
+  border: 2px solid #b8956a;
+  box-shadow: 0 0 12px 4px var(--azul-600);
+}
+.escena__avatar-cuerpo {
+  width: 40px;
+  height: 48px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+.escena__avatar-cuerpo--F {
+  background: #9b2c2c;
+  border: 2px solid #742a2a;
+}
+.escena__avatar-cuerpo--M {
+  background: #2c7a2c;
+  border: 2px solid #1a5c1a;
+}
+.escena__avatar-pulso {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 2px solid var(--azul-600);
+  border-radius: 8px;
+  animation: pulso 2s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pulso {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.08); }
+}
+
+.escena__ficha {
   background: #1a202c;
   border: 2px solid #4a5568;
   border-radius: 8px;
   padding: 20px 24px;
-  min-height: 120px;
-  position: relative;
+  min-width: 200px;
 }
-.escena__dialogo-nombre {
+.escena__ficha-nombre {
   font-family: var(--fuente-titulo);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--azul-600);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
-.escena__dialogo-texto {
+.escena__ficha-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.escena__ficha-dato {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.escena__ficha-etiqueta {
+  font-family: var(--fuente-mono);
+  font-size: 11px;
+  color: var(--gris-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.escena__ficha-valor {
+  font-family: var(--fuente-mono);
+  font-size: 13px;
+  color: #e2e8f0;
+  font-variant-numeric: tabular-nums;
+}
+.escena__ficha-contador {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #4a5568;
+  font-family: var(--fuente-mono);
+  font-size: 10px;
+  color: var(--gris-500);
+  text-align: center;
+}
+
+/* — Pantalla 3: Mesa redonda — */
+.escena__mesa-redonda {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 600px;
+}
+.escena__mesa-redonda-sala {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  image-rendering: pixelated;
+}
+.escena__mesa-redonda-pared {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #2d3748 0%, #1a202c 100%);
+  border-radius: 8px;
+}
+.escena__mesa-redonda-circulo {
+  position: absolute;
+  top: 28%;
+  left: 22%;
+  width: 56%;
+  height: 44%;
+  background: linear-gradient(180deg, #6b5340 0%, #4a3828 100%);
+  border: 2px solid #3a2818;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.escena__mesa-redonda-silla {
+  position: absolute;
+  width: 16px;
+  height: 20px;
+  background: #4a5568;
+  border: 1px solid #718096;
+  border-radius: 2px;
+}
+.escena__mesa-redonda-silla--1 { top: 18%; left: 47%; }
+.escena__mesa-redonda-silla--2 { top: 35%; left: 14%; }
+.escena__mesa-redonda-silla--3 { top: 35%; right: 14%; }
+.escena__mesa-redonda-silla--4 { bottom: 20%; left: 22%; }
+.escena__mesa-redonda-silla--5 { bottom: 20%; right: 22%; }
+
+.escena__mesa-redonda-brief {
+  text-align: center;
+}
+.escena__mesa-redonda-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--azul-600);
+  margin: 0 0 8px 0;
+}
+.escena__mesa-redonda-equipo {
+  font-family: var(--fuente-mono);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--blanco);
+  padding: 8px 24px;
+  background: #2b4c7e;
+  border-radius: var(--radio);
+  display: inline-block;
+  margin-bottom: 16px;
+}
+.escena__mesa-redonda-instrucciones {
   font-family: var(--fuente-cuerpo);
   font-size: 14px;
   line-height: 1.6;
-  color: #e2e8f0;
+  color: var(--gris-500);
+  max-width: 440px;
+  margin: 0 auto 20px;
+}
+.escena__boton--iniciar {
+  font-size: 15px;
+  padding: 12px 32px;
+}
+
+/* — Subtítulos — */
+.escena__subtitulos {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 16px;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 6px;
+  padding: 16px 24px;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.escena__subtitulos-nombre {
+  font-family: var(--fuente-titulo);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--azul-600);
+}
+.escena__subtitulos-texto {
+  font-family: var(--fuente-cuerpo);
+  font-size: 15px;
+  line-height: 1.6;
+  color: #f0f0f0;
+  margin: 0;
   white-space: pre-wrap;
 }
-.escena__dialogo-cursor {
+.escena__subtitulos-cursor {
   display: inline-block;
-  width: 8px;
+  width: 2px;
   height: 16px;
-  background: var(--azul-600);
+  background: #f0f0f0;
   animation: parpadeo 0.8s step-end infinite;
   vertical-align: text-bottom;
-  margin-left: 2px;
+  margin-left: 1px;
 }
+
+/* — Controles escena — */
 @keyframes parpadeo {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -721,6 +955,8 @@ input, select, textarea, button {
   gap: 12px;
   margin-top: 12px;
   align-items: center;
+  width: 100%;
+  max-width: 800px;
 }
 .escena__boton {
   padding: 8px 20px;
