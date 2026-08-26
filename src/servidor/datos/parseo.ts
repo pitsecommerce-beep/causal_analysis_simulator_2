@@ -10,6 +10,7 @@ const PATRONES_ERROR: Array<{ patron: RegExp; tipo: 'captura' | 'incompletos' | 
   { patron: /error de catura/i, tipo: 'captura' },
   { patron: /incomplete documents/i, tipo: 'incompletos' },
   { patron: /illegible document/i, tipo: 'ilegibles' },
+  { patron: /documentos ilegibles/i, tipo: 'ilegibles' },
   { patron: /invalid id/i, tipo: 'invalid_id' },
 ];
 

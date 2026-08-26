@@ -1,15 +1,22 @@
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import type { DatosCargados } from '../datos/tipos.js';
+import type { ConfigSimulador } from '../motor/tipos.js';
 import {
   generarDiscursoDirector,
   generarParlamentosClientes,
+  validarTerminosProhibidos,
   type ResultadoDiscurso,
   type ParlamentoCliente,
 } from './anthropic.js';
 import { textoAAudio, vozDirector, vozCliente, type ResultadoAudio } from './deepgram.js';
+import { DISCURSO_DIRECTOR, TESTIMONIOS_RESPALDO } from './guiones.js';
 
 export interface PiezaEscena {
   rol: 'director' | 'cliente';
   nombre: string;
+  estado: string;
+  sucursal: number;
   genero: string;
   texto: string;
   fuenteTexto: 'ia' | 'respaldo';
@@ -41,9 +48,25 @@ export function obtenerEscena(codigoSala: string): EscenaCompleta | null {
   return cache.get(codigoSala)?.escena ?? null;
 }
 
+function configVoz(config: ConfigSimulador) {
+  const voz = config.voz;
+  return {
+    maxPalabrasDirector: voz?.max_palabras_director ?? 320,
+    maxPalabrasTestimonio: voz?.max_palabras_testimonio ?? 70,
+    timeoutMs: voz?.timeout_ms ?? 12000,
+    terminosProhibidos: voz?.terminos_prohibidos ?? [],
+    voces: voz?.voces ?? {
+      director: 'aura-2-javier-es',
+      clienteM: ['aura-2-aquila-es', 'aura-2-javier-es'],
+      clienteF: ['aura-2-carina-es', 'aura-2-diana-es', 'aura-2-selena-es'],
+    },
+  };
+}
+
 export async function precalentarEscena(
   codigoSala: string,
   datos: DatosCargados,
+  config: ConfigSimulador,
 ): Promise<void> {
   const existente = cache.get(codigoSala);
   if (existente && existente.estado !== 'pendiente' && existente.estado !== 'error') {
@@ -52,32 +75,75 @@ export async function precalentarEscena(
 
   cache.set(codigoSala, { estado: 'generando', escena: null, error: null });
 
+  const cv = configVoz(config);
+
   try {
+    const totalSucursales = new Set(datos.solicitudes.map(s => s.sucursal)).size;
+
     const [discurso, parlamentos] = await Promise.all([
       generarDiscursoDirector(
         datos.solicitudes.length,
         datos.comentarios.length,
-        new Set(datos.solicitudes.map(s => s.sucursal)).size,
+        totalSucursales,
+        cv.terminosProhibidos,
+        cv.maxPalabrasDirector,
+        cv.timeoutMs,
       ),
       generarParlamentosClientes(
         datos.comentarios,
+        datos.solicitudes,
         datos.verdadOculta.semilla,
+        cv.maxPalabrasTestimonio,
+        cv.timeoutMs,
       ),
     ]);
 
-    const director = await construirPieza(
-      'director', 'Ramón Betancourt', 'M', discurso, vozDirector(),
+    const textoDirector = discurso.fuente === 'ia' && discurso.texto
+      ? discurso.texto
+      : DISCURSO_DIRECTOR;
+
+    const audioDirector = await generarAudioConRespaldo(
+      textoDirector,
+      vozDirector(cv.voces),
+      cv.timeoutMs,
+      'discurso-director.mp3',
     );
+
+    const director: PiezaEscena = {
+      rol: 'director',
+      nombre: 'Ramón Betancourt',
+      estado: '',
+      sucursal: 0,
+      genero: 'M',
+      texto: textoDirector,
+      fuenteTexto: discurso.fuente === 'ia' && discurso.texto ? 'ia' : 'respaldo',
+      audio: audioDirector.audio,
+      fuenteAudio: audioDirector.fuente,
+    };
 
     const clientes: PiezaEscena[] = [];
     for (let i = 0; i < parlamentos.length; i++) {
       const p = parlamentos[i];
-      const pieza = await construirPieza(
-        'cliente', p.nombre, p.genero,
-        { texto: p.texto, fuente: p.fuente },
-        vozCliente(p.genero, i),
+      const textoCliente = p.fuente === 'ia' ? p.texto : obtenerTestimonioRespaldo(i);
+      const voz = vozCliente(p.genero, i, cv.voces);
+      const audio = await generarAudioConRespaldo(
+        textoCliente,
+        voz,
+        cv.timeoutMs,
+        `cliente-${i}.mp3`,
       );
-      clientes.push(pieza);
+
+      clientes.push({
+        rol: 'cliente',
+        nombre: p.nombre,
+        estado: p.estado,
+        sucursal: p.sucursal,
+        genero: p.genero,
+        texto: textoCliente,
+        fuenteTexto: p.fuente,
+        audio: audio.audio,
+        fuenteAudio: audio.fuente,
+      });
     }
 
     cache.set(codigoSala, {
@@ -87,60 +153,80 @@ export async function precalentarEscena(
     });
   } catch (err) {
     console.warn('⚠ Error precalentando escena:', (err as Error).message);
+    const escenaResp = construirEscenaRespaldo();
     cache.set(codigoSala, {
       estado: 'error',
-      escena: escenaRespaldo(datos),
+      escena: escenaResp,
       error: (err as Error).message,
     });
   }
 }
 
-async function construirPieza(
-  rol: 'director' | 'cliente',
-  nombre: string,
-  genero: string,
-  discurso: ResultadoDiscurso,
+async function generarAudioConRespaldo(
+  texto: string,
   voz: string,
-): Promise<PiezaEscena> {
-  let audioResult: ResultadoAudio;
-  try {
-    audioResult = await textoAAudio(discurso.texto, { voz });
-  } catch {
-    audioResult = { audio: Buffer.alloc(0), fuente: 'respaldo' };
-  }
+  timeoutMs: number,
+  archivoRespaldo: string,
+): Promise<ResultadoAudio> {
+  const resultado = await textoAAudio(texto, { voz }, timeoutMs);
+  if (resultado.audio.length > 0) return resultado;
 
-  return {
-    rol,
-    nombre,
-    genero,
-    texto: discurso.texto,
-    fuenteTexto: discurso.fuente,
-    audio: audioResult.audio,
-    fuenteAudio: audioResult.fuente,
-  };
+  try {
+    const ruta = resolve('src/servidor/voz/respaldo', archivoRespaldo);
+    const audio = readFileSync(ruta);
+    return { audio, fuente: 'respaldo', tiempoMs: 0 };
+  } catch {
+    return { audio: Buffer.alloc(0), fuente: 'respaldo', tiempoMs: 0 };
+  }
 }
 
-function escenaRespaldo(datos: DatosCargados): EscenaCompleta {
-  const totalSucursales = new Set(datos.solicitudes.map(s => s.sucursal)).size;
-  const textoDirector = `Buenos días. Soy Ramón Betancourt, Director de Banca al Menudeo de ETF Bank.
+function obtenerTestimonioRespaldo(indice: number): string {
+  if (indice < TESTIMONIOS_RESPALDO.length) {
+    return TESTIMONIOS_RESPALDO[indice].texto;
+  }
+  return TESTIMONIOS_RESPALDO[0].texto;
+}
 
-Los he convocado porque tenemos un problema serio. Las quejas de clientes en nuestro proceso de tarjeta de crédito se han disparado. No estoy hablando de percepciones: tenemos datos concretos.
+function construirEscenaRespaldo(): EscenaCompleta {
+  let audioDirector = Buffer.alloc(0);
+  try {
+    audioDirector = readFileSync(resolve('src/servidor/voz/respaldo/discurso-director.mp3'));
+  } catch { /* no fallback audio */ }
 
-Frente a ustedes tienen acceso a una muestra de ${datos.solicitudes.length} solicitudes reales de nuestro proceso. Además contamos con ${datos.comentarios.length} comentarios directos de clientes. Son sus palabras, no las mías.
+  const clientes: PiezaEscena[] = TESTIMONIOS_RESPALDO.map((t, i) => {
+    let audio = Buffer.alloc(0);
+    try {
+      audio = readFileSync(resolve('src/servidor/voz/respaldo', `cliente-${i}.mp3`));
+    } catch { /* no fallback audio */ }
 
-Nuestro proceso involucra tres actores principales y ${totalSucursales} sucursales. Necesito un diagnóstico basado en evidencia. Tienen tiempo limitado. Adelante.`;
+    return {
+      rol: 'cliente' as const,
+      nombre: t.genero === 'F'
+        ? ['Patricia', 'Laura'][i % 2]
+        : ['Jorge', 'Roberto'][i % 2],
+      estado: t.estado,
+      sucursal: t.sucursal,
+      genero: t.genero,
+      texto: t.texto,
+      fuenteTexto: 'respaldo' as const,
+      audio,
+      fuenteAudio: 'respaldo' as const,
+    };
+  });
 
   return {
     director: {
       rol: 'director',
       nombre: 'Ramón Betancourt',
+      estado: '',
+      sucursal: 0,
       genero: 'M',
-      texto: textoDirector,
+      texto: DISCURSO_DIRECTOR,
       fuenteTexto: 'respaldo',
-      audio: Buffer.alloc(0),
-      fuenteAudio: 'respaldo',
+      audio: audioDirector,
+      fuenteAudio: audioDirector.length > 0 ? 'respaldo' : 'respaldo',
     },
-    clientes: [],
+    clientes,
     lista: true,
   };
 }
@@ -148,3 +234,5 @@ Nuestro proceso involucra tres actores principales y ${totalSucursales} sucursal
 export function limpiarCache(codigoSala: string): void {
   cache.delete(codigoSala);
 }
+
+export { validarTerminosProhibidos };

@@ -1,4 +1,3 @@
-const TIMEOUT_MS = 12_000;
 const DEEPGRAM_TTS_URL = 'https://api.deepgram.com/v1/speak';
 
 export interface OpcionesTTS {
@@ -9,41 +8,42 @@ export interface OpcionesTTS {
 export interface ResultadoAudio {
   audio: Buffer;
   fuente: 'ia' | 'respaldo';
+  tiempoMs: number;
 }
 
-const VOCES = {
-  director: 'aura-2-javier-es',
-  clienteF: ['aura-2-carina-es', 'aura-2-diana-es', 'aura-2-selena-es'],
-  clienteM: ['aura-2-aquila-es'],
-} as const;
-
-export function vozDirector(): string {
-  return VOCES.director;
+export function vozDirector(voces: { director: string }): string {
+  return voces.director;
 }
 
-export function vozCliente(genero: string, indice: number): string {
+export function vozCliente(
+  genero: string,
+  indice: number,
+  voces: { clienteM: string[]; clienteF: string[] },
+): string {
   if (genero === 'F') {
-    return VOCES.clienteF[indice % VOCES.clienteF.length];
+    return voces.clienteF[indice % voces.clienteF.length];
   }
-  return VOCES.clienteM[indice % VOCES.clienteM.length];
+  return voces.clienteM[indice % voces.clienteM.length];
 }
 
 export async function textoAAudio(
   texto: string,
   opciones: OpcionesTTS,
+  timeoutMs: number,
 ): Promise<ResultadoAudio> {
   const apiKey = process.env.DEEPGRAM_API_KEY;
   if (!apiKey) {
     console.warn('⚠ DEEPGRAM_API_KEY no configurada, sin audio');
-    return { audio: Buffer.alloc(0), fuente: 'respaldo' };
+    return { audio: Buffer.alloc(0), fuente: 'respaldo', tiempoMs: 0 };
   }
 
   const modelo = opciones.modelo ?? 'aura-2';
   const url = `${DEEPGRAM_TTS_URL}?model=${modelo}&voice=${opciones.voz}&encoding=mp3&sample_rate=24000`;
 
+  const inicio = Date.now();
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -63,9 +63,11 @@ export async function textoAAudio(
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    return { audio: Buffer.from(arrayBuffer), fuente: 'ia' };
+    const tiempoMs = Date.now() - inicio;
+    return { audio: Buffer.from(arrayBuffer), fuente: 'ia', tiempoMs };
   } catch (err) {
+    const tiempoMs = Date.now() - inicio;
     console.warn('⚠ Error generando audio TTS:', (err as Error).message);
-    return { audio: Buffer.alloc(0), fuente: 'respaldo' };
+    return { audio: Buffer.alloc(0), fuente: 'respaldo', tiempoMs };
   }
 }
