@@ -1,0 +1,215 @@
+{
+  "fases": {
+    "sala_juntas": { "inicio": 0, "duracion": 6 },
+    "voz_cliente": { "inicio": 6, "duracion": 4 },
+    "transicion": { "inicio": 10, "duracion": 2 },
+    "trimestre_1": { "inicio": 12, "duracion": 14 },
+    "trimestre_2": { "inicio": 26, "duracion": 10 },
+    "trimestre_3": { "inicio": 36, "duracion": 9 },
+    "consejo": { "inicio": 45, "duracion": 5 }
+  },
+  "equipo": {
+    "tamano": 4,
+    "presupuesto": 100,
+    "creditos_indagacion": 12
+  },
+  "costos_consulta": {
+    "segmentar": 1,
+    "correlacionar": 1,
+    "serie_tiempo": 1,
+    "embudo": 1,
+    "intervenir": 3
+  },
+  "intervenciones": [
+    {
+      "id": 1,
+      "nombre": "Checklist documental con validación en C.R.A.S.S.",
+      "costo": 15,
+      "retraso_trimestres": 1,
+      "efectos": {
+        "incompletos_mult": 0.30,
+        "ilegibles_mult": 0.50
+      },
+      "efecto_secundario": null
+    },
+    {
+      "id": 2,
+      "nombre": "Capacitación focalizada en sucursales nombradas",
+      "costo": 25,
+      "retraso_trimestres": 1,
+      "requiere_sucursales": true,
+      "efectos": {
+        "error_captura_mult_sucursales": 0.40
+      },
+      "efecto_secundario": "erosion_rotacion"
+    },
+    {
+      "id": 3,
+      "nombre": "Capacitación masiva a las 18 sucursales",
+      "costo": 100,
+      "retraso_trimestres": 2,
+      "efectos": {
+        "error_captura_mult_todas": 0.40
+      },
+      "efecto_secundario": "presupuesto_agotado"
+    },
+    {
+      "id": 4,
+      "nombre": "Consultar buró antes de la captura completa",
+      "costo": 10,
+      "retraso_trimestres": 1,
+      "efectos": {
+        "trabajo_perdido_mult": 0.73,
+        "costo_mult": 0.78
+      },
+      "efecto_secundario": null
+    },
+    {
+      "id": 5,
+      "nombre": "Automatizar el disparo de envío de plástico",
+      "costo": 10,
+      "retraso_trimestres": 1,
+      "efectos": {
+        "atorados_pct": 0.02,
+        "quejas_mult": 0.75
+      },
+      "efecto_secundario": "cero_efecto_captura"
+    },
+    {
+      "id": 6,
+      "nombre": "Dos revisores más en CrOP",
+      "costo": 35,
+      "retraso_trimestres": 0,
+      "efectos": {
+        "backoffice_mult": 0.65
+      },
+      "efecto_secundario": "costo_fijo_permanente"
+    },
+    {
+      "id": 7,
+      "nombre": "Segmentar el proceso por perfil de cliente",
+      "costo": 20,
+      "retraso_trimestres": 1,
+      "efectos": {},
+      "efecto_secundario": "consume_presupuesto"
+    },
+    {
+      "id": 8,
+      "nombre": "Endurecer el umbral del score interno",
+      "costo": 5,
+      "retraso_trimestres": 0,
+      "efectos": {
+        "ciclo_dias_reduccion_aparente": 5,
+        "conversion_mult": 0.65
+      },
+      "efecto_secundario": "metrica_traicionera"
+    },
+    {
+      "id": 9,
+      "nombre": "Bono por velocidad a ejecutivos",
+      "costo": 15,
+      "retraso_trimestres": 0,
+      "efectos": {
+        "captura_mult": 0.88
+      },
+      "efecto_secundario": "incentivo_perverso",
+      "efecto_perverso": {
+        "trimestre_activacion": 3,
+        "errores_mult": 1.25,
+        "quejas_mult": 1.18
+      }
+    },
+    {
+      "id": 10,
+      "nombre": "Reemplazo integral del C.R.A.S.S.",
+      "costo": 100,
+      "retraso_trimestres": 4,
+      "efectos": {},
+      "efecto_secundario": "sin_efecto_horizonte"
+    }
+  ],
+  "eventos": [
+    {
+      "id": "auditoria_regulatoria",
+      "nombre": "Auditoría regulatoria",
+      "efecto": { "backoffice_dias_extra": 2 },
+      "duracion_trimestres": 1
+    },
+    {
+      "id": "renuncia_gerente",
+      "nombre": "Renuncia del gerente de una sucursal foco",
+      "efecto": { "capacitacion_reversion": 0.40 },
+      "duracion_trimestres": 1
+    },
+    {
+      "id": "campana_competencia",
+      "nombre": "Campaña de la competencia",
+      "efecto": { "abandono_extra_pct": 0.15, "umbral_ciclo_dias": 20 },
+      "duracion_trimestres": 1
+    },
+    {
+      "id": "pico_estacional",
+      "nombre": "Pico estacional",
+      "efecto": { "volumen_mult": 1.30 },
+      "duracion_trimestres": 1
+    },
+    {
+      "id": "nota_prensa",
+      "nombre": "Nota en prensa",
+      "efecto": { "quejas_visibles_mult": 1.50 },
+      "duracion_trimestres": 1
+    },
+    {
+      "id": "rotacion_crop",
+      "nombre": "Rotación en CrOP",
+      "efecto": { "capacidad_crop_reduccion": 2 },
+      "duracion_trimestres": 1
+    },
+    {
+      "id": "cambio_regulatorio",
+      "nombre": "Cambio regulatorio de documentación",
+      "efecto": { "ilegibles_extra_pct": 0.20 },
+      "duracion_trimestres": 1
+    }
+  ],
+  "puntuacion": {
+    "diagnostico": {
+      "ventana_captura_cuello": 120,
+      "reproceso_mecanismo": 100,
+      "fuga_plastico": 70,
+      "trabajo_perdido_buro": 60,
+      "penalizacion_causa_espuria": -40,
+      "penalizacion_concentracion_sin_masa": -30
+    },
+    "rigor": {
+      "pareto_estratificacion": 40,
+      "dispersion_interpretacion": 40,
+      "embudo_etapas": 40,
+      "hipotesis_escrita": 40,
+      "cruzo_comentarios_base": 40
+    },
+    "impacto": {
+      "reduccion_ciclo_mediano": 110,
+      "reduccion_quejas": 80,
+      "conversion_preservada": 70,
+      "presupuesto_no_gastado": 40
+    },
+    "velocidad": {
+      "max_puntos": 100,
+      "minuto_inicio": 25,
+      "minuto_fin": 45,
+      "puntos_minimo": 20
+    },
+    "eficiencia": {
+      "max_puntos": 50
+    },
+    "penalizaciones": {
+      "intervencion_empeora_kpi_min": -50,
+      "intervencion_empeora_kpi_max": -150,
+      "metrica_costa_negocio": -120,
+      "incentivo_perverso": -80,
+      "presupuesto_agotado_sin_efecto": -100
+    }
+  },
+  "desempate": ["diagnostico", "impacto", "velocidad"]
+}
