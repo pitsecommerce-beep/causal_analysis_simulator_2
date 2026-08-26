@@ -60,10 +60,14 @@ async function main(): Promise<void> {
   const PORT = parseInt(process.env.PORT || '3000', 10);
   const HOST = '0.0.0.0';
   httpServer.listen(PORT, HOST, () => {
+    const modeloPensar = process.env.ANTHROPIC_MODEL_PENSAR || 'claude-sonnet-5';
+    const modeloRedactar = process.env.ANTHROPIC_MODEL_REDACTAR || 'claude-haiku-4-5';
     console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
     console.log(`║   SIMULADOR DE ANÁLISIS CAUSAL — ETF Bank                  ║`);
     console.log(`║   Servidor escuchando en puerto ${String(PORT).padEnd(29)}║`);
     console.log(`║   Base de datos: ${(dbConectada ? 'conectada' : 'solo memoria').padEnd(40)}║`);
+    console.log(`║   IA pensar:   ${modeloPensar.padEnd(42)}║`);
+    console.log(`║   IA redactar: ${modeloRedactar.padEnd(42)}║`);
     console.log(`╚══════════════════════════════════════════════════════════════╝`);
   });
 
