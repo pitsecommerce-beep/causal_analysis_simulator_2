@@ -11,7 +11,7 @@ import { TESTIMONIOS_RESPALDO, validarTestimoniosContraDatos } from './voz/guion
 import { sortearComentarios } from './voz/anthropic.js';
 
 async function main(): Promise<void> {
-  console.log('Cargando configuración y datos...');
+  console.log('Cargando configuracion y datos...');
   const config = cargarConfig();
   const datos = cargarTodosDatos();
   console.log(`  ${datos.solicitudes.length} solicitudes, ${datos.comentarios.length} comentarios cargados`);
@@ -42,18 +42,6 @@ async function main(): Promise<void> {
   });
 
   let dbConectada = false;
-  if (process.env.DATABASE_URL) {
-    console.log('Conectando a base de datos...');
-    dbConectada = await conectarDB();
-    if (dbConectada) {
-      await ejecutarMigraciones();
-      console.log('  Base de datos lista');
-    } else {
-      console.warn('  ⚠ No se pudo conectar a Postgres. Estado solo en memoria.');
-    }
-  } else {
-    console.warn('⚠ DATABASE_URL no configurada. Estado solo en memoria.');
-  }
 
   app.get('/api/salud', async (_req, res) => {
     const variablesFaltantes = verificarVariables();
@@ -74,29 +62,44 @@ async function main(): Promise<void> {
     });
   }
 
+  const PORT = parseInt(process.env.PORT || '3000', 10);
+  const HOST = '0.0.0.0';
+
+  await new Promise<void>((res) => httpServer.listen(PORT, HOST, res));
+  console.log(`  Servidor escuchando en puerto ${PORT} (healthcheck listo)`);
+
+  if (process.env.DATABASE_URL) {
+    console.log('Conectando a base de datos...');
+    dbConectada = await conectarDB();
+    if (dbConectada) {
+      await ejecutarMigraciones();
+      console.log('  Base de datos lista ✓');
+    } else {
+      console.warn('  ⚠ No se pudo conectar a Postgres. Estado solo en memoria.');
+    }
+  } else {
+    console.warn('⚠ DATABASE_URL no configurada. Estado solo en memoria.');
+  }
+
+  configurarSockets(io, config, datos, dbConectada);
+
   const faltantes = verificarVariables();
+  const modeloPensar = process.env.ANTHROPIC_MODEL_PENSAR || 'claude-sonnet-5';
+  const modeloRedactar = process.env.ANTHROPIC_MODEL_REDACTAR || 'claude-haiku-4-5';
+  console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
+  console.log(`║   SIMULADOR DE ANALISIS CAUSAL — ETF Bank                  ║`);
+  console.log(`║   Servidor escuchando en puerto ${String(PORT).padEnd(29)}║`);
+  console.log(`║   Base de datos: ${(dbConectada ? 'conectada' : 'solo memoria').padEnd(40)}║`);
+  console.log(`║   IA pensar:   ${modeloPensar.padEnd(42)}║`);
+  console.log(`║   IA redactar: ${modeloRedactar.padEnd(42)}║`);
+  console.log(`╚══════════════════════════════════════════════════════════════╝`);
+
   if (faltantes.length > 0) {
     console.warn(`\n⚠ Variables faltantes (funcionalidad reducida):`);
     for (const v of faltantes) {
       console.warn(`  - ${v}`);
     }
   }
-
-  configurarSockets(io, config, datos, dbConectada);
-
-  const PORT = parseInt(process.env.PORT || '3000', 10);
-  const HOST = '0.0.0.0';
-  httpServer.listen(PORT, HOST, () => {
-    const modeloPensar = process.env.ANTHROPIC_MODEL_PENSAR || 'claude-sonnet-5';
-    const modeloRedactar = process.env.ANTHROPIC_MODEL_REDACTAR || 'claude-haiku-4-5';
-    console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
-    console.log(`║   SIMULADOR DE ANÁLISIS CAUSAL — ETF Bank                  ║`);
-    console.log(`║   Servidor escuchando en puerto ${String(PORT).padEnd(29)}║`);
-    console.log(`║   Base de datos: ${(dbConectada ? 'conectada' : 'solo memoria').padEnd(40)}║`);
-    console.log(`║   IA pensar:   ${modeloPensar.padEnd(42)}║`);
-    console.log(`║   IA redactar: ${modeloRedactar.padEnd(42)}║`);
-    console.log(`╚══════════════════════════════════════════════════════════════╝`);
-  });
 
   process.on('SIGTERM', async () => {
     console.log('\nCerrando servidor...');
