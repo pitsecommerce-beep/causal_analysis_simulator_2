@@ -50,7 +50,7 @@ async function main(): Promise<void> {
   const distCliente = resolve('dist/cliente');
   if (existsSync(distCliente)) {
     app.use(express.static(distCliente));
-    app.get('*', (_req, res) => {
+    app.get('/{*splat}', (_req, res) => {
       res.sendFile(resolve(distCliente, 'index.html'));
     });
   }
@@ -58,7 +58,8 @@ async function main(): Promise<void> {
   configurarSockets(io, config, datos, dbConectada);
 
   const PORT = parseInt(process.env.PORT || '3000', 10);
-  httpServer.listen(PORT, () => {
+  const HOST = '0.0.0.0';
+  httpServer.listen(PORT, HOST, () => {
     console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
     console.log(`║   SIMULADOR DE ANÁLISIS CAUSAL — ETF Bank                  ║`);
     console.log(`║   Servidor escuchando en puerto ${String(PORT).padEnd(29)}║`);

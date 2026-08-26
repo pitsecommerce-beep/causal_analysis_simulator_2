@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm ci --include=dev"]
+
+[phases.build]
+cmds = [
+  "npx tsc",
+  "npx vite build",
+  "mkdir -p dist/src/servidor/db/migraciones",
+  "cp -r src/servidor/db/migraciones/* dist/src/servidor/db/migraciones/"
+]
+
+[start]
+cmd = "node dist/src/servidor/index.js"
