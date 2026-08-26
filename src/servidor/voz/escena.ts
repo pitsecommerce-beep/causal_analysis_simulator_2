@@ -18,6 +18,7 @@ export interface PiezaEscena {
   estado: string;
   sucursal: number;
   genero: string;
+  intentos: number;
   texto: string;
   fuenteTexto: 'ia' | 'respaldo';
   audio: Buffer;
@@ -115,6 +116,7 @@ export async function precalentarEscena(
       estado: '',
       sucursal: 0,
       genero: 'M',
+      intentos: 0,
       texto: textoDirector,
       fuenteTexto: discurso.fuente === 'ia' && discurso.texto ? 'ia' : 'respaldo',
       audio: audioDirector.audio,
@@ -139,6 +141,7 @@ export async function precalentarEscena(
         estado: p.estado,
         sucursal: p.sucursal,
         genero: p.genero,
+        intentos: p.intentos,
         texto: textoCliente,
         fuenteTexto: p.fuente,
         audio: audio.audio,
@@ -205,6 +208,7 @@ function construirEscenaRespaldo(): EscenaCompleta {
       estado: t.estado,
       sucursal: t.sucursal,
       genero: t.genero,
+      intentos: t.intentos,
       texto: t.texto,
       fuenteTexto: 'respaldo' as const,
       audio,
@@ -219,6 +223,7 @@ function construirEscenaRespaldo(): EscenaCompleta {
       estado: '',
       sucursal: 0,
       genero: 'M',
+      intentos: 0,
       texto: DISCURSO_DIRECTOR,
       fuenteTexto: 'respaldo',
       audio: audioDirector,

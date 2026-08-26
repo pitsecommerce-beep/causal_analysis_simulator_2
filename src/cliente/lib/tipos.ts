@@ -172,6 +172,27 @@ export const CAMPOS_SERIE: Record<string, string> = {
   count: 'Total solicitudes',
 };
 
+export type RolEquipo = 'patrocinador' | 'lider' | 'analista' | 'voz_cliente';
+
+export interface MiembroEquipo {
+  nombre: string;
+  rol: RolEquipo;
+}
+
+export const NOMBRES_ROLES: Record<RolEquipo, string> = {
+  patrocinador: 'Patrocinador del proceso',
+  lider: 'Líder de mejora',
+  analista: 'Analista de datos',
+  voz_cliente: 'Voz del cliente',
+};
+
+export const DESC_ROLES: Record<RolEquipo, string> = {
+  patrocinador: 'Autoriza intervenciones (gasto de presupuesto)',
+  lider: 'Envía el diagnóstico final',
+  analista: 'Ejecuta las consultas de datos',
+  voz_cliente: 'Marca evidencia de comentarios de cliente',
+};
+
 export const NOMBRES_FASES: Record<string, string> = {
   espera: 'Esperando inicio',
   sala_juntas: 'Sala de juntas',

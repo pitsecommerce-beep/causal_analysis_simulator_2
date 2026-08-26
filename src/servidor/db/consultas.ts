@@ -1,5 +1,5 @@
 import { obtenerPool } from './conexion.js';
-import type { EstadoMotor, DiagnosticoEquipo, RigorMetodo, ResultadoPuntuacion } from '../motor/tipos.js';
+import type { EstadoMotor, DiagnosticoEquipo, RigorMetodo, ResultadoPuntuacion, RolEquipo, MiembroEquipo } from '../motor/tipos.js';
 
 export interface SesionDB {
   id: number;
@@ -159,4 +159,51 @@ export async function obtenerDiagnosticos(sesionId: number): Promise<Array<{ equ
     [sesionId],
   );
   return rows;
+}
+
+export async function guardarMiembros(
+  equipoId: number,
+  miembros: MiembroEquipo[],
+): Promise<void> {
+  const pool = obtenerPool();
+  await pool.query('DELETE FROM miembros WHERE equipo_id = $1', [equipoId]);
+  for (const m of miembros) {
+    await pool.query(
+      `INSERT INTO miembros (equipo_id, nombre_participante, rol)
+       VALUES ($1, $2, $3)`,
+      [equipoId, m.nombre, m.rol],
+    );
+  }
+}
+
+export async function obtenerMiembros(equipoId: number): Promise<MiembroEquipo[]> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    'SELECT nombre_participante AS nombre, rol FROM miembros WHERE equipo_id = $1',
+    [equipoId],
+  );
+  return rows;
+}
+
+export async function registrarEvidencia(
+  equipoId: number,
+  comentarioId: string,
+  hipotesis: string,
+  registradoPor: string,
+): Promise<void> {
+  const pool = obtenerPool();
+  await pool.query(
+    `INSERT INTO evidencias (equipo_id, comentario_id, hipotesis, registrado_por)
+     VALUES ($1, $2, $3, $4)`,
+    [equipoId, comentarioId, hipotesis, registradoPor],
+  );
+}
+
+export async function contarEvidencias(equipoId: number): Promise<number> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    'SELECT COUNT(*)::int AS total FROM evidencias WHERE equipo_id = $1',
+    [equipoId],
+  );
+  return rows[0]?.total ?? 0;
 }

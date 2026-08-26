@@ -3,7 +3,9 @@ import { socket } from '../lib/socket';
 import type {
   EstadoMotorCliente, EstadoReloj, IntervencionCatalogo,
   SolicitudCliente, ResultadoConsulta, EntradaBitacoraLocal,
+  RolEquipo, MiembroEquipo,
 } from '../lib/tipos';
+import { NOMBRES_ROLES } from '../lib/tipos';
 import { Reloj } from './Reloj';
 import { PanelKPIs } from './PanelKPIs';
 import { PanelConsultas } from './PanelConsultas';
@@ -17,11 +19,15 @@ interface Props {
   solicitudes: SolicitudCliente[];
   codigoSala: string;
   nombreEquipo: string;
+  miRol: RolEquipo | null;
+  miNombre: string | null;
+  miembros: MiembroEquipo[];
+  tamanoEquipo: number;
 }
 
 export function ConsolaApp({
   estadoInicial, relojInicial, catalogoInicial, solicitudes,
-  codigoSala, nombreEquipo,
+  codigoSala, nombreEquipo, miRol, miNombre, miembros, tamanoEquipo,
 }: Props) {
   const [estado, setEstado] = useState<EstadoMotorCliente>(estadoInicial);
   const [reloj, setReloj] = useState<EstadoReloj>(relojInicial);
@@ -29,6 +35,13 @@ export function ConsolaApp({
   const [resultado, setResultado] = useState<ResultadoConsulta | null>(null);
   const [bitacora, setBitacora] = useState<EntradaBitacoraLocal[]>([]);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [roster, setRoster] = useState<MiembroEquipo[]>(miembros);
+
+  const tieneRoles = roster.length > 0;
+  const esAnalista = miRol === 'analista';
+  const esPatrocinador = miRol === 'patrocinador';
+  const esLider = miRol === 'lider';
+  const esVozCliente = miRol === 'voz_cliente' || (tamanoEquipo <= 3 && miRol === 'lider');
 
   useEffect(() => {
     function onTick(data: EstadoReloj) {
@@ -55,12 +68,16 @@ export function ConsolaApp({
       setMensaje(`Trimestre ${data.trimestre}`);
       setTimeout(() => setMensaje(null), 4000);
     }
+    function onRolesAsignados(data: { miembros: MiembroEquipo[] }) {
+      setRoster(data.miembros);
+    }
 
     socket.on('reloj:tick', onTick);
     socket.on('reloj:fase_cambio', onFaseCambio);
     socket.on('reloj:pausado', onPausado);
     socket.on('sesion:estado', onEstado);
     socket.on('sesion:trimestre_avanzado', onTrimestreAvanzado);
+    socket.on('equipo:roles_asignados', onRolesAsignados);
 
     return () => {
       socket.off('reloj:tick', onTick);
@@ -68,6 +85,7 @@ export function ConsolaApp({
       socket.off('reloj:pausado', onPausado);
       socket.off('sesion:estado', onEstado);
       socket.off('sesion:trimestre_avanzado', onTrimestreAvanzado);
+      socket.off('equipo:roles_asignados', onRolesAsignados);
     };
   }, []);
 
@@ -103,6 +121,11 @@ export function ConsolaApp({
           <span>Creditos: {estado.creditosIndagacion}/12</span>
           <span>Presupuesto: ${estado.presupuesto}/100</span>
         </div>
+        {miRol && miNombre && (
+          <span className="consola__mi-rol">
+            {miNombre} — {NOMBRES_ROLES[miRol]}
+          </span>
+        )}
         {mensaje && (
           <span style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: 12, fontSize: 13 }}>
             {mensaje}
@@ -120,6 +143,9 @@ export function ConsolaApp({
           onResultado={setResultado}
           onBitacora={handleBitacora}
           onIntervencion={handleIntervencion}
+          puedeConsultar={!tieneRoles || esAnalista}
+          puedeIntervenir={!tieneRoles || esPatrocinador}
+          esVozCliente={esVozCliente}
         />
       </aside>
 
@@ -129,6 +155,17 @@ export function ConsolaApp({
 
       <aside className="consola__kpis">
         <PanelKPIs estado={estado} />
+        {roster.length > 0 && (
+          <div className="roster">
+            <h4 className="roster__titulo">Equipo</h4>
+            {roster.map((m, i) => (
+              <div key={i} className={`roster__miembro ${m.nombre === miNombre ? 'roster__miembro--yo' : ''}`}>
+                <span className="roster__nombre">{m.nombre}</span>
+                <span className="roster__rol">{NOMBRES_ROLES[m.rol]}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </aside>
 
       <footer className="consola__bitacora">

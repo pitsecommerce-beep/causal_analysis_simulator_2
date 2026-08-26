@@ -10,6 +10,7 @@ interface Props {
     solicitudes: SolicitudCliente[];
     codigoSala: string;
     nombreEquipo: string;
+    tamanoEquipo: number;
   }) => void;
 }
 
@@ -42,6 +43,7 @@ export function UnirseEquipo({ onUnido }: Props) {
         solicitudes: resp.solicitudes ?? [],
         codigoSala: codigo.toUpperCase(),
         nombreEquipo: nombre.trim(),
+        tamanoEquipo: resp.tamanoEquipo ?? 4,
       });
     });
   };

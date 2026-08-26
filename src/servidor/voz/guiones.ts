@@ -20,6 +20,7 @@ export interface TestimonioRespaldo {
   estado: string;
   sucursal: number;
   genero: string;
+  intentos: number;
   nombre: string;
   texto: string;
 }
@@ -86,6 +87,7 @@ export const TESTIMONIOS_RESPALDO: TestimonioRespaldo[] = [
     estado: 'Edo Mex',
     sucursal: 110,
     genero: 'M',
+    intentos: 3,
     nombre: 'Carlos',
     texto: 'No hay una lista clara de requisitos. Cada ejecutivo pide algo distinto y uno paga el tiempo.',
   },
@@ -95,6 +97,7 @@ export const TESTIMONIOS_RESPALDO: TestimonioRespaldo[] = [
     estado: 'Edo Mex',
     sucursal: 214,
     genero: 'M',
+    intentos: 3,
     nombre: 'Pedro',
     texto: 'No hay una lista clara de requisitos. Cada ejecutivo pide algo distinto y uno paga el tiempo.',
   },
@@ -104,6 +107,7 @@ export const TESTIMONIOS_RESPALDO: TestimonioRespaldo[] = [
     estado: 'D.F.',
     sucursal: 631,
     genero: 'F',
+    intentos: 2,
     nombre: 'Carmen',
     texto: 'Mi solicitud fue autorizada y ahi se quedo. No hay tarjeta, no hay explicacion, no hay a quien preguntar.',
   },
@@ -113,6 +117,7 @@ export const TESTIMONIOS_RESPALDO: TestimonioRespaldo[] = [
     estado: 'Edo Mex',
     sucursal: 692,
     genero: 'F',
+    intentos: 3,
     nombre: 'María',
     texto: 'Si el buro era el problema, pudieron consultarlo antes de pedirme tres veces los mismos papeles.',
   },

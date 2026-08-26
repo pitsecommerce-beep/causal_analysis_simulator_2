@@ -1005,3 +1005,191 @@ input, select, textarea, button {
 @keyframes girar {
   to { transform: rotate(360deg); }
 }
+
+/* — Roles (MesaRedonda) — */
+.roles__formulario {
+  text-align: left;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.roles__campo {
+  margin-bottom: 16px;
+}
+.roles__campo label {
+  display: block;
+  font-family: var(--fuente-mono);
+  font-size: 11px;
+  color: var(--gris-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.roles__campo input {
+  width: 100%;
+  padding: 8px 12px;
+  background: #1a202c;
+  border: 1px solid #4a5568;
+  border-radius: var(--radio);
+  color: var(--blanco);
+  font-size: 14px;
+  font-family: var(--fuente-cuerpo);
+}
+.roles__opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.roles__opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 16px;
+  background: #1a202c;
+  border: 2px solid #4a5568;
+  border-radius: var(--radio);
+  color: var(--blanco);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+  position: relative;
+}
+.roles__opcion:hover:not(:disabled) { border-color: var(--azul-600); }
+.roles__opcion--activa {
+  border-color: var(--azul-600);
+  background: #1a2744;
+}
+.roles__opcion--ocupada {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.roles__opcion-nombre {
+  font-weight: 700;
+  font-size: 14px;
+}
+.roles__opcion-desc {
+  font-size: 12px;
+  color: var(--gris-500);
+}
+.roles__opcion-nota {
+  font-size: 11px;
+  color: var(--azul-600);
+  font-style: italic;
+}
+.roles__opcion-badge {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 10px;
+  color: var(--rojo-600);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.roles__error {
+  color: var(--rojo-600);
+  font-size: 12px;
+  margin: 8px 0;
+}
+.roles__resumen {
+  text-align: left;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.roles__confirmado {
+  font-family: var(--fuente-mono);
+  font-size: 14px;
+  color: var(--azul-600);
+  background: #1a2744;
+  padding: 8px 16px;
+  border-radius: var(--radio);
+  margin-bottom: 16px;
+  text-align: center;
+}
+.roles__roster {
+  margin-bottom: 16px;
+}
+.roles__roster h3 {
+  font-family: var(--fuente-titulo);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gris-500);
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.roles__roster-miembro {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #1a202c;
+  border-radius: var(--radio);
+  margin-bottom: 4px;
+}
+.roles__roster-nombre {
+  font-size: 13px;
+  color: var(--blanco);
+}
+.roles__roster-rol {
+  font-family: var(--fuente-mono);
+  font-size: 11px;
+  color: var(--azul-600);
+}
+.roles__faltantes {
+  font-size: 12px;
+  color: var(--gris-500);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* — Roster en consola — */
+.roster {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gris-700);
+}
+.roster__titulo {
+  font-family: var(--fuente-mono);
+  font-size: 10px;
+  color: var(--gris-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px 0;
+}
+.roster__miembro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  font-size: 12px;
+}
+.roster__miembro--yo {
+  background: rgba(66, 153, 225, 0.15);
+}
+.roster__nombre {
+  color: var(--blanco);
+}
+.roster__rol {
+  font-family: var(--fuente-mono);
+  font-size: 10px;
+  color: var(--azul-600);
+}
+
+/* — Rol indicator in header — */
+.consola__mi-rol {
+  font-family: var(--fuente-mono);
+  font-size: 11px;
+  color: var(--azul-600);
+  background: rgba(66, 153, 225, 0.15);
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+/* — Disabled reason — */
+.tarjeta-consulta__razon {
+  font-size: 11px;
+  color: var(--gris-500);
+  font-style: italic;
+  margin-top: 4px;
+}

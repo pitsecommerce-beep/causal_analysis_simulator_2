@@ -3,11 +3,12 @@ interface Props {
   genero: string;
   estado: string;
   sucursal: number;
+  intentos: number;
   indice: number;
   total: number;
 }
 
-export function VozCliente({ nombre, genero, estado, sucursal, indice, total }: Props) {
+export function VozCliente({ nombre, genero, estado, sucursal, intentos, indice, total }: Props) {
   const claseCuerpo = genero === 'F'
     ? 'escena__avatar-cuerpo escena__avatar-cuerpo--F'
     : 'escena__avatar-cuerpo escena__avatar-cuerpo--M';
@@ -32,6 +33,10 @@ export function VozCliente({ nombre, genero, estado, sucursal, indice, total }: 
           <span className="escena__ficha-dato">
             <span className="escena__ficha-etiqueta">Estado</span>
             <span className="escena__ficha-valor">{estado}</span>
+          </span>
+          <span className="escena__ficha-dato">
+            <span className="escena__ficha-etiqueta">Intentos</span>
+            <span className="escena__ficha-valor">{intentos}</span>
           </span>
         </div>
         <div className="escena__ficha-contador">

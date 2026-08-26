@@ -140,6 +140,13 @@ export interface ResultadoPuntuacion {
   desglose: Record<string, number>;
 }
 
+export type RolEquipo = 'patrocinador' | 'lider' | 'analista' | 'voz_cliente';
+
+export interface MiembroEquipo {
+  nombre: string;
+  rol: RolEquipo;
+}
+
 export type Final = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H';
 
 export const FINALES: Record<Final, { nombre: string; rangoMin: number; rangoMax: number }> = {

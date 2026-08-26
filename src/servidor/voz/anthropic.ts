@@ -25,6 +25,7 @@ export interface ParlamentoCliente {
   estado: string;
   sucursal: number;
   genero: string;
+  intentos: number;
   texto: string;
   fuente: 'ia' | 'respaldo';
   tiempoMs: number;
@@ -171,6 +172,7 @@ Genera el parlamento en primera persona de este cliente.`,
           estado: com.estado,
           sucursal: com.sucursal,
           genero,
+          intentos: com.intentos,
           texto: bloque.text,
           fuente: 'ia',
           tiempoMs,
@@ -263,6 +265,7 @@ function parlamentoRespaldo(com: ComentarioCliente, sol: Solicitud | undefined, 
     estado: com.estado,
     sucursal: com.sucursal,
     genero,
+    intentos: com.intentos,
     texto: com.comentario,
     fuente: 'respaldo',
     tiempoMs: 0,
