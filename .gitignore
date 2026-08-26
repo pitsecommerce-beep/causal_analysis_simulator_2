@@ -3,3 +3,4 @@ dist/
 .env
 *.mp3
 *.wav
+tmp_voz_prueba/

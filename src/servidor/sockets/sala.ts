@@ -10,6 +10,7 @@ import {
   type RelojSesion, type NombreFase,
 } from './reloj.js';
 import * as db from '../db/consultas.js';
+import { precalentarEscena, estadoEscena, obtenerEscena, limpiarCache } from '../voz/escena.js';
 
 interface EquipoActivo {
   dbId: number | null;
@@ -114,6 +115,13 @@ export function configurarSockets(
       sesiones.set(codigo, sesion);
       socket.join(`sala:${codigo}`);
       socket.join(`profesor:${codigo}`);
+
+      precalentarEscena(codigo, datos).then(() => {
+        io.to(`profesor:${codigo}`).emit('escena:estado', {
+          estado: estadoEscena(codigo),
+        });
+      }).catch(() => {});
+
       ack?.({ codigoSala: codigo });
     });
 
@@ -321,6 +329,69 @@ export function configurarSockets(
       });
 
       ack?.({ resultado, estadoMotor: estado });
+    });
+
+    socket.on('escena:solicitar', (payload, ack) => {
+      const codigo = payload?.codigoSala;
+      if (!codigo || !sesiones.has(codigo)) {
+        return ack?.({ error: 'Sesión no encontrada' });
+      }
+      const estado = estadoEscena(codigo);
+      if (estado !== 'lista' && estado !== 'error') {
+        return ack?.({ estado, escena: null });
+      }
+      const escena = obtenerEscena(codigo);
+      if (!escena) return ack?.({ estado, escena: null });
+
+      ack?.({
+        estado,
+        escena: {
+          director: {
+            nombre: escena.director.nombre,
+            texto: escena.director.texto,
+            fuenteTexto: escena.director.fuenteTexto,
+            tieneAudio: escena.director.audio.length > 0,
+          },
+          clientes: escena.clientes.map(c => ({
+            nombre: c.nombre,
+            genero: c.genero,
+            texto: c.texto,
+            fuenteTexto: c.fuenteTexto,
+            tieneAudio: c.audio.length > 0,
+          })),
+        },
+      });
+    });
+
+    socket.on('escena:audio', (payload, ack) => {
+      const codigo = payload?.codigoSala;
+      const rol = payload?.rol as string;
+      const indice = payload?.indice as number | undefined;
+
+      if (!codigo || !sesiones.has(codigo)) {
+        return ack?.({ error: 'Sesión no encontrada' });
+      }
+      const escena = obtenerEscena(codigo);
+      if (!escena) return ack?.({ error: 'Escena no lista' });
+
+      let pieza;
+      if (rol === 'director') {
+        pieza = escena.director;
+      } else if (rol === 'cliente' && typeof indice === 'number') {
+        pieza = escena.clientes[indice];
+      }
+
+      if (!pieza || pieza.audio.length === 0) {
+        return ack?.({ error: 'Audio no disponible' });
+      }
+
+      ack?.({ audio: pieza.audio.toString('base64'), formato: 'mp3' });
+    });
+
+    socket.on('escena:estado_generacion', (payload, ack) => {
+      const codigo = payload?.codigoSala;
+      if (!codigo) return ack?.({ error: 'Código requerido' });
+      ack?.({ estado: estadoEscena(codigo) });
     });
 
     socket.on('disconnect', () => {

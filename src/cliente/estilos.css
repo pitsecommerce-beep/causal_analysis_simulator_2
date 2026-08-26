@@ -577,3 +577,195 @@ input, select, textarea, button {
   color: var(--blanco);
   border-color: var(--azul-700);
 }
+
+/* — Escena sala de juntas — */
+.escena {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--gris-900);
+  color: var(--blanco);
+  padding: 24px;
+}
+.escena__sala {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16/9;
+  background: #2d3748;
+  border: 2px solid #4a5568;
+  border-radius: 8px;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+.escena__mesa {
+  position: absolute;
+  bottom: 20%;
+  left: 15%;
+  right: 15%;
+  height: 18%;
+  background: #5a4a3a;
+  border: 2px solid #4a3a2a;
+  border-radius: 4px;
+}
+.escena__pared {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(180deg, #3a4a5c 0%, #2d3748 100%);
+  border-bottom: 3px solid #4a5568;
+}
+.escena__pantalla {
+  position: absolute;
+  top: 5%;
+  left: 30%;
+  right: 30%;
+  height: 22%;
+  background: #1a202c;
+  border: 2px solid #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fuente-mono);
+  font-size: 10px;
+  color: var(--azul-600);
+}
+.escena__personaje {
+  position: absolute;
+  width: 40px;
+  height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.escena__personaje--activo .escena__cabeza {
+  box-shadow: 0 0 8px 2px var(--azul-600);
+}
+.escena__cabeza {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  background: #d4a574;
+  border: 1px solid #b8956a;
+}
+.escena__cuerpo {
+  width: 20px;
+  height: 24px;
+  border-radius: 2px;
+  margin-top: 2px;
+}
+.escena__cuerpo--director {
+  background: #2b4c7e;
+  border: 1px solid #1a365d;
+}
+.escena__cuerpo--clienteF {
+  background: #9b2c2c;
+  border: 1px solid #742a2a;
+}
+.escena__cuerpo--clienteM {
+  background: #2c7a2c;
+  border: 1px solid #1a5c1a;
+}
+.escena__nombre-personaje {
+  font-size: 8px;
+  font-family: var(--fuente-mono);
+  margin-top: 2px;
+  white-space: nowrap;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.escena__dialogo {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 16px;
+  background: #1a202c;
+  border: 2px solid #4a5568;
+  border-radius: 8px;
+  padding: 20px 24px;
+  min-height: 120px;
+  position: relative;
+}
+.escena__dialogo-nombre {
+  font-family: var(--fuente-titulo);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--azul-600);
+  margin-bottom: 8px;
+}
+.escena__dialogo-texto {
+  font-family: var(--fuente-cuerpo);
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+}
+.escena__dialogo-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: var(--azul-600);
+  animation: parpadeo 0.8s step-end infinite;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+}
+@keyframes parpadeo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.escena__controles {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  align-items: center;
+}
+.escena__boton {
+  padding: 8px 20px;
+  background: var(--azul-700);
+  color: var(--blanco);
+  border: none;
+  border-radius: var(--radio);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.escena__boton:hover { background: var(--azul-900); }
+.escena__boton--skip {
+  background: transparent;
+  border: 1px solid var(--gris-500);
+  color: var(--gris-500);
+  font-size: 12px;
+}
+.escena__boton--skip:hover {
+  border-color: var(--blanco);
+  color: var(--blanco);
+}
+.escena__indicador {
+  font-family: var(--fuente-mono);
+  font-size: 11px;
+  color: var(--gris-500);
+  margin-left: auto;
+}
+.escena__cargando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--gris-500);
+  font-size: 14px;
+}
+.escena__spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gris-700);
+  border-top-color: var(--azul-600);
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
