@@ -55,6 +55,14 @@ async function main(): Promise<void> {
     });
   }
 
+  const faltantes = verificarVariables();
+  if (faltantes.length > 0) {
+    console.warn(`\n⚠ Variables faltantes (funcionalidad reducida):`);
+    for (const v of faltantes) {
+      console.warn(`  - ${v}`);
+    }
+  }
+
   configurarSockets(io, config, datos, dbConectada);
 
   const PORT = parseInt(process.env.PORT || '3000', 10);
