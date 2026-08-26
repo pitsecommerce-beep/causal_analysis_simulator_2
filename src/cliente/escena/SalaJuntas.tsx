@@ -11,26 +11,39 @@ interface Props {
 }
 
 const POSICIONES_CLIENTES = [
-  { left: '10%', bottom: '45%' },
-  { left: '25%', bottom: '42%' },
-  { left: '65%', bottom: '42%' },
-  { left: '80%', bottom: '45%' },
+  { left: '12%', bottom: '45%' },
+  { left: '27%', bottom: '42%' },
+  { left: '63%', bottom: '42%' },
+  { left: '78%', bottom: '45%' },
 ];
 
 export function SalaJuntas({ personajes, indiceActivo }: Props) {
   return (
     <div className="escena__sala">
       <div className="escena__pared" />
-      <div className="escena__pantalla">ETF BANK</div>
+      <div className="escena__ventanales">
+        <div className="escena__ventanal" />
+        <div className="escena__ventanal" />
+        <div className="escena__ventanal" />
+      </div>
+      <div className="escena__pantalla">
+        <span className="escena__pantalla-logo">ETF BANK</span>
+        <span className="escena__pantalla-sub">CRASS — Sala de juntas</span>
+      </div>
       <div className="escena__mesa" />
 
       {personajes.map((p, i) => {
         const esDirector = p.rol === 'director';
         const pos = esDirector
-          ? { left: '45%', bottom: '48%' }
+          ? { left: '46%', bottom: '50%' }
           : POSICIONES_CLIENTES[(i - 1) % POSICIONES_CLIENTES.length];
 
-        const claseActivo = i === indiceActivo ? ' escena__personaje--activo' : '';
+        const clases = [
+          'escena__personaje',
+          i === indiceActivo ? 'escena__personaje--activo' : '',
+          esDirector ? 'escena__personaje--director' : '',
+        ].filter(Boolean).join(' ');
+
         const claseCuerpo = esDirector
           ? 'escena__cuerpo escena__cuerpo--director'
           : p.genero === 'F'
@@ -40,7 +53,7 @@ export function SalaJuntas({ personajes, indiceActivo }: Props) {
         return (
           <div
             key={i}
-            className={`escena__personaje${claseActivo}`}
+            className={clases}
             style={{ left: pos.left, bottom: pos.bottom }}
           >
             <div className="escena__cabeza" />

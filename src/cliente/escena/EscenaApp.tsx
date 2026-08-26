@@ -1,32 +1,46 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SalaJuntas } from './SalaJuntas';
+import { VozCliente } from './VozCliente';
+import { MesaRedonda } from './MesaRedonda';
 import { socket } from '../lib/socket';
 
-interface PiezaTexto {
+interface PiezaDirector {
+  nombre: string;
+  texto: string;
+  fuenteTexto: 'ia' | 'respaldo';
+  tieneAudio: boolean;
+}
+
+interface PiezaCliente {
   nombre: string;
   genero: string;
+  estado: string;
+  sucursal: number;
   texto: string;
   fuenteTexto: 'ia' | 'respaldo';
   tieneAudio: boolean;
 }
 
 interface DatosEscena {
-  director: PiezaTexto;
-  clientes: PiezaTexto[];
+  director: PiezaDirector;
+  clientes: PiezaCliente[];
 }
 
 interface Props {
   codigoSala: string;
+  nombreEquipo: string;
   onTerminar: () => void;
 }
 
-const VEL_ESCRITURA = 30;
+type PantallaEscena = 'cargando' | 'director' | 'clientes' | 'mesa';
 
-export function EscenaApp({ codigoSala, onTerminar }: Props) {
+const VEL_ESCRITURA = 28;
+
+export function EscenaApp({ codigoSala, nombreEquipo, onTerminar }: Props) {
   const [escena, setEscena] = useState<DatosEscena | null>(null);
-  const [cargando, setCargando] = useState(true);
-  const [indicePieza, setIndicePieza] = useState(0);
-  const [textoVisible, setTextoVisible] = useState('');
+  const [pantalla, setPantalla] = useState<PantallaEscena>('cargando');
+  const [indiceCliente, setIndiceCliente] = useState(0);
+  const [subtitulo, setSubtitulo] = useState('');
   const [escribiendo, setEscribiendo] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -35,108 +49,130 @@ export function EscenaApp({ codigoSala, onTerminar }: Props) {
     socket.emit('escena:solicitar', { codigoSala }, (resp: any) => {
       if (resp?.escena) {
         setEscena(resp.escena);
-        setCargando(false);
+        setPantalla('director');
       } else if (resp?.estado === 'generando') {
         const poll = setInterval(() => {
           socket.emit('escena:solicitar', { codigoSala }, (r2: any) => {
             if (r2?.escena) {
               setEscena(r2.escena);
-              setCargando(false);
+              setPantalla('director');
               clearInterval(poll);
             }
           });
         }, 2000);
         return () => clearInterval(poll);
       } else {
-        setCargando(false);
+        setPantalla('mesa');
       }
     });
   }, [codigoSala]);
 
-  const piezas = escena
-    ? [escena.director, ...escena.clientes]
-    : [];
-
-  const piezaActual = piezas[indicePieza] ?? null;
+  const limpiarAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+  }, []);
 
   const escribirTexto = useCallback((texto: string) => {
-    setTextoVisible('');
+    setSubtitulo('');
     setEscribiendo(true);
     let pos = 0;
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       pos++;
       if (pos >= texto.length) {
-        setTextoVisible(texto);
+        setSubtitulo(texto);
         setEscribiendo(false);
         if (timerRef.current) clearInterval(timerRef.current);
       } else {
-        setTextoVisible(texto.slice(0, pos));
+        setSubtitulo(texto.slice(0, pos));
       }
     }, VEL_ESCRITURA);
   }, []);
 
-  useEffect(() => {
-    if (!piezaActual) return;
-    escribirTexto(piezaActual.texto);
+  const pedirAudio = useCallback((rol: 'director' | 'cliente', indice?: number) => {
+    limpiarAudio();
+    socket.emit('escena:audio', { codigoSala, rol, indice }, (resp: any) => {
+      if (resp?.audio) {
+        try {
+          const blob = base64ToBlob(resp.audio, 'audio/mp3');
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audioRef.current = audio;
+          audio.play().catch(() => {});
+        } catch { /* subtitles still visible */ }
+      }
+    });
+  }, [codigoSala, limpiarAudio]);
 
-    if (piezaActual.tieneAudio) {
-      socket.emit(
-        'escena:audio',
-        {
-          codigoSala,
-          rol: indicePieza === 0 ? 'director' : 'cliente',
-          indice: indicePieza > 0 ? indicePieza - 1 : undefined,
-        },
-        (resp: any) => {
-          if (resp?.audio) {
-            try {
-              const blob = base64ToBlob(resp.audio, 'audio/mp3');
-              const url = URL.createObjectURL(blob);
-              const audio = new Audio(url);
-              audioRef.current = audio;
-              audio.play().catch(() => {});
-            } catch {
-              // audio failed, subtitles still visible
-            }
-          }
-        },
-      );
+  useEffect(() => {
+    if (!escena) return;
+
+    if (pantalla === 'director') {
+      escribirTexto(escena.director.texto);
+      if (escena.director.tieneAudio) pedirAudio('director');
+    } else if (pantalla === 'clientes') {
+      const c = escena.clientes[indiceCliente];
+      if (c) {
+        escribirTexto(c.texto);
+        if (c.tieneAudio) pedirAudio('cliente', indiceCliente);
+      }
     }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
     };
-  }, [indicePieza, piezaActual, codigoSala, escribirTexto]);
+  }, [pantalla, indiceCliente, escena, escribirTexto, pedirAudio]);
+
+  useEffect(() => {
+    return () => {
+      limpiarAudio();
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [limpiarAudio]);
+
+  function completarTexto() {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (pantalla === 'director' && escena) {
+      setSubtitulo(escena.director.texto);
+    } else if (pantalla === 'clientes' && escena) {
+      setSubtitulo(escena.clientes[indiceCliente]?.texto ?? '');
+    }
+    setEscribiendo(false);
+  }
 
   function avanzar() {
     if (escribiendo) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setTextoVisible(piezaActual?.texto ?? '');
-      setEscribiendo(false);
+      completarTexto();
       return;
     }
-    if (indicePieza < piezas.length - 1) {
-      setIndicePieza(i => i + 1);
-    } else {
-      onTerminar();
+
+    limpiarAudio();
+
+    if (pantalla === 'director') {
+      if (escena && escena.clientes.length > 0) {
+        setIndiceCliente(0);
+        setPantalla('clientes');
+      } else {
+        setPantalla('mesa');
+      }
+    } else if (pantalla === 'clientes' && escena) {
+      if (indiceCliente < escena.clientes.length - 1) {
+        setIndiceCliente(i => i + 1);
+      } else {
+        setPantalla('mesa');
+      }
     }
   }
 
   function saltar() {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
+    limpiarAudio();
     if (timerRef.current) clearInterval(timerRef.current);
-    onTerminar();
+    setPantalla('mesa');
   }
 
-  if (cargando) {
+  if (pantalla === 'cargando') {
     return (
       <div className="escena">
         <div className="escena__cargando">
@@ -147,57 +183,94 @@ export function EscenaApp({ codigoSala, onTerminar }: Props) {
     );
   }
 
-  if (!escena || piezas.length === 0) {
+  if (pantalla === 'mesa') {
     return (
       <div className="escena">
-        <div className="escena__cargando">
-          <span>Escena no disponible</span>
-          <button className="escena__boton" onClick={onTerminar}>
-            Continuar al simulador
+        <MesaRedonda nombreEquipo={nombreEquipo} onIniciar={onTerminar} />
+      </div>
+    );
+  }
+
+  if (pantalla === 'director' && escena) {
+    const personajes = [
+      { nombre: escena.director.nombre, genero: 'M', rol: 'director' as const, activo: true },
+      ...escena.clientes.map((c, i) => ({
+        nombre: c.nombre,
+        genero: c.genero,
+        rol: 'cliente' as const,
+        activo: false,
+      })),
+    ];
+
+    return (
+      <div className="escena">
+        <SalaJuntas personajes={personajes} indiceActivo={0} />
+
+        <div className="escena__subtitulos">
+          <span className="escena__subtitulos-nombre">{escena.director.nombre}</span>
+          <p className="escena__subtitulos-texto">
+            {subtitulo}
+            {escribiendo && <span className="escena__subtitulos-cursor" />}
+          </p>
+        </div>
+
+        <div className="escena__controles">
+          <button className="escena__boton" onClick={avanzar}>
+            {escribiendo ? 'Mostrar todo' : 'Siguiente'}
+          </button>
+          <button className="escena__boton escena__boton--skip" onClick={saltar}>
+            Saltar escena
           </button>
         </div>
       </div>
     );
   }
 
-  const personajes = piezas.map((p, i) => ({
-    nombre: p.nombre,
-    genero: p.genero,
-    rol: (i === 0 ? 'director' : 'cliente') as 'director' | 'cliente',
-    activo: i === indicePieza,
-  }));
+  if (pantalla === 'clientes' && escena) {
+    const cliente = escena.clientes[indiceCliente];
+    const esUltimo = indiceCliente >= escena.clientes.length - 1;
 
-  const esUltima = indicePieza >= piezas.length - 1;
-  const etiquetaBoton = escribiendo
-    ? 'Mostrar todo'
-    : esUltima
-      ? 'Iniciar simulador'
-      : 'Siguiente';
+    return (
+      <div className="escena">
+        <VozCliente
+          nombre={cliente.nombre}
+          genero={cliente.genero}
+          estado={cliente.estado}
+          sucursal={cliente.sucursal}
+          indice={indiceCliente}
+          total={escena.clientes.length}
+        />
+
+        <div className="escena__subtitulos">
+          <span className="escena__subtitulos-nombre">{cliente.nombre}</span>
+          <p className="escena__subtitulos-texto">
+            {subtitulo}
+            {escribiendo && <span className="escena__subtitulos-cursor" />}
+          </p>
+        </div>
+
+        <div className="escena__controles">
+          <button className="escena__boton" onClick={avanzar}>
+            {escribiendo ? 'Mostrar todo' : esUltimo ? 'Continuar' : 'Siguiente cliente'}
+          </button>
+          <button className="escena__boton escena__boton--skip" onClick={saltar}>
+            Saltar escena
+          </button>
+          <span className="escena__indicador">
+            {indiceCliente + 1} / {escena.clientes.length}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="escena">
-      <SalaJuntas personajes={personajes} indiceActivo={indicePieza} />
-
-      <div className="escena__dialogo">
-        <div className="escena__dialogo-nombre">
-          {piezaActual?.nombre}
-        </div>
-        <div className="escena__dialogo-texto">
-          {textoVisible}
-          {escribiendo && <span className="escena__dialogo-cursor" />}
-        </div>
-      </div>
-
-      <div className="escena__controles">
-        <button className="escena__boton" onClick={avanzar}>
-          {etiquetaBoton}
+      <div className="escena__cargando">
+        <span>Escena no disponible</span>
+        <button className="escena__boton" onClick={onTerminar}>
+          Continuar al simulador
         </button>
-        <button className="escena__boton escena__boton--skip" onClick={saltar}>
-          Saltar escena
-        </button>
-        <span className="escena__indicador">
-          {indicePieza + 1} / {piezas.length}
-        </span>
       </div>
     </div>
   );
