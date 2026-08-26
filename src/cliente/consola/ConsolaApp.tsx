@@ -3,12 +3,16 @@ import { socket } from '../lib/socket';
 import type {
   EstadoMotorCliente, EstadoReloj, IntervencionCatalogo,
   SolicitudCliente, ResultadoConsulta, EntradaBitacoraLocal,
+  RolEquipo, MiembroEquipo, ResultadoPuntuacion, PreguntaConsejo,
 } from '../lib/tipos';
+import { NOMBRES_ROLES } from '../lib/tipos';
 import { Reloj } from './Reloj';
 import { PanelKPIs } from './PanelKPIs';
 import { PanelConsultas } from './PanelConsultas';
 import { GraficaResultado } from './GraficaResultado';
 import { Bitacora } from './Bitacora';
+import { FormDiagnostico } from './FormDiagnostico';
+import { TableroFinal } from './TableroFinal';
 
 interface Props {
   estadoInicial: EstadoMotorCliente;
@@ -17,11 +21,15 @@ interface Props {
   solicitudes: SolicitudCliente[];
   codigoSala: string;
   nombreEquipo: string;
+  miRol: RolEquipo | null;
+  miNombre: string | null;
+  miembros: MiembroEquipo[];
+  tamanoEquipo: number;
 }
 
 export function ConsolaApp({
   estadoInicial, relojInicial, catalogoInicial, solicitudes,
-  codigoSala, nombreEquipo,
+  codigoSala, nombreEquipo, miRol, miNombre, miembros, tamanoEquipo,
 }: Props) {
   const [estado, setEstado] = useState<EstadoMotorCliente>(estadoInicial);
   const [reloj, setReloj] = useState<EstadoReloj>(relojInicial);
@@ -29,6 +37,17 @@ export function ConsolaApp({
   const [resultado, setResultado] = useState<ResultadoConsulta | null>(null);
   const [bitacora, setBitacora] = useState<EntradaBitacoraLocal[]>([]);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [roster, setRoster] = useState<MiembroEquipo[]>(miembros);
+  const [puntuacion, setPuntuacion] = useState<ResultadoPuntuacion | null>(null);
+  const [preguntas, setPreguntas] = useState<PreguntaConsejo[]>([]);
+  const [dagRevelado, setDagRevelado] = useState(false);
+
+  const tieneRoles = roster.length > 0;
+  const esAnalista = miRol === 'analista';
+  const esPatrocinador = miRol === 'patrocinador';
+  const esLider = miRol === 'lider';
+  const esVozCliente = miRol === 'voz_cliente' || (tamanoEquipo <= 3 && miRol === 'lider');
+  const esConsejoOFin = reloj.fase === 'consejo' || reloj.fase === 'finalizado';
 
   useEffect(() => {
     function onTick(data: EstadoReloj) {
@@ -55,12 +74,24 @@ export function ConsolaApp({
       setMensaje(`Trimestre ${data.trimestre}`);
       setTimeout(() => setMensaje(null), 4000);
     }
+    function onRolesAsignados(data: { miembros: MiembroEquipo[] }) {
+      setRoster(data.miembros);
+    }
+    function onConsejoPreguntas(data: { preguntas: PreguntaConsejo[] }) {
+      setPreguntas(data.preguntas);
+    }
+    function onDagRevelado() {
+      setDagRevelado(true);
+    }
 
     socket.on('reloj:tick', onTick);
     socket.on('reloj:fase_cambio', onFaseCambio);
     socket.on('reloj:pausado', onPausado);
     socket.on('sesion:estado', onEstado);
     socket.on('sesion:trimestre_avanzado', onTrimestreAvanzado);
+    socket.on('equipo:roles_asignados', onRolesAsignados);
+    socket.on('consejo:preguntas', onConsejoPreguntas);
+    socket.on('sesion:dag_revelado', onDagRevelado);
 
     return () => {
       socket.off('reloj:tick', onTick);
@@ -68,6 +99,9 @@ export function ConsolaApp({
       socket.off('reloj:pausado', onPausado);
       socket.off('sesion:estado', onEstado);
       socket.off('sesion:trimestre_avanzado', onTrimestreAvanzado);
+      socket.off('equipo:roles_asignados', onRolesAsignados);
+      socket.off('consejo:preguntas', onConsejoPreguntas);
+      socket.off('sesion:dag_revelado', onDagRevelado);
     };
   }, []);
 
@@ -93,6 +127,25 @@ export function ConsolaApp({
     if (entrada.resultado) setResultado(entrada.resultado);
   }, []);
 
+  if (puntuacion) {
+    return (
+      <div className="consola consola--tablero">
+        <header className="consola__header">
+          <h1>{nombreEquipo}</h1>
+          <Reloj reloj={reloj} />
+        </header>
+        <main className="consola__tablero-main">
+          <TableroFinal
+            resultado={puntuacion}
+            preguntas={preguntas}
+            historialKPIs={estado.historialKPIs}
+            nombreEquipo={nombreEquipo}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="consola">
       <header className="consola__header">
@@ -103,6 +156,11 @@ export function ConsolaApp({
           <span>Creditos: {estado.creditosIndagacion}/12</span>
           <span>Presupuesto: ${estado.presupuesto}/100</span>
         </div>
+        {miRol && miNombre && (
+          <span className="consola__mi-rol">
+            {miNombre} — {NOMBRES_ROLES[miRol]}
+          </span>
+        )}
         {mensaje && (
           <span style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: 12, fontSize: 13 }}>
             {mensaje}
@@ -120,7 +178,20 @@ export function ConsolaApp({
           onResultado={setResultado}
           onBitacora={handleBitacora}
           onIntervencion={handleIntervencion}
+          puedeConsultar={!tieneRoles || esAnalista}
+          puedeIntervenir={!tieneRoles || esPatrocinador}
+          esVozCliente={esVozCliente}
         />
+        {esConsejoOFin && (
+          <FormDiagnostico
+            puedeEnviar={!tieneRoles || esLider}
+            onResultado={(r) => {
+              setPuntuacion(r);
+              setEstado(prev => ({ ...prev, trimestre: 3 }));
+            }}
+            onPreguntas={setPreguntas}
+          />
+        )}
       </aside>
 
       <main className="consola__resultados">
@@ -129,6 +200,17 @@ export function ConsolaApp({
 
       <aside className="consola__kpis">
         <PanelKPIs estado={estado} />
+        {roster.length > 0 && (
+          <div className="roster">
+            <h4 className="roster__titulo">Equipo</h4>
+            {roster.map((m, i) => (
+              <div key={i} className={`roster__miembro ${m.nombre === miNombre ? 'roster__miembro--yo' : ''}`}>
+                <span className="roster__nombre">{m.nombre}</span>
+                <span className="roster__rol">{NOMBRES_ROLES[m.rol]}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </aside>
 
       <footer className="consola__bitacora">

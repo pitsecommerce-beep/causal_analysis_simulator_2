@@ -172,6 +172,76 @@ export const CAMPOS_SERIE: Record<string, string> = {
   count: 'Total solicitudes',
 };
 
+export type RolEquipo = 'patrocinador' | 'lider' | 'analista' | 'voz_cliente';
+
+export interface MiembroEquipo {
+  nombre: string;
+  rol: RolEquipo;
+}
+
+export const NOMBRES_ROLES: Record<RolEquipo, string> = {
+  patrocinador: 'Patrocinador del proceso',
+  lider: 'Líder de mejora',
+  analista: 'Analista de datos',
+  voz_cliente: 'Voz del cliente',
+};
+
+export const DESC_ROLES: Record<RolEquipo, string> = {
+  patrocinador: 'Autoriza intervenciones (gasto de presupuesto)',
+  lider: 'Envía el diagnóstico final',
+  analista: 'Ejecuta las consultas de datos',
+  voz_cliente: 'Marca evidencia de comentarios de cliente',
+};
+
+export interface ResultadoPuntuacion {
+  diagnostico: number;
+  rigor: number;
+  impacto: number;
+  velocidad: number;
+  eficiencia: number;
+  penalizaciones: number;
+  total: number;
+  final: string;
+  desglose: Record<string, number>;
+}
+
+export interface PreguntaConsejo {
+  pregunta: string;
+  angulo: string;
+}
+
+export interface EquipoTablero {
+  nombre: string;
+  trimestre: number;
+  presupuesto: number;
+  creditos: number;
+  intervenciones: string[];
+  kpis: KPIsCliente;
+  historialKPIs: KPIsCliente[];
+  resultado: ResultadoPuntuacion | null;
+  miembros: MiembroEquipo[];
+}
+
+export interface DiagnosticoForm {
+  ventanaCapturaEsCuello: boolean;
+  reprocesoEsMecanismo: boolean;
+  fugaPlastico: boolean;
+  trabajoPerdidoBuro: boolean;
+  causasEspurias: string[];
+  concentracionSinMasa: boolean;
+}
+
+export const NOMBRES_FINALES: Record<string, string> = {
+  A: 'Reconversion',
+  B: 'Buen proyecto incompleto',
+  C: 'Ataque al mediador',
+  D: 'La metrica traicionera',
+  E: 'El incentivo perverso',
+  F: 'Dispersion',
+  G: 'Paralisis por analisis',
+  H: 'Falso positivo',
+};
+
 export const NOMBRES_FASES: Record<string, string> = {
   espera: 'Esperando inicio',
   sala_juntas: 'Sala de juntas',

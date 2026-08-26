@@ -33,6 +33,7 @@ async function main(): Promise<void> {
       estado: com.estado,
       sucursal: com.sucursal,
       genero,
+      intentos: com.intentos,
       nombre,
       texto: com.comentario,
     });

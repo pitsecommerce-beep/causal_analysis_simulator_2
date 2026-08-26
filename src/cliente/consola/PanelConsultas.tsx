@@ -15,15 +15,18 @@ interface Props {
   onResultado: (resultado: ResultadoConsulta) => void;
   onBitacora: (entrada: EntradaBitacoraLocal) => void;
   onIntervencion: (id: number, sucursales?: number[]) => void;
+  puedeConsultar: boolean;
+  puedeIntervenir: boolean;
+  esVozCliente: boolean;
 }
 
 let contadorBitacora = 0;
 
 function TarjetaConsulta({
-  nombre, costo, children, onEjecutar, disabled,
+  nombre, costo, children, onEjecutar, disabled, razonDeshabilitado,
 }: {
   nombre: string; costo: number; children: React.ReactNode;
-  onEjecutar: () => void; disabled: boolean;
+  onEjecutar: () => void; disabled: boolean; razonDeshabilitado?: string;
 }) {
   const [abierta, setAbierta] = useState(false);
   return (
@@ -38,13 +41,20 @@ function TarjetaConsulta({
           <button className="tarjeta-consulta__ejecutar" onClick={onEjecutar} disabled={disabled}>
             Ejecutar consulta
           </button>
+          {razonDeshabilitado && (
+            <p className="tarjeta-consulta__razon">{razonDeshabilitado}</p>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, catalogo, onResultado, onBitacora, onIntervencion }: Props) {
+export function PanelConsultas({
+  solicitudes, creditosRestantes, presupuesto, catalogo,
+  onResultado, onBitacora, onIntervencion,
+  puedeConsultar, puedeIntervenir, esVozCliente,
+}: Props) {
   const [hipotesis, setHipotesis] = useState('');
   const [segAgrupar, setSegAgrupar] = useState('sucursal');
   const [segMedida, setSegMedida] = useState('erroresCaptura');
@@ -54,8 +64,18 @@ export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, ca
   const [error, setError] = useState('');
   const [modalSucs, setModalSucs] = useState<number | null>(null);
   const [inputSucs, setInputSucs] = useState('');
+  const [evidComentario, setEvidComentario] = useState('');
+  const [evidHipotesis, setEvidHipotesis] = useState('');
+  const [evidMensaje, setEvidMensaje] = useState('');
+
+  const razonConsulta = !puedeConsultar ? 'Solo el Analista de datos puede ejecutar consultas.' : undefined;
+  const razonIntervencion = !puedeIntervenir ? 'Solo el Patrocinador del proceso puede autorizar intervenciones.' : undefined;
 
   function validarYEjecutar(tipo: string, parametros: Record<string, string>, costo: number) {
+    if (!puedeConsultar) {
+      setError('Solo el Analista de datos puede ejecutar consultas.');
+      return;
+    }
     if (!hipotesis.trim()) {
       setError('Escribe la hipotesis antes de ejecutar.');
       return;
@@ -86,7 +106,27 @@ export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, ca
     setHipotesis('');
   }
 
-  const cfgInterv = catalogo.find(i => i.id === modalSucs);
+  function marcarEvidencia() {
+    if (!evidComentario.trim() || !evidHipotesis.trim()) {
+      setEvidMensaje('Se requiere el ID del comentario y la hipótesis.');
+      return;
+    }
+    socket.emit('equipo:marcar_evidencia', {
+      comentarioId: evidComentario.trim(),
+      hipotesis: evidHipotesis.trim(),
+    }, (resp: any) => {
+      if (resp?.error) {
+        setEvidMensaje(resp.error);
+        return;
+      }
+      setEvidMensaje(`Evidencia registrada (${resp.totalEvidencias} total)`);
+      setEvidComentario('');
+      setEvidHipotesis('');
+      setTimeout(() => setEvidMensaje(''), 3000);
+    });
+  }
+
+  const consultaDisabled = !puedeConsultar || creditosRestantes < 1;
 
   return (
     <div>
@@ -101,11 +141,14 @@ export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, ca
           value={hipotesis}
           onChange={e => setHipotesis(e.target.value)}
           placeholder="Que quieres probar con esta consulta?"
+          disabled={!puedeConsultar}
         />
+        {razonConsulta && <p className="tarjeta-consulta__razon">{razonConsulta}</p>}
       </div>
       {error && <p style={{ color: 'var(--rojo-600)', fontSize: 12, marginBottom: 8 }}>{error}</p>}
 
-      <TarjetaConsulta nombre="Segmentar" costo={1} disabled={creditosRestantes < 1}
+      <TarjetaConsulta nombre="Segmentar" costo={1} disabled={consultaDisabled}
+        razonDeshabilitado={razonConsulta}
         onEjecutar={() => validarYEjecutar('segmentar', { agrupadoPor: segAgrupar, medida: segMedida }, 1)}>
         <div className="tarjeta-consulta__campo">
           <label>Agrupar por</label>
@@ -121,7 +164,8 @@ export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, ca
         </div>
       </TarjetaConsulta>
 
-      <TarjetaConsulta nombre="Correlacionar" costo={1} disabled={creditosRestantes < 1}
+      <TarjetaConsulta nombre="Correlacionar" costo={1} disabled={consultaDisabled}
+        razonDeshabilitado={razonConsulta}
         onEjecutar={() => validarYEjecutar('correlacionar', { variableX: corrX, variableY: corrY }, 1)}>
         <div className="tarjeta-consulta__campo">
           <label>Variable X</label>
@@ -137,7 +181,8 @@ export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, ca
         </div>
       </TarjetaConsulta>
 
-      <TarjetaConsulta nombre="Serie de tiempo" costo={1} disabled={creditosRestantes < 1}
+      <TarjetaConsulta nombre="Serie de tiempo" costo={1} disabled={consultaDisabled}
+        razonDeshabilitado={razonConsulta}
         onEjecutar={() => validarYEjecutar('serie_tiempo', { variable: serieVar }, 1)}>
         <div className="tarjeta-consulta__campo">
           <label>Variable</label>
@@ -147,7 +192,8 @@ export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, ca
         </div>
       </TarjetaConsulta>
 
-      <TarjetaConsulta nombre="Embudo" costo={1} disabled={creditosRestantes < 1}
+      <TarjetaConsulta nombre="Embudo" costo={1} disabled={consultaDisabled}
+        razonDeshabilitado={razonConsulta}
         onEjecutar={() => validarYEjecutar('embudo', {}, 1)}>
         <p style={{ fontSize: 12, color: 'var(--gris-700)' }}>
           Muestra el conteo de solicitudes en cada etapa del proceso.
@@ -155,13 +201,16 @@ export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, ca
       </TarjetaConsulta>
 
       <h3 className="intervenciones__titulo">Intervenciones</h3>
+      {razonIntervencion && (
+        <p className="tarjeta-consulta__razon" style={{ marginBottom: 8 }}>{razonIntervencion}</p>
+      )}
       {catalogo.map(item => (
-        <div key={item.id} className={`intervencion ${!item.disponible ? 'intervencion--disabled' : ''}`}>
+        <div key={item.id} className={`intervencion ${!item.disponible || !puedeIntervenir ? 'intervencion--disabled' : ''}`}>
           <span className="intervencion__nombre">{item.nombre}</span>
           <span className="intervencion__costo">${item.costo}</span>
           <button
             className="intervencion__boton"
-            disabled={!item.disponible}
+            disabled={!item.disponible || !puedeIntervenir}
             onClick={() => {
               if (item.id === 2) {
                 setModalSucs(item.id);
@@ -179,6 +228,34 @@ export function PanelConsultas({ solicitudes, creditosRestantes, presupuesto, ca
         <p style={{ fontSize: 12, color: 'var(--gris-500)', marginTop: 8 }}>
           {presupuesto === 0 ? 'Presupuesto agotado.' : 'No hay intervenciones disponibles.'}
         </p>
+      )}
+
+      {esVozCliente && (
+        <>
+          <h3 className="intervenciones__titulo">Evidencia de cliente</h3>
+          <div className="tarjeta-consulta__campo">
+            <label>ID del comentario (ej. C-032)</label>
+            <input
+              value={evidComentario}
+              onChange={e => setEvidComentario(e.target.value)}
+              placeholder="C-032"
+            />
+          </div>
+          <div className="tarjeta-consulta__campo">
+            <label>Hipótesis que respalda</label>
+            <textarea
+              value={evidHipotesis}
+              onChange={e => setEvidHipotesis(e.target.value)}
+              placeholder="Este comentario evidencia que..."
+            />
+          </div>
+          <button className="tarjeta-consulta__ejecutar" onClick={marcarEvidencia}>
+            Marcar como evidencia
+          </button>
+          {evidMensaje && (
+            <p style={{ fontSize: 12, color: 'var(--azul-600)', marginTop: 4 }}>{evidMensaje}</p>
+          )}
+        </>
       )}
 
       {modalSucs !== null && (

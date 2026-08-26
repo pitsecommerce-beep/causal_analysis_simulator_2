@@ -1,0 +1,134 @@
+import { useState } from 'react';
+import { socket } from '../lib/socket';
+import type { DiagnosticoForm, ResultadoPuntuacion, PreguntaConsejo } from '../lib/tipos';
+
+interface Props {
+  puedeEnviar: boolean;
+  onResultado: (resultado: ResultadoPuntuacion) => void;
+  onPreguntas: (preguntas: PreguntaConsejo[]) => void;
+}
+
+const CAUSAS_OPCIONES = [
+  { key: 'edad', label: 'Edad del cliente' },
+  { key: 'anios_cliente', label: 'Antigüedad del cliente' },
+  { key: 'score_buro', label: 'Score del buró de crédito' },
+  { key: 'score_etf', label: 'Score interno ETF' },
+  { key: 'genero', label: 'Género del cliente' },
+  { key: 'estado_civil', label: 'Estado civil' },
+  { key: 'linea_credito', label: 'Línea de crédito otorgada' },
+];
+
+export function FormDiagnostico({ puedeEnviar, onResultado, onPreguntas }: Props) {
+  const [form, setForm] = useState<DiagnosticoForm>({
+    ventanaCapturaEsCuello: false,
+    reprocesoEsMecanismo: false,
+    fugaPlastico: false,
+    trabajoPerdidoBuro: false,
+    causasEspurias: [],
+    concentracionSinMasa: false,
+  });
+  const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  function toggleCausa(key: string) {
+    setForm(prev => {
+      const causas = prev.causasEspurias.includes(key)
+        ? prev.causasEspurias.filter(c => c !== key)
+        : [...prev.causasEspurias, key];
+      return { ...prev, causasEspurias: causas };
+    });
+  }
+
+  function enviar() {
+    const diagnChecked = form.ventanaCapturaEsCuello || form.reprocesoEsMecanismo ||
+      form.fugaPlastico || form.trabajoPerdidoBuro || form.causasEspurias.length > 0;
+    if (!diagnChecked) {
+      setError('Selecciona al menos un hallazgo en tu diagnostico.');
+      return;
+    }
+    setError('');
+    setEnviando(true);
+
+    socket.emit('equipo:diagnostico', { diagnostico: form }, (resp: any) => {
+      setEnviando(false);
+      if (resp?.error) {
+        setError(resp.error);
+        return;
+      }
+      setEnviado(true);
+      if (resp?.resultado) onResultado(resp.resultado);
+    });
+  }
+
+  if (enviado) return null;
+
+  return (
+    <div className="diagnostico">
+      <h3 className="diagnostico__titulo">Diagnostico final</h3>
+      {!puedeEnviar && (
+        <p className="tarjeta-consulta__razon">Solo el Lider de mejora puede enviar el diagnostico.</p>
+      )}
+
+      <div className="diagnostico__seccion">
+        <h4>Hallazgos causales</h4>
+        <label className="diagnostico__check">
+          <input type="checkbox" checked={form.ventanaCapturaEsCuello}
+            onChange={e => setForm(p => ({ ...p, ventanaCapturaEsCuello: e.target.checked }))}
+            disabled={!puedeEnviar} />
+          La ventana de captura es el cuello de botella del proceso
+        </label>
+        <label className="diagnostico__check">
+          <input type="checkbox" checked={form.reprocesoEsMecanismo}
+            onChange={e => setForm(p => ({ ...p, reprocesoEsMecanismo: e.target.checked }))}
+            disabled={!puedeEnviar} />
+          El reproceso por errores de captura es el mecanismo principal
+        </label>
+        <label className="diagnostico__check">
+          <input type="checkbox" checked={form.fugaPlastico}
+            onChange={e => setForm(p => ({ ...p, fugaPlastico: e.target.checked }))}
+            disabled={!puedeEnviar} />
+          Hay fuga de plasticos aprobados que nunca se envian
+        </label>
+        <label className="diagnostico__check">
+          <input type="checkbox" checked={form.trabajoPerdidoBuro}
+            onChange={e => setForm(p => ({ ...p, trabajoPerdidoBuro: e.target.checked }))}
+            disabled={!puedeEnviar} />
+          Se pierde trabajo en casos que el buro rechazara
+        </label>
+      </div>
+
+      <div className="diagnostico__seccion">
+        <h4>Concentracion</h4>
+        <label className="diagnostico__check">
+          <input type="checkbox" checked={form.concentracionSinMasa}
+            onChange={e => setForm(p => ({ ...p, concentracionSinMasa: e.target.checked }))}
+            disabled={!puedeEnviar} />
+          Los errores estan concentrados en pocas sucursales (sin masa real)
+        </label>
+      </div>
+
+      <div className="diagnostico__seccion">
+        <h4>Otras causas identificadas</h4>
+        <p style={{ fontSize: 12, color: 'var(--gris-600)', marginBottom: 8 }}>
+          Marca las que consideres causas del problema (cuidado: algunas son trampas).
+        </p>
+        {CAUSAS_OPCIONES.map(c => (
+          <label key={c.key} className="diagnostico__check">
+            <input type="checkbox" checked={form.causasEspurias.includes(c.key)}
+              onChange={() => toggleCausa(c.key)}
+              disabled={!puedeEnviar} />
+            {c.label}
+          </label>
+        ))}
+      </div>
+
+      {error && <p style={{ color: 'var(--rojo-600)', fontSize: 12, marginTop: 8 }}>{error}</p>}
+
+      <button className="diagnostico__enviar" onClick={enviar}
+        disabled={!puedeEnviar || enviando}>
+        {enviando ? 'Enviando...' : 'Enviar diagnostico al consejo'}
+      </button>
+    </div>
+  );
+}

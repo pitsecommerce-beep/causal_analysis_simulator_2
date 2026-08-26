@@ -3,6 +3,7 @@ import { SalaJuntas } from './SalaJuntas';
 import { VozCliente } from './VozCliente';
 import { MesaRedonda } from './MesaRedonda';
 import { socket } from '../lib/socket';
+import type { RolEquipo, MiembroEquipo } from '../lib/tipos';
 
 interface PiezaDirector {
   nombre: string;
@@ -16,6 +17,7 @@ interface PiezaCliente {
   genero: string;
   estado: string;
   sucursal: number;
+  intentos: number;
   texto: string;
   fuenteTexto: 'ia' | 'respaldo';
   tieneAudio: boolean;
@@ -29,14 +31,15 @@ interface DatosEscena {
 interface Props {
   codigoSala: string;
   nombreEquipo: string;
-  onTerminar: () => void;
+  tamanoEquipo: number;
+  onTerminar: (miembros: MiembroEquipo[], miRol: RolEquipo, miNombre: string) => void;
 }
 
 type PantallaEscena = 'cargando' | 'director' | 'clientes' | 'mesa';
 
 const VEL_ESCRITURA = 28;
 
-export function EscenaApp({ codigoSala, nombreEquipo, onTerminar }: Props) {
+export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }: Props) {
   const [escena, setEscena] = useState<DatosEscena | null>(null);
   const [pantalla, setPantalla] = useState<PantallaEscena>('cargando');
   const [indiceCliente, setIndiceCliente] = useState(0);
@@ -186,7 +189,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, onTerminar }: Props) {
   if (pantalla === 'mesa') {
     return (
       <div className="escena">
-        <MesaRedonda nombreEquipo={nombreEquipo} onIniciar={onTerminar} />
+        <MesaRedonda nombreEquipo={nombreEquipo} tamanoEquipo={tamanoEquipo} onIniciar={onTerminar} />
       </div>
     );
   }
@@ -237,6 +240,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, onTerminar }: Props) {
           genero={cliente.genero}
           estado={cliente.estado}
           sucursal={cliente.sucursal}
+          intentos={cliente.intentos}
           indice={indiceCliente}
           total={escena.clientes.length}
         />

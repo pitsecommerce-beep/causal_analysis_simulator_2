@@ -1,5 +1,5 @@
 import type { Server as SocketServer, Socket } from 'socket.io';
-import type { ConfigSimulador, EstadoMotor } from '../motor/tipos.js';
+import type { ConfigSimulador, EstadoMotor, RolEquipo, MiembroEquipo } from '../motor/tipos.js';
 import type { DatosCargados, Solicitud } from '../datos/tipos.js';
 import { crearEstadoInicial, avanzarTrimestre } from '../motor/dag.js';
 import { aplicarIntervencion, listarIntervencionesDisponibles } from '../motor/intervenciones.js';
@@ -11,11 +11,19 @@ import {
 } from './reloj.js';
 import * as db from '../db/consultas.js';
 import { precalentarEscena, estadoEscena, obtenerEscena, limpiarCache } from '../voz/escena.js';
+import { generarPreguntasConsejo, type PreguntaConsejo } from '../voz/anthropic.js';
+
+const ROLES_VALIDOS: RolEquipo[] = ['patrocinador', 'lider', 'analista', 'voz_cliente'];
 
 interface EquipoActivo {
   dbId: number | null;
   nombre: string;
   estadoMotor: EstadoMotor;
+  miembros: MiembroEquipo[];
+  evidencias: Array<{ comentarioId: string; hipotesis: string; registradoPor: string }>;
+  consultasRealizadas: Set<string>;
+  resultado: import('../motor/tipos.js').ResultadoPuntuacion | null;
+  preguntasConsejo: PreguntaConsejo[] | null;
 }
 
 interface SesionActiva {
@@ -190,6 +198,49 @@ export function configurarSockets(
       });
     });
 
+    socket.on('profesor:tablero', (payload, ack) => {
+      if (!validarClaveProfesor(payload?.clave)) {
+        return ack?.({ error: 'Clave de profesor incorrecta' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
+
+      const equipos = Array.from(sesion.equipos.values()).map(e => ({
+        nombre: e.nombre,
+        trimestre: e.estadoMotor.trimestre,
+        presupuesto: e.estadoMotor.presupuesto,
+        creditos: e.estadoMotor.creditosIndagacion,
+        intervenciones: e.estadoMotor.intervenciones.map(i => i.nombre),
+        kpis: e.estadoMotor.kpis,
+        historialKPIs: e.estadoMotor.historialKPIs,
+        resultado: e.resultado,
+        miembros: e.miembros,
+      }));
+
+      ack?.({
+        reloj: obtenerEstadoReloj(sesion.reloj, config),
+        equipos,
+        escena: estadoEscena(sesion.codigoSala),
+      });
+    });
+
+    socket.on('profesor:revelar_dag', (payload, ack) => {
+      if (!validarClaveProfesor(payload?.clave)) {
+        return ack?.({ error: 'Clave de profesor incorrecta' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
+
+      if (sesion.reloj.faseActual !== 'consejo' && sesion.reloj.faseActual !== 'finalizado') {
+        return ack?.({ error: 'El DAG solo se revela en la fase de consejo' });
+      }
+
+      io.to(`sala:${sesion.codigoSala}`).emit('sesion:dag_revelado', {
+        verdadOculta: datos.verdadOculta,
+      });
+      ack?.({ ok: true });
+    });
+
     socket.on('equipo:unirse', async (payload, ack) => {
       const codigo = payload?.codigoSala?.toUpperCase();
       const nombre = payload?.nombre?.trim();
@@ -201,7 +252,7 @@ export function configurarSockets(
       let equipo = sesion.equipos.get(nombre);
       if (!equipo) {
         const estadoMotor = crearEstadoInicial(config);
-        equipo = { dbId: null, nombre, estadoMotor };
+        equipo = { dbId: null, nombre, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null };
         if (dbDisponible && sesion.dbId) {
           try {
             const row = await db.crearEquipo(sesion.dbId, nombre, estadoMotor);
@@ -221,7 +272,70 @@ export function configurarSockets(
         reloj: obtenerEstadoReloj(sesion.reloj, config),
         intervencionesCatalogo: listarIntervencionesDisponibles(equipo.estadoMotor, config),
         solicitudes: prepararDatosCliente(datos.solicitudes),
+        tamanoEquipo: config.equipo.tamano,
       });
+    });
+
+    socket.on('equipo:asignar_roles', async (payload, ack) => {
+      const info = (socket as any).__equipo;
+      if (!info) return ack?.({ error: 'No estás en un equipo' });
+
+      const sesion = sesiones.get(info.codigoSala);
+      const equipo = sesion?.equipos.get(info.nombre);
+      if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
+
+      const miembros = payload?.miembros as MiembroEquipo[] | undefined;
+      if (!miembros || !Array.isArray(miembros) || miembros.length === 0) {
+        return ack?.({ error: 'Se requieren miembros con roles' });
+      }
+
+      for (const m of miembros) {
+        if (!m.nombre?.trim()) return ack?.({ error: 'Cada participante necesita un nombre' });
+        if (!ROLES_VALIDOS.includes(m.rol)) return ack?.({ error: `Rol no válido: ${m.rol}` });
+      }
+
+      const tamano = config.equipo.tamano;
+      const rolesReq = rolesRequeridos(tamano);
+      const rolesAsignados = miembros.map(m => m.rol);
+      for (const req of rolesReq) {
+        if (!rolesAsignados.includes(req)) {
+          return ack?.({ error: `Falta el rol obligatorio: ${req}` });
+        }
+      }
+
+      const unicosExceptoAnalista = rolesAsignados.filter(r => r !== 'analista');
+      const setUnicosExceptoAnalista = new Set(unicosExceptoAnalista);
+      if (setUnicosExceptoAnalista.size !== unicosExceptoAnalista.length) {
+        return ack?.({ error: 'Solo el rol de Analista puede repetirse' });
+      }
+
+      equipo.miembros = miembros.map(m => ({ nombre: m.nombre.trim(), rol: m.rol }));
+
+      if (dbDisponible && equipo.dbId) {
+        try {
+          await db.guardarMiembros(equipo.dbId, equipo.miembros);
+        } catch (_) { /* sin persistencia */ }
+      }
+
+      io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:roles_asignados', {
+        miembros: equipo.miembros,
+      });
+
+      ack?.({ ok: true, miembros: equipo.miembros });
+    });
+
+    socket.on('equipo:elegir_rol', (payload, ack) => {
+      const info = (socket as any).__equipo;
+      if (!info) return ack?.({ error: 'No estás en un equipo' });
+
+      const rol = payload?.rol as RolEquipo;
+      const participante = payload?.participante?.trim() as string;
+      if (!rol || !participante) return ack?.({ error: 'Rol y nombre de participante requeridos' });
+      if (!ROLES_VALIDOS.includes(rol)) return ack?.({ error: `Rol no válido: ${rol}` });
+
+      (socket as any).__equipo.participante = participante;
+      (socket as any).__equipo.rol = rol;
+      ack?.({ ok: true });
     });
 
     socket.on('equipo:intervenir', async (payload, ack) => {
@@ -231,6 +345,10 @@ export function configurarSockets(
       const sesion = sesiones.get(info.codigoSala);
       const equipo = sesion?.equipos.get(info.nombre);
       if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
+
+      if (equipo.miembros.length > 0 && info.rol !== 'patrocinador') {
+        return ack?.({ error: 'Solo el Patrocinador del proceso puede autorizar intervenciones' });
+      }
 
       const id = parseInt(payload?.intervencionId, 10);
       if (isNaN(id)) return ack?.({ error: 'ID de intervención no válido' });
@@ -262,6 +380,10 @@ export function configurarSockets(
       const equipo = sesion?.equipos.get(info.nombre);
       if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
 
+      if (equipo.miembros.length > 0 && info.rol !== 'analista') {
+        return ack?.({ error: 'Solo el Analista de datos puede ejecutar consultas' });
+      }
+
       const tipo = payload?.tipo as string;
       const hipotesis = payload?.hipotesis?.trim() as string;
       const parametros = payload?.parametros as Record<string, unknown> | null;
@@ -277,6 +399,7 @@ export function configurarSockets(
       }
 
       equipo.estadoMotor.creditosIndagacion -= costo;
+      equipo.consultasRealizadas.add(tipo);
 
       if (dbDisponible && equipo.dbId) {
         try {
@@ -293,6 +416,53 @@ export function configurarSockets(
       ack?.({ ok: true, creditosRestantes: equipo.estadoMotor.creditosIndagacion });
     });
 
+    socket.on('equipo:marcar_evidencia', async (payload, ack) => {
+      const info = (socket as any).__equipo;
+      if (!info) return ack?.({ error: 'No estás en un equipo' });
+
+      const sesion = sesiones.get(info.codigoSala);
+      const equipo = sesion?.equipos.get(info.nombre);
+      if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
+
+      const tamano = config.equipo.tamano;
+      const puedeMarcar = info.rol === 'voz_cliente' || (tamano <= 3 && info.rol === 'lider');
+      if (equipo.miembros.length > 0 && !puedeMarcar) {
+        return ack?.({ error: 'Solo la Voz del cliente puede marcar evidencia' });
+      }
+
+      const comentarioId = payload?.comentarioId as string;
+      const hipotesis = payload?.hipotesis?.trim() as string;
+      if (!comentarioId || !hipotesis) {
+        return ack?.({ error: 'Se requiere comentarioId e hipótesis' });
+      }
+
+      const registradoPor = info.participante ?? 'desconocido';
+
+      equipo.evidencias.push({ comentarioId, hipotesis, registradoPor });
+
+      if (dbDisponible && equipo.dbId) {
+        try {
+          await db.registrarEvidencia(equipo.dbId, comentarioId, hipotesis, registradoPor);
+        } catch (_) { /* sin persistencia */ }
+      }
+
+      if (dbDisponible && equipo.dbId) {
+        try {
+          await db.registrarConsulta(equipo.dbId, 'evidencia', hipotesis,
+            { comentarioId, registradoPor }, equipo.estadoMotor.trimestre);
+        } catch (_) { /* sin persistencia */ }
+      }
+
+      io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:evidencia_marcada', {
+        comentarioId,
+        hipotesis,
+        registradoPor,
+        totalEvidencias: equipo.evidencias.length,
+      });
+
+      ack?.({ ok: true, totalEvidencias: equipo.evidencias.length });
+    });
+
     socket.on('equipo:diagnostico', async (payload, ack) => {
       const info = (socket as any).__equipo;
       if (!info) return ack?.({ error: 'No estás en un equipo' });
@@ -301,9 +471,20 @@ export function configurarSockets(
       const equipo = sesion?.equipos.get(info.nombre);
       if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
 
+      if (equipo.miembros.length > 0 && info.rol !== 'lider') {
+        return ack?.({ error: 'Solo el Líder de mejora puede enviar el diagnóstico' });
+      }
+
       const diagnostico = payload?.diagnostico;
-      const rigor = payload?.rigor;
-      if (!diagnostico || !rigor) return ack?.({ error: 'Diagnóstico y rigor son requeridos' });
+      if (!diagnostico) return ack?.({ error: 'Diagnóstico es requerido' });
+
+      const rigor = {
+        paretoEstratificacion: equipo.consultasRealizadas.has('segmentar'),
+        dispersionInterpretacion: equipo.consultasRealizadas.has('correlacionar'),
+        embudoEtapas: equipo.consultasRealizadas.has('embudo'),
+        hipotesisEscrita: equipo.consultasRealizadas.size > 0,
+        cruzoComentariosBase: equipo.evidencias.length > 0,
+      };
 
       const minuto = sesion.reloj.segundoActual / 60;
       diagnostico.minutoDeclaracion = Math.round(minuto);
@@ -315,6 +496,7 @@ export function configurarSockets(
       equipo.estadoMotor = estado;
 
       const resultado = calcularPuntuacion(estado, diagnostico, rigor, config);
+      equipo.resultado = resultado;
 
       if (dbDisponible && equipo.dbId) {
         try {
@@ -322,6 +504,26 @@ export function configurarSockets(
           await db.actualizarEstadoMotor(equipo.dbId, estado);
         } catch (_) { /* sin persistencia */ }
       }
+
+      const diagnosticoTexto = [
+        diagnostico.ventanaCapturaEsCuello ? 'La ventana de captura es el cuello de botella del proceso.' : null,
+        diagnostico.reprocesoEsMecanismo ? 'El reproceso por errores de captura es el mecanismo principal.' : null,
+        diagnostico.fugaPlastico ? 'Hay fuga de plásticos aprobados que nunca se envían.' : null,
+        diagnostico.trabajoPerdidoBuro ? 'Se pierde trabajo en casos que el buró rechazará.' : null,
+        diagnostico.concentracionSinMasa ? 'La concentración en pocas sucursales no tiene masa real.' : null,
+        ...(diagnostico.causasEspurias || []).map((c: string) => `Causa identificada: ${c}`),
+      ].filter(Boolean).join('\n');
+
+      const intervencionesTexto = estado.intervenciones
+        .map(i => `- ${i.nombre} (T${i.trimestre})`)
+        .join('\n') || 'Ninguna intervención aplicada.';
+
+      generarPreguntasConsejo(diagnosticoTexto, intervencionesTexto, 15000)
+        .then(({ preguntas }) => {
+          equipo.preguntasConsejo = preguntas;
+          io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('consejo:preguntas', { preguntas });
+        })
+        .catch(() => {});
 
       io.to(`profesor:${info.codigoSala}`).emit('sesion:equipo_diagnostico', {
         equipo: info.nombre,
@@ -357,6 +559,7 @@ export function configurarSockets(
             genero: c.genero,
             estado: c.estado,
             sucursal: c.sucursal,
+            intentos: c.intentos,
             texto: c.texto,
             fuenteTexto: c.fuenteTexto,
             tieneAudio: c.audio.length > 0,
@@ -444,4 +647,9 @@ async function persistirEquipo(sesion: SesionActiva, equipo: EquipoActivo): Prom
   try {
     await db.actualizarEstadoMotor(equipo.dbId, equipo.estadoMotor);
   } catch (_) { /* silently continue */ }
+}
+
+function rolesRequeridos(tamano: number): RolEquipo[] {
+  if (tamano <= 3) return ['patrocinador', 'lider', 'analista'];
+  return ['patrocinador', 'lider', 'analista', 'voz_cliente'];
 }

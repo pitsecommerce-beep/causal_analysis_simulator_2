@@ -25,6 +25,7 @@ export interface ParlamentoCliente {
   estado: string;
   sucursal: number;
   genero: string;
+  intentos: number;
   texto: string;
   fuente: 'ia' | 'respaldo';
   tiempoMs: number;
@@ -171,6 +172,7 @@ Genera el parlamento en primera persona de este cliente.`,
           estado: com.estado,
           sucursal: com.sucursal,
           genero,
+          intentos: com.intentos,
           texto: bloque.text,
           fuente: 'ia',
           tiempoMs,
@@ -256,6 +258,88 @@ function generoDesdeBase(sol: Solicitud | undefined): string {
   return 'M';
 }
 
+export interface PreguntaConsejo {
+  pregunta: string;
+  angulo: string;
+}
+
+const MODELO_PENSAR = () => process.env.ANTHROPIC_MODEL_PENSAR || 'claude-sonnet-5';
+
+const PREGUNTAS_RESPALDO: PreguntaConsejo[] = [
+  {
+    pregunta: '¿Qué evidencia tienen de que la ventana de captura es el verdadero cuello de botella y no simplemente un síntoma de otro problema más profundo?',
+    angulo: 'causalidad',
+  },
+  {
+    pregunta: 'Si su diagnóstico es correcto, ¿por qué no todas las sucursales muestran el mismo patrón? ¿Cómo explican la variabilidad?',
+    angulo: 'generalizacion',
+  },
+  {
+    pregunta: 'Las intervenciones que proponen tienen costos y tiempos de implementación. ¿Cuál es el riesgo de que empeoren la situación antes de mejorarla?',
+    angulo: 'riesgo',
+  },
+];
+
+export async function generarPreguntasConsejo(
+  diagnosticoTexto: string,
+  intervencionesTexto: string,
+  timeoutMs: number,
+): Promise<{ preguntas: PreguntaConsejo[]; fuente: 'ia' | 'respaldo' }> {
+  const api = obtenerCliente();
+  if (!api) {
+    return { preguntas: PREGUNTAS_RESPALDO, fuente: 'respaldo' };
+  }
+
+  try {
+    const response = await Promise.race([
+      api.messages.create({
+        model: MODELO_PENSAR(),
+        max_tokens: 1024,
+        system: `Eres un consejero escéptico del consejo directivo de ETF Bank México.
+Un equipo de consultoras externas te presenta su diagnóstico del problema de quejas en el proceso de tarjeta de crédito.
+Tu trabajo es hacer preguntas incisivas que cuestionen la solidez de su razonamiento.
+NO valides ni rechaces el diagnóstico. Solo cuestiona.
+Cada pregunta debe atacar desde un ángulo diferente: causalidad vs correlación, generalización vs caso particular, riesgo de las intervenciones.
+Responde SOLO en JSON válido con este formato exacto:
+[{"pregunta":"...","angulo":"causalidad"},{"pregunta":"...","angulo":"generalizacion"},{"pregunta":"...","angulo":"riesgo"}]
+Español mexicano formal. Tres preguntas exactamente.`,
+        messages: [{
+          role: 'user',
+          content: `El equipo consultor presenta lo siguiente:
+
+DIAGNÓSTICO:
+${diagnosticoTexto}
+
+INTERVENCIONES APLICADAS:
+${intervencionesTexto}
+
+Genera exactamente 3 preguntas escépticas.`,
+        }],
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), timeoutMs),
+      ),
+    ]);
+
+    const bloque = response.content.find(b => b.type === 'text');
+    if (bloque && bloque.type === 'text') {
+      try {
+        const jsonMatch = bloque.text.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]) as PreguntaConsejo[];
+          if (Array.isArray(parsed) && parsed.length >= 3) {
+            return { preguntas: parsed.slice(0, 3), fuente: 'ia' };
+          }
+        }
+      } catch { /* parse error, use fallback */ }
+    }
+    return { preguntas: PREGUNTAS_RESPALDO, fuente: 'respaldo' };
+  } catch (err) {
+    console.warn('⚠ Error generando preguntas del consejo:', (err as Error).message);
+    return { preguntas: PREGUNTAS_RESPALDO, fuente: 'respaldo' };
+  }
+}
+
 function parlamentoRespaldo(com: ComentarioCliente, sol: Solicitud | undefined, indice: number): ParlamentoCliente {
   const genero = generoDesdeBase(sol);
   return {
@@ -263,6 +347,7 @@ function parlamentoRespaldo(com: ComentarioCliente, sol: Solicitud | undefined, 
     estado: com.estado,
     sucursal: com.sucursal,
     genero,
+    intentos: com.intentos,
     texto: com.comentario,
     fuente: 'respaldo',
     tiempoMs: 0,
