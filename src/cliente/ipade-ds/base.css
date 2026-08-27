@@ -1,0 +1,220 @@
+/* ==========================================================================
+   IPADE Design System · base.css
+   Capa 2: reset, elementos HTML, tipografía, grid y utilidades.
+   Depende de tokens.css.
+   ========================================================================== */
+
+/* ---------- Reset ------------------------------------------------------- */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+* { margin: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--ipd-space-20);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  background: var(--ipd-bg-page);
+  color: var(--ipd-text-primary);
+  font-family: var(--ipd-font-sans);
+  font-size: var(--ipd-size-md);
+  line-height: var(--ipd-leading-relaxed);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+img, picture, video, canvas, svg { display: block; max-width: 100%; }
+input, button, textarea, select { font: inherit; color: inherit; }
+p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+ul[class], ol[class] { list-style: none; padding: 0; }
+
+/* ---------- Foco visible ------------------------------------------------ */
+/* Un solo anillo para todo el sistema. Nunca usar outline: none sin reemplazo. */
+
+:focus-visible {
+  outline: var(--ipd-border-thick) solid var(--ipd-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--ipd-radius-xs);
+}
+
+/* ---------- Salto a contenido ------------------------------------------- */
+
+.ipd-skip-link {
+  position: absolute;
+  left: var(--ipd-space-4);
+  top: var(--ipd-space-4);
+  z-index: var(--ipd-z-tooltip);
+  padding: var(--ipd-space-3) var(--ipd-space-5);
+  background: var(--ipd-bg-brand);
+  color: var(--ipd-text-on-brand);
+  border-radius: var(--ipd-radius-sm);
+  transform: translateY(-200%);
+  transition: transform var(--ipd-duration-fast) var(--ipd-ease-standard);
+}
+.ipd-skip-link:focus-visible { transform: translateY(0); }
+
+/* ---------- Tipografía -------------------------------------------------- */
+
+.ipd-display-1,
+.ipd-display-2,
+.ipd-h1, .ipd-h2, .ipd-h3, .ipd-h4 {
+  font-family: var(--ipd-font-display);
+  font-weight: var(--ipd-weight-semibold);
+  letter-spacing: var(--ipd-tracking-tight);
+  color: var(--ipd-text-primary);
+  text-wrap: balance;
+}
+
+.ipd-display-1 { font-size: var(--ipd-size-6xl); line-height: var(--ipd-leading-tight); letter-spacing: var(--ipd-tracking-tighter); }
+.ipd-display-2 { font-size: var(--ipd-size-5xl); line-height: var(--ipd-leading-tight); letter-spacing: var(--ipd-tracking-tighter); }
+.ipd-h1 { font-size: var(--ipd-size-4xl); line-height: var(--ipd-leading-tight); }
+.ipd-h2 { font-size: var(--ipd-size-3xl); line-height: var(--ipd-leading-snug); }
+.ipd-h3 { font-size: var(--ipd-size-2xl); line-height: var(--ipd-leading-snug); }
+.ipd-h4 { font-size: var(--ipd-size-xl); line-height: var(--ipd-leading-snug); }
+
+.ipd-h5, .ipd-h6 {
+  font-family: var(--ipd-font-sans);
+  font-weight: var(--ipd-weight-semibold);
+  color: var(--ipd-text-primary);
+}
+.ipd-h5 { font-size: var(--ipd-size-lg); line-height: var(--ipd-leading-normal); }
+.ipd-h6 { font-size: var(--ipd-size-md); line-height: var(--ipd-leading-normal); }
+
+.ipd-lead {
+  font-size: var(--ipd-size-lg);
+  line-height: var(--ipd-leading-relaxed);
+  color: var(--ipd-text-secondary);
+  max-width: 60ch;
+}
+.ipd-body { font-size: var(--ipd-size-md); line-height: var(--ipd-leading-relaxed); }
+.ipd-body-sm { font-size: var(--ipd-size-sm); line-height: var(--ipd-leading-normal); }
+.ipd-caption { font-size: var(--ipd-size-xs); line-height: var(--ipd-leading-normal); color: var(--ipd-text-tertiary); }
+
+.ipd-overline {
+  font-size: var(--ipd-size-2xs);
+  font-weight: var(--ipd-weight-semibold);
+  letter-spacing: var(--ipd-tracking-wider);
+  text-transform: uppercase;
+  color: var(--ipd-text-accent);
+}
+
+/* Eyebrow con filete: marca el inicio de una sección de contenido. */
+.ipd-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ipd-space-3);
+  font-size: var(--ipd-size-2xs);
+  font-weight: var(--ipd-weight-semibold);
+  letter-spacing: var(--ipd-tracking-wider);
+  text-transform: uppercase;
+  color: var(--ipd-text-accent);
+}
+.ipd-eyebrow::before {
+  content: "";
+  width: var(--ipd-space-8);
+  height: var(--ipd-border-thick);
+  background: var(--ipd-bg-accent);
+}
+
+.ipd-prose { max-width: var(--ipd-container-narrow); }
+.ipd-prose > * + * { margin-top: var(--ipd-space-5); }
+.ipd-prose h2 { margin-top: var(--ipd-space-12); }
+.ipd-prose h3 { margin-top: var(--ipd-space-10); }
+.ipd-prose ul, .ipd-prose ol { padding-left: var(--ipd-space-6); }
+.ipd-prose li + li { margin-top: var(--ipd-space-2); }
+
+/* ---------- Enlaces ----------------------------------------------------- */
+
+.ipd-link {
+  color: var(--ipd-text-link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: color var(--ipd-duration-fast) var(--ipd-ease-standard);
+}
+.ipd-link:hover { color: var(--ipd-text-link-hover); text-decoration-thickness: 2px; }
+
+/* Enlace con flecha, patrón de "Ver más" del sitio. */
+.ipd-link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ipd-space-2);
+  font-weight: var(--ipd-weight-semibold);
+  font-size: var(--ipd-size-sm);
+  color: var(--ipd-text-link);
+  text-decoration: none;
+}
+.ipd-link-arrow::after {
+  content: "→";
+  transition: transform var(--ipd-duration-fast) var(--ipd-ease-standard);
+}
+.ipd-link-arrow:hover { color: var(--ipd-text-link-hover); }
+.ipd-link-arrow:hover::after { transform: translateX(3px); }
+
+/* ---------- Layout ------------------------------------------------------ */
+
+.ipd-container {
+  width: 100%;
+  max-width: var(--ipd-container-max);
+  margin-inline: auto;
+  padding-inline: var(--ipd-gutter);
+}
+.ipd-container--narrow { max-width: var(--ipd-container-narrow); }
+.ipd-container--wide { max-width: var(--ipd-container-wide); }
+
+@media (min-width: 600px) { .ipd-container { padding-inline: var(--ipd-gutter-md); } }
+@media (min-width: 1024px) { .ipd-container { padding-inline: var(--ipd-gutter-lg); } }
+
+.ipd-section { padding-block: var(--ipd-section-y); }
+.ipd-section--tight { padding-block: var(--ipd-section-y-tight); }
+.ipd-section--brand { background: var(--ipd-bg-brand); color: var(--ipd-text-on-brand); }
+.ipd-section--subtle { background: var(--ipd-bg-subtle); }
+
+.ipd-grid {
+  display: grid;
+  gap: var(--ipd-grid-gap);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (min-width: 768px) { .ipd-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .ipd-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); } }
+
+/* Rejilla automática para colecciones de tarjetas. */
+.ipd-cards {
+  display: grid;
+  gap: var(--ipd-grid-gap);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+}
+
+.ipd-stack { display: flex; flex-direction: column; gap: var(--ipd-space-4); }
+.ipd-cluster { display: flex; flex-wrap: wrap; gap: var(--ipd-space-3); align-items: center; }
+
+/* ---------- Utilidades -------------------------------------------------- */
+
+.ipd-visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ipd-ratio { aspect-ratio: var(--ipd-ratio-wide); overflow: hidden; }
+.ipd-ratio > img { width: 100%; height: 100%; object-fit: cover; }
+.ipd-ratio--hero { aspect-ratio: var(--ipd-ratio-hero); }
+.ipd-ratio--card { aspect-ratio: var(--ipd-ratio-card); }
+.ipd-ratio--portrait { aspect-ratio: var(--ipd-ratio-portrait); }
+.ipd-ratio--square { aspect-ratio: var(--ipd-ratio-square); }
+
+.ipd-divider { height: 1px; background: var(--ipd-border-subtle); border: 0; }
+.ipd-rule-accent { width: var(--ipd-space-12); height: var(--ipd-border-accent); background: var(--ipd-bg-accent); border: 0; }
