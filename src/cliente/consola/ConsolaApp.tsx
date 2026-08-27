@@ -14,6 +14,7 @@ import { GraficaResultado } from './GraficaResultado';
 import { Bitacora } from './Bitacora';
 import { FormDiagnostico } from './FormDiagnostico';
 import { TableroFinal } from './TableroFinal';
+import { PanelComentarios } from '../juego/PanelComentarios';
 
 interface Props {
   estadoInicial: EstadoMotorCliente;
@@ -182,20 +183,24 @@ export function ConsolaApp({
       <aside className="consola__consultas">
         {tienePanelAcciones ? (
           <>
-            <PanelConsultas
-              solicitudes={solicitudes}
-              creditosRestantes={estado.creditosIndagacion}
-              presupuesto={estado.presupuesto}
-              catalogo={catalogo}
-              onResultado={setResultado}
-              onBitacora={handleBitacora}
-              onIntervencion={handleIntervencion}
-              puedeConsultar={mostrarConsultas}
-              puedeIntervenir={mostrarIntervenciones}
-              esVozCliente={esVozCliente}
-              mostrarConsultas={mostrarConsultas}
-              mostrarIntervenciones={mostrarIntervenciones}
-            />
+            {(mostrarConsultas || mostrarIntervenciones) && (
+              <PanelConsultas
+                solicitudes={solicitudes}
+                creditosRestantes={estado.creditosIndagacion}
+                presupuesto={estado.presupuesto}
+                catalogo={catalogo}
+                onResultado={setResultado}
+                onBitacora={handleBitacora}
+                onIntervencion={handleIntervencion}
+                puedeConsultar={mostrarConsultas}
+                puedeIntervenir={mostrarIntervenciones}
+                mostrarConsultas={mostrarConsultas}
+                mostrarIntervenciones={mostrarIntervenciones}
+              />
+            )}
+            {esVozCliente && (
+              <PanelComentarios solicitudes={solicitudes} />
+            )}
             {mostrarDiagnostico && (
               <FormDiagnostico
                 onResultado={(r) => {

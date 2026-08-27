@@ -5,6 +5,7 @@ import { socket } from './lib/socket';
 
 const EscenaApp = lazy(() => import('./escena/EscenaApp').then(m => ({ default: m.EscenaApp })));
 const ConsolaApp = lazy(() => import('./consola/ConsolaApp').then(m => ({ default: m.ConsolaApp })));
+const JuegoApp = lazy(() => import('./juego/JuegoApp').then(m => ({ default: m.JuegoApp })));
 const ProfesorApp = lazy(() => import('./profesor/ProfesorApp').then(m => ({ default: m.ProfesorApp })));
 
 interface DatosSesion {
@@ -23,7 +24,7 @@ interface DatosRol {
   miNombre: string;
 }
 
-type Pantalla = 'unirse' | 'escena' | 'consola' | 'profesor';
+type Pantalla = 'unirse' | 'escena' | 'juego' | 'consola' | 'profesor';
 
 export function App() {
   const [sesion, setSesion] = useState<DatosSesion | null>(null);
@@ -102,8 +103,27 @@ export function App() {
           tamanoEquipo={sesion.tamanoEquipo}
           onTerminar={(miembros, miRol, miNombre) => {
             setDatosRol({ miembros, miRol, miNombre });
-            setPantalla('consola');
+            setPantalla('juego');
           }}
+        />
+      </Suspense>
+    );
+  }
+
+  if (pantalla === 'juego' && datosRol) {
+    return (
+      <Suspense fallback={cargando}>
+        <JuegoApp
+          estadoInicial={sesion.estadoMotor}
+          relojInicial={sesion.reloj}
+          catalogoInicial={sesion.catalogo}
+          solicitudes={sesion.solicitudes}
+          codigoSala={sesion.codigoSala}
+          nombreEquipo={sesion.nombreEquipo}
+          miRol={datosRol.miRol}
+          miNombre={datosRol.miNombre}
+          miembros={datosRol.miembros}
+          tamanoEquipo={sesion.tamanoEquipo}
         />
       </Suspense>
     );

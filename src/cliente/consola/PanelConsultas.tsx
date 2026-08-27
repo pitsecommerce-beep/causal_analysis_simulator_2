@@ -17,7 +17,6 @@ interface Props {
   onIntervencion: (id: number, sucursales?: number[]) => void;
   puedeConsultar: boolean;
   puedeIntervenir: boolean;
-  esVozCliente: boolean;
   mostrarConsultas: boolean;
   mostrarIntervenciones: boolean;
 }
@@ -52,7 +51,7 @@ function TarjetaConsulta({
 export function PanelConsultas({
   solicitudes, creditosRestantes, presupuesto, catalogo,
   onResultado, onBitacora, onIntervencion,
-  puedeConsultar, puedeIntervenir, esVozCliente,
+  puedeConsultar, puedeIntervenir,
   mostrarConsultas, mostrarIntervenciones,
 }: Props) {
   const [hipotesis, setHipotesis] = useState('');
@@ -64,9 +63,6 @@ export function PanelConsultas({
   const [error, setError] = useState('');
   const [modalSucs, setModalSucs] = useState<number | null>(null);
   const [inputSucs, setInputSucs] = useState('');
-  const [evidComentario, setEvidComentario] = useState('');
-  const [evidHipotesis, setEvidHipotesis] = useState('');
-  const [evidMensaje, setEvidMensaje] = useState('');
 
 
   function validarYEjecutar(tipo: string, parametros: Record<string, string>, costo: number) {
@@ -103,27 +99,6 @@ export function PanelConsultas({
     });
     setHipotesis('');
   }
-
-  function marcarEvidencia() {
-    if (!evidComentario.trim() || !evidHipotesis.trim()) {
-      setEvidMensaje('Se requiere el ID del comentario y la hipótesis.');
-      return;
-    }
-    socket.emit('equipo:marcar_evidencia', {
-      comentarioId: evidComentario.trim(),
-      hipotesis: evidHipotesis.trim(),
-    }, (resp: any) => {
-      if (resp?.error) {
-        setEvidMensaje(resp.error);
-        return;
-      }
-      setEvidMensaje(`Evidencia registrada (${resp.totalEvidencias} total)`);
-      setEvidComentario('');
-      setEvidHipotesis('');
-      setTimeout(() => setEvidMensaje(''), 3000);
-    });
-  }
-
 
   return (
     <div>
@@ -225,34 +200,6 @@ export function PanelConsultas({
             <p style={{ fontSize: 12, color: 'var(--ipd-text-tertiary)', marginTop: 8 }}>
               {presupuesto === 0 ? 'Presupuesto agotado.' : 'No hay intervenciones disponibles.'}
             </p>
-          )}
-        </>
-      )}
-
-      {esVozCliente && (
-        <>
-          <h3 className="intervenciones__titulo">Evidencia de cliente</h3>
-          <div className="tarjeta-consulta__campo">
-            <label>ID del comentario (ej. C-032)</label>
-            <input
-              value={evidComentario}
-              onChange={e => setEvidComentario(e.target.value)}
-              placeholder="C-032"
-            />
-          </div>
-          <div className="tarjeta-consulta__campo">
-            <label>Hipótesis que respalda</label>
-            <textarea
-              value={evidHipotesis}
-              onChange={e => setEvidHipotesis(e.target.value)}
-              placeholder="Este comentario evidencia que..."
-            />
-          </div>
-          <button className="tarjeta-consulta__ejecutar" onClick={marcarEvidencia}>
-            Marcar como evidencia
-          </button>
-          {evidMensaje && (
-            <p style={{ fontSize: 12, color: 'var(--ipd-interactive-default)', marginTop: 4 }}>{evidMensaje}</p>
           )}
         </>
       )}
