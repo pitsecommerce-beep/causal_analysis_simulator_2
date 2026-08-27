@@ -40,6 +40,7 @@ export async function textoAAudio(
   const url = `${DEEPGRAM_TTS_URL}?model=${opciones.voz}&encoding=mp3&sample_rate=24000`;
 
   const inicio = Date.now();
+  console.log(`🔊 Deepgram TTS: voz=${opciones.voz} texto=${texto.slice(0, 60)}...`);
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -58,15 +59,17 @@ export async function textoAAudio(
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
+      console.warn(`⚠ Deepgram respondió ${response.status}: ${body.slice(0, 300)}`);
       throw new Error(`Deepgram ${response.status}: ${body.slice(0, 200)}`);
     }
 
     const arrayBuffer = await response.arrayBuffer();
     const tiempoMs = Date.now() - inicio;
+    console.log(`✅ Deepgram TTS OK: ${arrayBuffer.byteLength} bytes en ${tiempoMs}ms`);
     return { audio: Buffer.from(arrayBuffer), fuente: 'ia', tiempoMs };
   } catch (err) {
     const tiempoMs = Date.now() - inicio;
-    console.warn('⚠ Error generando audio TTS:', (err as Error).message);
+    console.warn(`⚠ Error TTS (${tiempoMs}ms):`, (err as Error).message);
     return { audio: Buffer.alloc(0), fuente: 'respaldo', tiempoMs };
   }
 }

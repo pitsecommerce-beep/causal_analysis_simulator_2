@@ -45,7 +45,9 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
   const [indiceCliente, setIndiceCliente] = useState(0);
   const [subtitulo, setSubtitulo] = useState('');
   const [escribiendo, setEscribiendo] = useState(false);
+  const [audioBloqueado, setAudioBloqueado] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioPendienteRef = useRef<{ rol: 'director' | 'cliente'; indice?: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -94,20 +96,38 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     }, VEL_ESCRITURA);
   }, []);
 
-  const pedirAudio = useCallback((rol: 'director' | 'cliente', indice?: number) => {
+  const reproducirBlob = useCallback((blob: Blob) => {
     limpiarAudio();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.play().then(() => {
+      setAudioBloqueado(false);
+    }).catch(() => {
+      setAudioBloqueado(true);
+    });
+  }, [limpiarAudio]);
+
+  const pedirAudio = useCallback((rol: 'director' | 'cliente', indice?: number) => {
+    audioPendienteRef.current = { rol, indice };
     socket.emit('escena:audio', { codigoSala, rol, indice }, (resp: any) => {
       if (resp?.audio) {
         try {
           const blob = base64ToBlob(resp.audio, 'audio/mp3');
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audioRef.current = audio;
-          audio.play().catch(() => {});
+          reproducirBlob(blob);
         } catch { /* subtitles still visible */ }
       }
     });
-  }, [codigoSala, limpiarAudio]);
+  }, [codigoSala, reproducirBlob]);
+
+  function desbloquearAudio() {
+    setAudioBloqueado(false);
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    } else if (audioPendienteRef.current) {
+      pedirAudio(audioPendienteRef.current.rol, audioPendienteRef.current.indice);
+    }
+  }
 
   useEffect(() => {
     if (!escena) return;
@@ -152,6 +172,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     }
 
     limpiarAudio();
+    setAudioBloqueado(false);
 
     if (pantalla === 'director') {
       if (escena && escena.clientes.length > 0) {
@@ -197,7 +218,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
   if (pantalla === 'director' && escena) {
     const personajes = [
       { nombre: escena.director.nombre, genero: 'M', rol: 'director' as const, activo: true },
-      ...escena.clientes.map((c, i) => ({
+      ...escena.clientes.map((c) => ({
         nombre: c.nombre,
         genero: c.genero,
         rol: 'cliente' as const,
@@ -218,6 +239,11 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
         </div>
 
         <div className="escena__controles">
+          {audioBloqueado && (
+            <button className="escena__boton escena__boton--audio" onClick={desbloquearAudio}>
+              Activar audio
+            </button>
+          )}
           <button className="escena__boton" onClick={avanzar}>
             {escribiendo ? 'Mostrar todo' : 'Siguiente'}
           </button>
@@ -254,6 +280,11 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
         </div>
 
         <div className="escena__controles">
+          {audioBloqueado && (
+            <button className="escena__boton escena__boton--audio" onClick={desbloquearAudio}>
+              Activar audio
+            </button>
+          )}
           <button className="escena__boton" onClick={avanzar}>
             {escribiendo ? 'Mostrar todo' : esUltimo ? 'Continuar' : 'Siguiente cliente'}
           </button>
