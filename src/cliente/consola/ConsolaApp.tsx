@@ -49,6 +49,11 @@ export function ConsolaApp({
   const esVozCliente = miRol === 'voz_cliente' || (tamanoEquipo <= 3 && miRol === 'lider');
   const esConsejoOFin = reloj.fase === 'consejo' || reloj.fase === 'finalizado';
 
+  const mostrarConsultas = !tieneRoles || esAnalista;
+  const mostrarIntervenciones = !tieneRoles || esPatrocinador;
+  const mostrarDiagnostico = (!tieneRoles || esLider) && esConsejoOFin;
+  const tienePanelAcciones = mostrarConsultas || mostrarIntervenciones || esVozCliente || mostrarDiagnostico;
+
   useEffect(() => {
     function onTick(data: EstadoReloj) {
       setReloj(data);
@@ -170,27 +175,37 @@ export function ConsolaApp({
       </header>
 
       <aside className="consola__consultas">
-        <PanelConsultas
-          solicitudes={solicitudes}
-          creditosRestantes={estado.creditosIndagacion}
-          presupuesto={estado.presupuesto}
-          catalogo={catalogo}
-          onResultado={setResultado}
-          onBitacora={handleBitacora}
-          onIntervencion={handleIntervencion}
-          puedeConsultar={!tieneRoles || esAnalista}
-          puedeIntervenir={!tieneRoles || esPatrocinador}
-          esVozCliente={esVozCliente}
-        />
-        {esConsejoOFin && (
-          <FormDiagnostico
-            puedeEnviar={!tieneRoles || esLider}
-            onResultado={(r) => {
-              setPuntuacion(r);
-              setEstado(prev => ({ ...prev, trimestre: 3 }));
-            }}
-            onPreguntas={setPreguntas}
-          />
+        {tienePanelAcciones ? (
+          <>
+            <PanelConsultas
+              solicitudes={solicitudes}
+              creditosRestantes={estado.creditosIndagacion}
+              presupuesto={estado.presupuesto}
+              catalogo={catalogo}
+              onResultado={setResultado}
+              onBitacora={handleBitacora}
+              onIntervencion={handleIntervencion}
+              puedeConsultar={mostrarConsultas}
+              puedeIntervenir={mostrarIntervenciones}
+              esVozCliente={esVozCliente}
+              mostrarConsultas={mostrarConsultas}
+              mostrarIntervenciones={mostrarIntervenciones}
+            />
+            {mostrarDiagnostico && (
+              <FormDiagnostico
+                onResultado={(r) => {
+                  setPuntuacion(r);
+                  setEstado(prev => ({ ...prev, trimestre: 3 }));
+                }}
+                onPreguntas={setPreguntas}
+              />
+            )}
+          </>
+        ) : (
+          <div className="consola__sin-acciones">
+            <p>Tu rol actual no tiene acciones en esta fase.</p>
+            <p>Observa los resultados y colabora con tu equipo.</p>
+          </div>
         )}
       </aside>
 

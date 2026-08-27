@@ -18,15 +18,17 @@ interface Props {
   puedeConsultar: boolean;
   puedeIntervenir: boolean;
   esVozCliente: boolean;
+  mostrarConsultas: boolean;
+  mostrarIntervenciones: boolean;
 }
 
 let contadorBitacora = 0;
 
 function TarjetaConsulta({
-  nombre, costo, children, onEjecutar, disabled, razonDeshabilitado,
+  nombre, costo, children, onEjecutar, disabled,
 }: {
   nombre: string; costo: number; children: React.ReactNode;
-  onEjecutar: () => void; disabled: boolean; razonDeshabilitado?: string;
+  onEjecutar: () => void; disabled: boolean;
 }) {
   const [abierta, setAbierta] = useState(false);
   return (
@@ -41,9 +43,6 @@ function TarjetaConsulta({
           <button className="tarjeta-consulta__ejecutar" onClick={onEjecutar} disabled={disabled}>
             Ejecutar consulta
           </button>
-          {razonDeshabilitado && (
-            <p className="tarjeta-consulta__razon">{razonDeshabilitado}</p>
-          )}
         </div>
       )}
     </div>
@@ -54,6 +53,7 @@ export function PanelConsultas({
   solicitudes, creditosRestantes, presupuesto, catalogo,
   onResultado, onBitacora, onIntervencion,
   puedeConsultar, puedeIntervenir, esVozCliente,
+  mostrarConsultas, mostrarIntervenciones,
 }: Props) {
   const [hipotesis, setHipotesis] = useState('');
   const [segAgrupar, setSegAgrupar] = useState('sucursal');
@@ -68,8 +68,6 @@ export function PanelConsultas({
   const [evidHipotesis, setEvidHipotesis] = useState('');
   const [evidMensaje, setEvidMensaje] = useState('');
 
-  const razonConsulta = !puedeConsultar ? 'Solo el Analista de datos puede ejecutar consultas.' : undefined;
-  const razonIntervencion = !puedeIntervenir ? 'Solo el Patrocinador del proceso puede autorizar intervenciones.' : undefined;
 
   function validarYEjecutar(tipo: string, parametros: Record<string, string>, costo: number) {
     if (!puedeConsultar) {
@@ -126,108 +124,109 @@ export function PanelConsultas({
     });
   }
 
-  const consultaDisabled = !puedeConsultar || creditosRestantes < 1;
 
   return (
     <div>
-      <h3 className="consultas__titulo">Consultas</h3>
-      <div className="consultas__creditos">
-        Creditos: {creditosRestantes}/12 | Presupuesto: ${presupuesto}/100
-      </div>
+      {mostrarConsultas && (
+        <>
+          <h3 className="consultas__titulo">Consultas</h3>
+          <div className="consultas__creditos">
+            Creditos: {creditosRestantes}/12 | Presupuesto: ${presupuesto}/100
+          </div>
 
-      <div className="tarjeta-consulta__campo">
-        <label>Hipotesis (obligatoria)</label>
-        <textarea
-          value={hipotesis}
-          onChange={e => setHipotesis(e.target.value)}
-          placeholder="Que quieres probar con esta consulta?"
-          disabled={!puedeConsultar}
-        />
-        {razonConsulta && <p className="tarjeta-consulta__razon">{razonConsulta}</p>}
-      </div>
-      {error && <p style={{ color: 'var(--rojo-600)', fontSize: 12, marginBottom: 8 }}>{error}</p>}
+          <div className="tarjeta-consulta__campo">
+            <label>Hipotesis (obligatoria)</label>
+            <textarea
+              value={hipotesis}
+              onChange={e => setHipotesis(e.target.value)}
+              placeholder="Que quieres probar con esta consulta?"
+            />
+          </div>
+          {error && <p style={{ color: 'var(--ipd-feedback-danger-fg)', fontSize: 12, marginBottom: 8 }}>{error}</p>}
 
-      <TarjetaConsulta nombre="Segmentar" costo={1} disabled={consultaDisabled}
-        razonDeshabilitado={razonConsulta}
-        onEjecutar={() => validarYEjecutar('segmentar', { agrupadoPor: segAgrupar, medida: segMedida }, 1)}>
-        <div className="tarjeta-consulta__campo">
-          <label>Agrupar por</label>
-          <select value={segAgrupar} onChange={e => setSegAgrupar(e.target.value)}>
-            {Object.entries(CAMPOS_AGRUPACION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </div>
-        <div className="tarjeta-consulta__campo">
-          <label>Medir</label>
-          <select value={segMedida} onChange={e => setSegMedida(e.target.value)}>
-            {Object.entries(CAMPOS_MEDIDA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </div>
-      </TarjetaConsulta>
+          <TarjetaConsulta nombre="Segmentar" costo={1} disabled={creditosRestantes < 1}
+            onEjecutar={() => validarYEjecutar('segmentar', { agrupadoPor: segAgrupar, medida: segMedida }, 1)}>
+            <div className="tarjeta-consulta__campo">
+              <label>Agrupar por</label>
+              <select value={segAgrupar} onChange={e => setSegAgrupar(e.target.value)}>
+                {Object.entries(CAMPOS_AGRUPACION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <div className="tarjeta-consulta__campo">
+              <label>Medir</label>
+              <select value={segMedida} onChange={e => setSegMedida(e.target.value)}>
+                {Object.entries(CAMPOS_MEDIDA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+          </TarjetaConsulta>
 
-      <TarjetaConsulta nombre="Correlacionar" costo={1} disabled={consultaDisabled}
-        razonDeshabilitado={razonConsulta}
-        onEjecutar={() => validarYEjecutar('correlacionar', { variableX: corrX, variableY: corrY }, 1)}>
-        <div className="tarjeta-consulta__campo">
-          <label>Variable X</label>
-          <select value={corrX} onChange={e => setCorrX(e.target.value)}>
-            {Object.entries(CAMPOS_NUMERICOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </div>
-        <div className="tarjeta-consulta__campo">
-          <label>Variable Y</label>
-          <select value={corrY} onChange={e => setCorrY(e.target.value)}>
-            {Object.entries(CAMPOS_NUMERICOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </div>
-      </TarjetaConsulta>
+          <TarjetaConsulta nombre="Correlacionar" costo={1} disabled={creditosRestantes < 1}
+            onEjecutar={() => validarYEjecutar('correlacionar', { variableX: corrX, variableY: corrY }, 1)}>
+            <div className="tarjeta-consulta__campo">
+              <label>Variable X</label>
+              <select value={corrX} onChange={e => setCorrX(e.target.value)}>
+                {Object.entries(CAMPOS_NUMERICOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <div className="tarjeta-consulta__campo">
+              <label>Variable Y</label>
+              <select value={corrY} onChange={e => setCorrY(e.target.value)}>
+                {Object.entries(CAMPOS_NUMERICOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+          </TarjetaConsulta>
 
-      <TarjetaConsulta nombre="Serie de tiempo" costo={1} disabled={consultaDisabled}
-        razonDeshabilitado={razonConsulta}
-        onEjecutar={() => validarYEjecutar('serie_tiempo', { variable: serieVar }, 1)}>
-        <div className="tarjeta-consulta__campo">
-          <label>Variable</label>
-          <select value={serieVar} onChange={e => setSerieVar(e.target.value)}>
-            {Object.entries(CAMPOS_SERIE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </div>
-      </TarjetaConsulta>
+          <TarjetaConsulta nombre="Serie de tiempo" costo={1} disabled={creditosRestantes < 1}
+            onEjecutar={() => validarYEjecutar('serie_tiempo', { variable: serieVar }, 1)}>
+            <div className="tarjeta-consulta__campo">
+              <label>Variable</label>
+              <select value={serieVar} onChange={e => setSerieVar(e.target.value)}>
+                {Object.entries(CAMPOS_SERIE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+          </TarjetaConsulta>
 
-      <TarjetaConsulta nombre="Embudo" costo={1} disabled={consultaDisabled}
-        razonDeshabilitado={razonConsulta}
-        onEjecutar={() => validarYEjecutar('embudo', {}, 1)}>
-        <p style={{ fontSize: 12, color: 'var(--gris-700)' }}>
-          Muestra el conteo de solicitudes en cada etapa del proceso.
-        </p>
-      </TarjetaConsulta>
-
-      <h3 className="intervenciones__titulo">Intervenciones</h3>
-      {razonIntervencion && (
-        <p className="tarjeta-consulta__razon" style={{ marginBottom: 8 }}>{razonIntervencion}</p>
+          <TarjetaConsulta nombre="Embudo" costo={1} disabled={creditosRestantes < 1}
+            onEjecutar={() => validarYEjecutar('embudo', {}, 1)}>
+            <p style={{ fontSize: 12, color: 'var(--ipd-text-tertiary)' }}>
+              Muestra el conteo de solicitudes en cada etapa del proceso.
+            </p>
+          </TarjetaConsulta>
+        </>
       )}
-      {catalogo.map(item => (
-        <div key={item.id} className={`intervencion ${!item.disponible || !puedeIntervenir ? 'intervencion--disabled' : ''}`}>
-          <span className="intervencion__nombre">{item.nombre}</span>
-          <span className="intervencion__costo">${item.costo}</span>
-          <button
-            className="intervencion__boton"
-            disabled={!item.disponible || !puedeIntervenir}
-            onClick={() => {
-              if (item.id === 2) {
-                setModalSucs(item.id);
-                setInputSucs('');
-              } else {
-                onIntervencion(item.id);
-              }
-            }}
-          >
-            Aplicar
-          </button>
-        </div>
-      ))}
-      {catalogo.length > 0 && !catalogo.some(i => i.disponible) && (
-        <p style={{ fontSize: 12, color: 'var(--gris-500)', marginTop: 8 }}>
-          {presupuesto === 0 ? 'Presupuesto agotado.' : 'No hay intervenciones disponibles.'}
-        </p>
+
+      {mostrarIntervenciones && (
+        <>
+          <h3 className="intervenciones__titulo">Intervenciones</h3>
+          <div className="consultas__creditos">
+            Presupuesto: ${presupuesto}/100
+          </div>
+          {catalogo.map(item => (
+            <div key={item.id} className={`intervencion ${!item.disponible ? 'intervencion--disabled' : ''}`}>
+              <span className="intervencion__nombre">{item.nombre}</span>
+              <span className="intervencion__costo">${item.costo}</span>
+              <button
+                className="intervencion__boton"
+                disabled={!item.disponible}
+                onClick={() => {
+                  if (item.id === 2) {
+                    setModalSucs(item.id);
+                    setInputSucs('');
+                  } else {
+                    onIntervencion(item.id);
+                  }
+                }}
+              >
+                Aplicar
+              </button>
+            </div>
+          ))}
+          {catalogo.length > 0 && !catalogo.some(i => i.disponible) && (
+            <p style={{ fontSize: 12, color: 'var(--ipd-text-tertiary)', marginTop: 8 }}>
+              {presupuesto === 0 ? 'Presupuesto agotado.' : 'No hay intervenciones disponibles.'}
+            </p>
+          )}
+        </>
       )}
 
       {esVozCliente && (
@@ -253,7 +252,7 @@ export function PanelConsultas({
             Marcar como evidencia
           </button>
           {evidMensaje && (
-            <p style={{ fontSize: 12, color: 'var(--azul-600)', marginTop: 4 }}>{evidMensaje}</p>
+            <p style={{ fontSize: 12, color: 'var(--ipd-interactive-default)', marginTop: 4 }}>{evidMensaje}</p>
           )}
         </>
       )}
@@ -262,7 +261,7 @@ export function PanelConsultas({
         <div className="modal-overlay" onClick={() => setModalSucs(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>Sucursales a capacitar</h3>
-            <p style={{ fontSize: 13, marginBottom: 12, color: 'var(--gris-700)' }}>
+            <p style={{ fontSize: 13, marginBottom: 12, color: 'var(--ipd-text-secondary)' }}>
               Ingresa los numeros de sucursal separados por coma.
             </p>
             <input

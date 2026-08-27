@@ -37,7 +37,7 @@ export async function textoAAudio(
     return { audio: Buffer.alloc(0), fuente: 'respaldo', tiempoMs: 0 };
   }
 
-  const url = `${DEEPGRAM_TTS_URL}?model=${opciones.voz}&encoding=mp3&sample_rate=24000`;
+  const url = `${DEEPGRAM_TTS_URL}?model=${opciones.voz}&encoding=mp3`;
 
   const inicio = Date.now();
   console.log(`🔊 Deepgram TTS: voz=${opciones.voz} texto=${texto.slice(0, 60)}...`);

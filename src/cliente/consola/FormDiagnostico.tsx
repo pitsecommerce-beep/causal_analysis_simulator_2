@@ -3,7 +3,6 @@ import { socket } from '../lib/socket';
 import type { DiagnosticoForm, ResultadoPuntuacion, PreguntaConsejo } from '../lib/tipos';
 
 interface Props {
-  puedeEnviar: boolean;
   onResultado: (resultado: ResultadoPuntuacion) => void;
   onPreguntas: (preguntas: PreguntaConsejo[]) => void;
 }
@@ -18,7 +17,7 @@ const CAUSAS_OPCIONES = [
   { key: 'linea_credito', label: 'Línea de crédito otorgada' },
 ];
 
-export function FormDiagnostico({ puedeEnviar, onResultado, onPreguntas }: Props) {
+export function FormDiagnostico({ onResultado, onPreguntas }: Props) {
   const [form, setForm] = useState<DiagnosticoForm>({
     ventanaCapturaEsCuello: false,
     reprocesoEsMecanismo: false,
@@ -66,34 +65,26 @@ export function FormDiagnostico({ puedeEnviar, onResultado, onPreguntas }: Props
   return (
     <div className="diagnostico">
       <h3 className="diagnostico__titulo">Diagnostico final</h3>
-      {!puedeEnviar && (
-        <p className="tarjeta-consulta__razon">Solo el Lider de mejora puede enviar el diagnostico.</p>
-      )}
-
       <div className="diagnostico__seccion">
         <h4>Hallazgos causales</h4>
         <label className="diagnostico__check">
           <input type="checkbox" checked={form.ventanaCapturaEsCuello}
-            onChange={e => setForm(p => ({ ...p, ventanaCapturaEsCuello: e.target.checked }))}
-            disabled={!puedeEnviar} />
+            onChange={e => setForm(p => ({ ...p, ventanaCapturaEsCuello: e.target.checked }))} />
           La ventana de captura es el cuello de botella del proceso
         </label>
         <label className="diagnostico__check">
           <input type="checkbox" checked={form.reprocesoEsMecanismo}
-            onChange={e => setForm(p => ({ ...p, reprocesoEsMecanismo: e.target.checked }))}
-            disabled={!puedeEnviar} />
+            onChange={e => setForm(p => ({ ...p, reprocesoEsMecanismo: e.target.checked }))} />
           El reproceso por errores de captura es el mecanismo principal
         </label>
         <label className="diagnostico__check">
           <input type="checkbox" checked={form.fugaPlastico}
-            onChange={e => setForm(p => ({ ...p, fugaPlastico: e.target.checked }))}
-            disabled={!puedeEnviar} />
+            onChange={e => setForm(p => ({ ...p, fugaPlastico: e.target.checked }))} />
           Hay fuga de plasticos aprobados que nunca se envian
         </label>
         <label className="diagnostico__check">
           <input type="checkbox" checked={form.trabajoPerdidoBuro}
-            onChange={e => setForm(p => ({ ...p, trabajoPerdidoBuro: e.target.checked }))}
-            disabled={!puedeEnviar} />
+            onChange={e => setForm(p => ({ ...p, trabajoPerdidoBuro: e.target.checked }))} />
           Se pierde trabajo en casos que el buro rechazara
         </label>
       </div>
@@ -102,31 +93,29 @@ export function FormDiagnostico({ puedeEnviar, onResultado, onPreguntas }: Props
         <h4>Concentracion</h4>
         <label className="diagnostico__check">
           <input type="checkbox" checked={form.concentracionSinMasa}
-            onChange={e => setForm(p => ({ ...p, concentracionSinMasa: e.target.checked }))}
-            disabled={!puedeEnviar} />
+            onChange={e => setForm(p => ({ ...p, concentracionSinMasa: e.target.checked }))} />
           Los errores estan concentrados en pocas sucursales (sin masa real)
         </label>
       </div>
 
       <div className="diagnostico__seccion">
         <h4>Otras causas identificadas</h4>
-        <p style={{ fontSize: 12, color: 'var(--gris-600)', marginBottom: 8 }}>
+        <p style={{ fontSize: 12, color: 'var(--ipd-text-tertiary)', marginBottom: 8 }}>
           Marca las que consideres causas del problema (cuidado: algunas son trampas).
         </p>
         {CAUSAS_OPCIONES.map(c => (
           <label key={c.key} className="diagnostico__check">
             <input type="checkbox" checked={form.causasEspurias.includes(c.key)}
-              onChange={() => toggleCausa(c.key)}
-              disabled={!puedeEnviar} />
+              onChange={() => toggleCausa(c.key)} />
             {c.label}
           </label>
         ))}
       </div>
 
-      {error && <p style={{ color: 'var(--rojo-600)', fontSize: 12, marginTop: 8 }}>{error}</p>}
+      {error && <p style={{ color: 'var(--ipd-feedback-danger-fg)', fontSize: 12, marginTop: 8 }}>{error}</p>}
 
       <button className="diagnostico__enviar" onClick={enviar}
-        disabled={!puedeEnviar || enviando}>
+        disabled={enviando}>
         {enviando ? 'Enviando...' : 'Enviar diagnostico al consejo'}
       </button>
     </div>
