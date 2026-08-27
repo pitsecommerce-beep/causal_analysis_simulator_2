@@ -445,6 +445,10 @@ export function configurarSockets(
       const info = (socket as any).__equipo;
       if (!info) return ack?.({ error: 'No estás en un equipo' });
 
+      const sesion = sesiones.get(info.codigoSala);
+      const equipo = sesion?.equipos.get(info.nombre);
+      if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
+
       const rol = payload?.rol as RolEquipo;
       const participante = payload?.participante?.trim() as string;
       if (!rol || !participante) return ack?.({ error: 'Rol y nombre de participante requeridos' });
@@ -452,7 +456,22 @@ export function configurarSockets(
 
       (socket as any).__equipo.participante = participante;
       (socket as any).__equipo.rol = rol;
-      ack?.({ ok: true });
+
+      const yaExiste = equipo.miembros.some(m => m.nombre === participante);
+      if (!yaExiste) {
+        equipo.miembros.push({ nombre: participante, rol });
+      } else {
+        const idx = equipo.miembros.findIndex(m => m.nombre === participante);
+        if (idx >= 0) equipo.miembros[idx].rol = rol;
+      }
+
+      io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:miembro_sentado', {
+        nombre: participante,
+        rol,
+        miembros: equipo.miembros,
+      });
+
+      ack?.({ ok: true, miembros: equipo.miembros });
     });
 
     socket.on('equipo:intervenir', async (payload, ack) => {
