@@ -1745,3 +1745,77 @@ input, select, textarea, button {
   border-radius: 10px;
   color: var(--gris-700);
 }
+
+.profesor__panel-equipos {
+  padding: 20px 24px;
+  background: var(--blanco);
+  border-bottom: 1px solid var(--gris-300);
+}
+.profesor__panel-equipos h2 {
+  font-size: 16px;
+  color: var(--azul-900);
+  margin-bottom: 4px;
+}
+.profesor__panel-desc {
+  font-size: 13px;
+  color: var(--gris-600);
+  margin-bottom: 16px;
+}
+.profesor__equipo-config {
+  background: var(--gris-100);
+  border-radius: var(--radio);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.profesor__equipo-config-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.profesor__equipo-nombre-input {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid var(--gris-300);
+  border-radius: var(--radio);
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--blanco);
+}
+.profesor__btn-eliminar {
+  padding: 4px 12px;
+  background: var(--rojo-600, #e53e3e);
+  color: var(--blanco);
+  border: none;
+  border-radius: var(--radio);
+  font-size: 12px;
+  cursor: pointer;
+}
+.profesor__emails-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gris-300);
+  border-radius: var(--radio);
+  font-family: var(--fuente-mono);
+  font-size: 13px;
+  resize: vertical;
+  background: var(--blanco);
+  box-sizing: border-box;
+}
+.profesor__email-count {
+  font-size: 11px;
+  color: var(--gris-500);
+  margin-top: 4px;
+  display: block;
+}
+.profesor__panel-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.profesor__btn--guardar {
+  background: var(--verde-600);
+}
+.profesor__btn--guardar:hover {
+  background: #2f855a;
+}

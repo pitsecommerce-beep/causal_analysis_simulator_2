@@ -1,6 +1,13 @@
 import { obtenerPool } from './conexion.js';
 import type { EstadoMotor, DiagnosticoEquipo, RigorMetodo, ResultadoPuntuacion, RolEquipo, MiembroEquipo } from '../motor/tipos.js';
 
+export interface AsignacionEquipoDB {
+  id: number;
+  sesion_id: number;
+  nombre_equipo: string;
+  email: string;
+}
+
 export interface SesionDB {
   id: number;
   codigo_sala: string;
@@ -206,4 +213,78 @@ export async function contarEvidencias(equipoId: number): Promise<number> {
     [equipoId],
   );
   return rows[0]?.total ?? 0;
+}
+
+export async function guardarAsignaciones(
+  sesionId: number,
+  equipos: { nombre: string; emails: string[] }[],
+): Promise<void> {
+  const pool = obtenerPool();
+  await pool.query('DELETE FROM asignaciones_equipo WHERE sesion_id = $1', [sesionId]);
+  for (const eq of equipos) {
+    for (const email of eq.emails) {
+      await pool.query(
+        `INSERT INTO asignaciones_equipo (sesion_id, nombre_equipo, email)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (sesion_id, email) DO UPDATE SET nombre_equipo = $2`,
+        [sesionId, eq.nombre, email.toLowerCase().trim()],
+      );
+    }
+  }
+}
+
+export async function obtenerAsignaciones(sesionId: number): Promise<AsignacionEquipoDB[]> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    'SELECT * FROM asignaciones_equipo WHERE sesion_id = $1 ORDER BY nombre_equipo, email',
+    [sesionId],
+  );
+  return rows;
+}
+
+export async function buscarAsignacionPorEmail(sesionId: number, email: string): Promise<AsignacionEquipoDB | null> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    'SELECT * FROM asignaciones_equipo WHERE sesion_id = $1 AND email = $2',
+    [sesionId, email.toLowerCase().trim()],
+  );
+  return rows[0] ?? null;
+}
+
+export async function guardarMiembroConEmail(
+  equipoId: number,
+  email: string,
+  nombre: string,
+  rol: RolEquipo,
+): Promise<void> {
+  const pool = obtenerPool();
+  await pool.query(
+    `INSERT INTO miembros (equipo_id, nombre_participante, rol, email)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (equipo_id, nombre_participante) DO UPDATE SET rol = $3, email = $4`,
+    [equipoId, nombre, rol, email.toLowerCase().trim()],
+  );
+}
+
+export async function obtenerEquipoCompletoPorEmail(
+  sesionId: number,
+  email: string,
+): Promise<{ equipo: EquipoDB; miembros: MiembroEquipo[] } | null> {
+  const pool = obtenerPool();
+  const { rows: asig } = await pool.query(
+    'SELECT nombre_equipo FROM asignaciones_equipo WHERE sesion_id = $1 AND email = $2',
+    [sesionId, email.toLowerCase().trim()],
+  );
+  if (asig.length === 0) return null;
+
+  const nombreEquipo = asig[0].nombre_equipo;
+  const { rows: eqs } = await pool.query(
+    'SELECT * FROM equipos WHERE sesion_id = $1 AND nombre = $2',
+    [sesionId, nombreEquipo],
+  );
+  if (eqs.length === 0) return null;
+
+  const equipo = eqs[0];
+  const miembros = await obtenerMiembros(equipo.id);
+  return { equipo, miembros };
 }
