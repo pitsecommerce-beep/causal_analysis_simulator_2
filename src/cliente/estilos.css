@@ -571,6 +571,66 @@ input, select, textarea, button {
   padding: var(--ipd-space-6);
   gap: 0;
 }
+.escena--canvas {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.escena--canvas .escena__overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--ipd-space-4) var(--ipd-space-6);
+  pointer-events: none;
+  z-index: 2;
+}
+.escena--canvas .escena__overlay > * {
+  pointer-events: auto;
+}
+.escena--canvas .escena__subtitulos {
+  margin-top: 0;
+  max-width: 720px;
+  backdrop-filter: blur(4px);
+}
+.escena--canvas .escena__controles {
+  max-width: 720px;
+}
+
+/* — Canvas sala — */
+.canvas-sala {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  z-index: 1;
+}
+.canvas-sala__lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: grab;
+}
+.canvas-sala__lienzo:active {
+  cursor: grabbing;
+}
+.canvas-sala__cargando {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ipd-space-3);
+  background: rgba(0, 0, 0, 0.85);
+  color: var(--ipd-color-navy-300);
+  font-size: var(--ipd-size-sm);
+  z-index: 3;
+}
 
 /* — Pantalla 1: Sala de juntas — */
 .escena__sala {

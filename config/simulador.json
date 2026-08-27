@@ -211,6 +211,26 @@
       "presupuesto_agotado_sin_efecto": -100
     }
   },
+  "camara": {
+    "arcoGrados": 140,
+    "aceleracionGrados": 400,
+    "velocidadMaxGrados": 200,
+    "spriteEscalaAlto": 0.32,
+    "spriteBaseY": 0.65,
+    "brujulaAlto": 20,
+    "posiciones": {
+      "director": 0,
+      "adriana": -55,
+      "cliente-0": -40,
+      "cliente-1": -15,
+      "cliente-2": 15,
+      "cliente-3": 40,
+      "companero-0": -30,
+      "companero-1": 10,
+      "companero-2": 35,
+      "companero-3": 55
+    }
+  },
   "desempate": ["diagnostico", "impacto", "velocidad"],
   "voz": {
     "clientes_por_sesion": 4,
