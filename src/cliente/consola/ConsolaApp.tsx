@@ -6,6 +6,7 @@ import type {
   RolEquipo, MiembroEquipo, ResultadoPuntuacion, PreguntaConsejo,
 } from '../lib/tipos';
 import { NOMBRES_ROLES } from '../lib/tipos';
+import { usePresencia } from '../lib/presencia';
 import { Reloj } from './Reloj';
 import { PanelKPIs } from './PanelKPIs';
 import { PanelConsultas } from './PanelConsultas';
@@ -53,6 +54,8 @@ export function ConsolaApp({
   const mostrarIntervenciones = !tieneRoles || esPatrocinador;
   const mostrarDiagnostico = (!tieneRoles || esLider) && esConsejoOFin;
   const tienePanelAcciones = mostrarConsultas || mostrarIntervenciones || esVozCliente || mostrarDiagnostico;
+
+  const { pares: presenciaPares, emitir: emitirPresencia } = usePresencia(miNombre);
 
   useEffect(() => {
     function onTick(data: EstadoReloj) {
@@ -111,7 +114,9 @@ export function ConsolaApp({
   }, []);
 
   const handleIntervencion = useCallback((id: number, sucursales?: number[]) => {
+    emitirPresencia('decidiendo');
     socket.emit('equipo:intervenir', { intervencionId: id, sucursales }, (resp: any) => {
+      emitirPresencia('idle');
       if (resp?.error) {
         setMensaje(resp.error);
         setTimeout(() => setMensaje(null), 3000);
@@ -122,7 +127,7 @@ export function ConsolaApp({
         setTimeout(() => setMensaje(null), 3000);
       }
     });
-  }, []);
+  }, [emitirPresencia]);
 
   const handleBitacora = useCallback((entrada: EntradaBitacoraLocal) => {
     setBitacora(prev => [...prev, entrada]);

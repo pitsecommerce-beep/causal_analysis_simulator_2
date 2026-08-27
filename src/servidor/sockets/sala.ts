@@ -743,8 +743,34 @@ export function configurarSockets(
       ack?.({ estado: estadoEscena(codigo) });
     });
 
+    // Presence broadcasting — 200ms throttle per socket
+    let ultimaPresencia = 0;
+    socket.on('equipo:presencia', (payload) => {
+      const ahora = Date.now();
+      if (ahora - ultimaPresencia < 200) return;
+      ultimaPresencia = ahora;
+
+      const info = (socket as any).__equipo;
+      if (!info?.participante) return;
+
+      const estado = typeof payload?.estado === 'string' ? payload.estado : 'idle';
+      const validos = ['idle', 'tecleando', 'consultando', 'decidiendo', 'esperando'];
+      if (!validos.includes(estado)) return;
+
+      socket.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:presencia', {
+        participante: info.participante,
+        estado,
+      });
+    });
+
     socket.on('disconnect', () => {
-      // Socket.IO handles room cleanup automatically
+      const info = (socket as any).__equipo;
+      if (info?.participante) {
+        socket.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:presencia', {
+          participante: info.participante,
+          estado: 'desconectado',
+        });
+      }
     });
   });
 }
