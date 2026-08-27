@@ -1,8 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { ComentarioCliente, Solicitud } from '../datos/tipos.js';
 
-const MODELO_REDACTAR = () => process.env.ANTHROPIC_MODEL_REDACTAR || 'claude-haiku-4-5';
-
 let cliente: Anthropic | null = null;
 
 function obtenerCliente(): Anthropic | null {
@@ -13,13 +11,6 @@ function obtenerCliente(): Anthropic | null {
   return cliente;
 }
 
-export interface ResultadoDiscurso {
-  texto: string;
-  fuente: 'ia' | 'respaldo';
-  validacion: boolean;
-  tiempoMs: number;
-}
-
 export interface ParlamentoCliente {
   nombre: string;
   estado: string;
@@ -27,7 +18,7 @@ export interface ParlamentoCliente {
   genero: string;
   intentos: number;
   texto: string;
-  fuente: 'ia' | 'respaldo';
+  fuente: 'directo';
   tiempoMs: number;
 }
 
@@ -37,156 +28,6 @@ export function validarTerminosProhibidos(texto: string, terminos: string[]): bo
     if (lower.includes(t.toLowerCase())) return false;
   }
   return true;
-}
-
-export async function generarDiscursoDirector(
-  totalSolicitudes: number,
-  totalComentarios: number,
-  totalSucursales: number,
-  terminosProhibidos: string[],
-  maxPalabras: number,
-  timeoutMs: number,
-): Promise<ResultadoDiscurso> {
-  const api = obtenerCliente();
-  if (!api) {
-    console.warn('⚠ ANTHROPIC_API_KEY no configurada, usando discurso de respaldo');
-    return { texto: '', fuente: 'respaldo', validacion: true, tiempoMs: 0 };
-  }
-
-  const inicio = Date.now();
-  try {
-    const response = await Promise.race([
-      api.messages.create({
-        model: MODELO_REDACTAR(),
-        max_tokens: 1024,
-        system: `Eres Ramón Betancourt, Director de Banca al Menudeo de ETF Bank México.
-Tono: impaciente pero profesional, no hostil. Hablas en primera persona.
-Tu audiencia es un grupo de consultoras externas que compiten entre sí.
-NUNCA reveles hallazgos, conclusiones ni causas raíz. Solo presentas el problema y el mandato.
-Máximo ${maxPalabras} palabras. Español mexicano formal.`,
-        messages: [{
-          role: 'user',
-          content: `Redacta el discurso de apertura de Ramón Betancourt para las consultoras.
-
-Datos que debe cubrir:
-- ETF Bank tiene un volumen creciente de quejas de clientes sobre el proceso de solicitud de tarjeta de crédito
-- Hay una muestra de ${totalSolicitudes} solicitudes reales disponible, más un extracto histórico del sistema C.R.A.S.S.
-- Hay ${totalComentarios} comentarios directos de clientes
-- El flujo del proceso tiene tres actores: el cliente, el ejecutivo de sucursal, y la Oficina de Solicitud de Crédito (CrOP)
-- El proceso involucra ${totalSucursales} sucursales
-- Compiten varias consultoras entre sí por el mandato
-- Mandato explícito: razonamiento cuidadoso y lógico, todo sustentado con datos, no opiniones ni adivinanzas
-
-NO menciones causas, NO digas qué está mal, NO sugieras soluciones, NO menciones sucursales específicas por número. Solo describe la situación y el mandato.`,
-        }],
-      }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), timeoutMs),
-      ),
-    ]);
-
-    const tiempoMs = Date.now() - inicio;
-    const bloque = response.content.find(b => b.type === 'text');
-    if (bloque && bloque.type === 'text') {
-      const valido = validarTerminosProhibidos(bloque.text, terminosProhibidos);
-      if (!valido) {
-        console.warn('⚠ Discurso generado contiene términos prohibidos, usando respaldo');
-        return { texto: '', fuente: 'respaldo', validacion: false, tiempoMs };
-      }
-      return { texto: bloque.text, fuente: 'ia', validacion: true, tiempoMs };
-    }
-    return { texto: '', fuente: 'respaldo', validacion: true, tiempoMs };
-  } catch (err) {
-    const tiempoMs = Date.now() - inicio;
-    console.warn('⚠ Error generando discurso con IA:', (err as Error).message);
-    return { texto: '', fuente: 'respaldo', validacion: true, tiempoMs };
-  }
-}
-
-export async function generarParlamentosClientes(
-  comentarios: ComentarioCliente[],
-  solicitudes: Solicitud[],
-  semilla: number,
-  maxPalabras: number,
-  timeoutMs: number,
-): Promise<ParlamentoCliente[]> {
-  const seleccionados = sortearComentarios(comentarios, semilla);
-  const indiceSolicitud = new Map(solicitudes.map(s => [s.id, s]));
-
-  const api = obtenerCliente();
-  if (!api) {
-    console.warn('⚠ ANTHROPIC_API_KEY no configurada, usando parlamentos de respaldo');
-    return seleccionados.map((c, i) => parlamentoRespaldo(c, indiceSolicitud.get(c.solicitudId), i));
-  }
-
-  const resultados: ParlamentoCliente[] = [];
-
-  for (let i = 0; i < seleccionados.length; i++) {
-    const com = seleccionados[i];
-    const sol = indiceSolicitud.get(com.solicitudId);
-    const genero = generoDesdeBase(sol);
-    const nombre = nombreFicticio(com.id, genero, i);
-
-    const inicio = Date.now();
-    try {
-      const camposSolicitud = sol
-        ? `- Application #: ${sol.id}
-- Sucursal: ${sol.sucursal}
-- Estado: ${sol.estado}
-- Intentos: ${sol.intentos}
-- Ventana de captura: ${sol.ventanaCaptura} días
-- Último estatus: ${sol.ultimoEstatus}
-- Línea otorgada: ${sol.lineaCredito ?? 'ninguna'}`
-        : '';
-
-      const response = await Promise.race([
-        api.messages.create({
-          model: MODELO_REDACTAR(),
-          max_tokens: 512,
-          system: `Conviertes un registro de comentario de cliente bancario en un parlamento hablado en primera persona.
-El cliente habla de su experiencia real. Usa los datos exactos del registro (intentos, fechas, sucursal).
-NO inventes ni una sola cifra. Si el registro dice tres intentos, el cliente dice tres.
-Español mexicano coloquial pero respetuoso. Máximo ${maxPalabras} palabras.
-Empieza directamente con el parlamento, sin comillas ni acotaciones.`,
-          messages: [{
-            role: 'user',
-            content: `Registro del cliente:
-${camposSolicitud}
-- Canal: ${com.canalCaptacion}
-- Categoría: ${com.categoriaPrimaria}${com.categoriaSecundaria ? ` / ${com.categoriaSecundaria}` : ''}
-- Comentario original: "${com.comentario}"
-
-Genera el parlamento en primera persona de este cliente.`,
-          }],
-        }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), timeoutMs),
-        ),
-      ]);
-
-      const tiempoMs = Date.now() - inicio;
-      const bloque = response.content.find(b => b.type === 'text');
-      if (bloque && bloque.type === 'text') {
-        resultados.push({
-          nombre,
-          estado: com.estado,
-          sucursal: com.sucursal,
-          genero,
-          intentos: com.intentos,
-          texto: bloque.text,
-          fuente: 'ia',
-          tiempoMs,
-        });
-      } else {
-        resultados.push(parlamentoRespaldo(com, sol, i));
-      }
-    } catch (err) {
-      console.warn(`⚠ Error generando parlamento cliente ${com.id}:`, (err as Error).message);
-      resultados.push(parlamentoRespaldo(com, sol, i));
-    }
-  }
-
-  return resultados;
 }
 
 export function sortearComentarios(comentarios: ComentarioCliente[], semilla: number): ComentarioCliente[] {
@@ -256,6 +97,30 @@ function generoDesdeBase(sol: Solicitud | undefined): string {
   const g = sol.genero.toLowerCase();
   if (g.includes('female') || g.includes('femenin')) return 'F';
   return 'M';
+}
+
+export function generarParlamentosDirectos(
+  comentarios: ComentarioCliente[],
+  solicitudes: Solicitud[],
+  semilla: number,
+): ParlamentoCliente[] {
+  const seleccionados = sortearComentarios(comentarios, semilla);
+  const indiceSolicitud = new Map(solicitudes.map(s => [s.id, s]));
+
+  return seleccionados.map((com, i) => {
+    const sol = indiceSolicitud.get(com.solicitudId);
+    const genero = generoDesdeBase(sol);
+    return {
+      nombre: nombreFicticio(com.id, genero, i),
+      estado: com.estado,
+      sucursal: com.sucursal,
+      genero,
+      intentos: com.intentos,
+      texto: com.comentario,
+      fuente: 'directo' as const,
+      tiempoMs: 0,
+    };
+  });
 }
 
 export interface PreguntaConsejo {
@@ -338,18 +203,4 @@ Genera exactamente 3 preguntas escépticas.`,
     console.warn('⚠ Error generando preguntas del consejo:', (err as Error).message);
     return { preguntas: PREGUNTAS_RESPALDO, fuente: 'respaldo' };
   }
-}
-
-function parlamentoRespaldo(com: ComentarioCliente, sol: Solicitud | undefined, indice: number): ParlamentoCliente {
-  const genero = generoDesdeBase(sol);
-  return {
-    nombre: nombreFicticio(com.id, genero, indice),
-    estado: com.estado,
-    sucursal: com.sucursal,
-    genero,
-    intentos: com.intentos,
-    texto: com.comentario,
-    fuente: 'respaldo',
-    tiempoMs: 0,
-  };
 }

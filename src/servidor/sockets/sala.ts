@@ -700,6 +700,12 @@ export function configurarSockets(
             fuenteTexto: c.fuenteTexto,
             tieneAudio: c.audio.length > 0,
           })),
+          adriana: {
+            nombre: escena.adriana.nombre,
+            texto: escena.adriana.texto,
+            fuenteTexto: escena.adriana.fuenteTexto,
+            tieneAudio: escena.adriana.audio.length > 0,
+          },
         },
       });
     });
@@ -718,6 +724,8 @@ export function configurarSockets(
       let pieza;
       if (rol === 'director') {
         pieza = escena.director;
+      } else if (rol === 'adriana') {
+        pieza = escena.adriana;
       } else if (rol === 'cliente' && typeof indice === 'number') {
         pieza = escena.clientes[indice];
       }

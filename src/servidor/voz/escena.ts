@@ -3,24 +3,22 @@ import { resolve } from 'path';
 import type { DatosCargados } from '../datos/tipos.js';
 import type { ConfigSimulador } from '../motor/tipos.js';
 import {
-  generarDiscursoDirector,
-  generarParlamentosClientes,
+  generarParlamentosDirectos,
   validarTerminosProhibidos,
-  type ResultadoDiscurso,
   type ParlamentoCliente,
 } from './anthropic.js';
 import { textoAAudio, vozDirector, vozCliente, type ResultadoAudio } from './deepgram.js';
-import { DISCURSO_DIRECTOR, TESTIMONIOS_RESPALDO } from './guiones.js';
+import { DISCURSO_DIRECTOR, DISCURSO_ADRIANA, TESTIMONIOS_RESPALDO } from './guiones.js';
 
 export interface PiezaEscena {
-  rol: 'director' | 'cliente';
+  rol: 'director' | 'cliente' | 'adriana';
   nombre: string;
   estado: string;
   sucursal: number;
   genero: string;
   intentos: number;
   texto: string;
-  fuenteTexto: 'ia' | 'respaldo';
+  fuenteTexto: 'fijo' | 'directo' | 'respaldo';
   audio: Buffer;
   fuenteAudio: 'ia' | 'respaldo';
 }
@@ -28,6 +26,7 @@ export interface PiezaEscena {
 export interface EscenaCompleta {
   director: PiezaEscena;
   clientes: PiezaEscena[];
+  adriana: PiezaEscena;
   lista: boolean;
 }
 
@@ -52,8 +51,6 @@ export function obtenerEscena(codigoSala: string): EscenaCompleta | null {
 function configVoz(config: ConfigSimulador) {
   const voz = config.voz;
   return {
-    maxPalabrasDirector: voz?.max_palabras_director ?? 320,
-    maxPalabrasTestimonio: voz?.max_palabras_testimonio ?? 70,
     timeoutMs: voz?.timeout_ms ?? 12000,
     terminosProhibidos: voz?.terminos_prohibidos ?? [],
     voces: voz?.voces ?? {
@@ -79,32 +76,19 @@ export async function precalentarEscena(
   const cv = configVoz(config);
 
   try {
-    const totalSucursales = new Set(datos.solicitudes.map(s => s.sucursal)).size;
+    const valido = validarTerminosProhibidos(DISCURSO_DIRECTOR, cv.terminosProhibidos);
+    if (!valido) {
+      console.warn('⚠ El guion fijo del director contiene términos prohibidos — revisar guiones/director.txt');
+    }
 
-    const [discurso, parlamentos] = await Promise.all([
-      generarDiscursoDirector(
-        datos.solicitudes.length,
-        datos.comentarios.length,
-        totalSucursales,
-        cv.terminosProhibidos,
-        cv.maxPalabrasDirector,
-        cv.timeoutMs,
-      ),
-      generarParlamentosClientes(
-        datos.comentarios,
-        datos.solicitudes,
-        datos.verdadOculta.semilla,
-        cv.maxPalabrasTestimonio,
-        cv.timeoutMs,
-      ),
-    ]);
-
-    const textoDirector = discurso.fuente === 'ia' && discurso.texto
-      ? discurso.texto
-      : DISCURSO_DIRECTOR;
+    const parlamentos = generarParlamentosDirectos(
+      datos.comentarios,
+      datos.solicitudes,
+      datos.verdadOculta.semilla,
+    );
 
     const audioDirector = await generarAudioConRespaldo(
-      textoDirector,
+      DISCURSO_DIRECTOR,
       vozDirector(cv.voces),
       cv.timeoutMs,
       'discurso-director.mp3',
@@ -117,8 +101,8 @@ export async function precalentarEscena(
       sucursal: 0,
       genero: 'M',
       intentos: 0,
-      texto: textoDirector,
-      fuenteTexto: discurso.fuente === 'ia' && discurso.texto ? 'ia' : 'respaldo',
+      texto: DISCURSO_DIRECTOR,
+      fuenteTexto: 'fijo',
       audio: audioDirector.audio,
       fuenteAudio: audioDirector.fuente,
     };
@@ -126,10 +110,9 @@ export async function precalentarEscena(
     const clientes: PiezaEscena[] = [];
     for (let i = 0; i < parlamentos.length; i++) {
       const p = parlamentos[i];
-      const textoCliente = p.fuente === 'ia' ? p.texto : obtenerTestimonioRespaldo(i);
       const voz = vozCliente(p.genero, i, cv.voces);
       const audio = await generarAudioConRespaldo(
-        textoCliente,
+        p.texto,
         voz,
         cv.timeoutMs,
         `cliente-${i}.mp3`,
@@ -142,16 +125,37 @@ export async function precalentarEscena(
         sucursal: p.sucursal,
         genero: p.genero,
         intentos: p.intentos,
-        texto: textoCliente,
-        fuenteTexto: p.fuente,
+        texto: p.texto,
+        fuenteTexto: 'directo',
         audio: audio.audio,
         fuenteAudio: audio.fuente,
       });
     }
 
+    const vozAdriana = cv.voces.adriana ?? cv.voces.clienteF?.[0] ?? 'aura-2-carina-es';
+    const audioAdriana = await generarAudioConRespaldo(
+      DISCURSO_ADRIANA,
+      vozAdriana,
+      cv.timeoutMs,
+      'adriana.mp3',
+    );
+
+    const adriana: PiezaEscena = {
+      rol: 'adriana',
+      nombre: 'Adriana Rueda',
+      estado: '',
+      sucursal: 0,
+      genero: 'F',
+      intentos: 0,
+      texto: DISCURSO_ADRIANA,
+      fuenteTexto: 'fijo',
+      audio: audioAdriana.audio,
+      fuenteAudio: audioAdriana.fuente,
+    };
+
     cache.set(codigoSala, {
       estado: 'lista',
-      escena: { director, clientes, lista: true },
+      escena: { director, clientes, adriana, lista: true },
       error: null,
     });
   } catch (err) {
@@ -183,13 +187,6 @@ async function generarAudioConRespaldo(
   }
 }
 
-function obtenerTestimonioRespaldo(indice: number): string {
-  if (indice < TESTIMONIOS_RESPALDO.length) {
-    return TESTIMONIOS_RESPALDO[indice].texto;
-  }
-  return TESTIMONIOS_RESPALDO[0].texto;
-}
-
 function construirEscenaRespaldo(): EscenaCompleta {
   let audioDirector = Buffer.alloc(0);
   try {
@@ -216,6 +213,11 @@ function construirEscenaRespaldo(): EscenaCompleta {
     };
   });
 
+  let audioAdriana = Buffer.alloc(0);
+  try {
+    audioAdriana = readFileSync(resolve('src/servidor/voz/respaldo/adriana.mp3'));
+  } catch { /* no fallback audio */ }
+
   return {
     director: {
       rol: 'director',
@@ -225,11 +227,23 @@ function construirEscenaRespaldo(): EscenaCompleta {
       genero: 'M',
       intentos: 0,
       texto: DISCURSO_DIRECTOR,
-      fuenteTexto: 'respaldo',
+      fuenteTexto: 'fijo',
       audio: audioDirector,
       fuenteAudio: audioDirector.length > 0 ? 'respaldo' : 'respaldo',
     },
     clientes,
+    adriana: {
+      rol: 'adriana',
+      nombre: 'Adriana Rueda',
+      estado: '',
+      sucursal: 0,
+      genero: 'F',
+      intentos: 0,
+      texto: DISCURSO_ADRIANA,
+      fuenteTexto: 'fijo',
+      audio: audioAdriana,
+      fuenteAudio: 'respaldo',
+    },
     lista: true,
   };
 }

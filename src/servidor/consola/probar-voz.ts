@@ -3,15 +3,15 @@ import { resolve } from 'path';
 import { cargarConfig } from '../motor/dag.js';
 import { cargarTodosDatos } from '../datos/cargador.js';
 import {
-  generarDiscursoDirector,
-  generarParlamentosClientes,
   validarTerminosProhibidos,
   sortearComentarios,
   nombreFicticio,
+  generarParlamentosDirectos,
 } from '../voz/anthropic.js';
 import { textoAAudio, vozDirector, vozCliente } from '../voz/deepgram.js';
 import {
   DISCURSO_DIRECTOR,
+  DISCURSO_ADRIANA,
   TESTIMONIOS_RESPALDO,
   validarTestimoniosContraDatos,
 } from '../voz/guiones.js';
@@ -31,55 +31,43 @@ async function main(): Promise<void> {
   const config = cargarConfig();
   const datos = cargarTodosDatos();
   const voz = config.voz!;
-  const totalSucursales = new Set(datos.solicitudes.map(s => s.sucursal)).size;
 
   const outDir = resolve('salida');
   mkdirSync(outDir, { recursive: true });
 
   console.log('╔══════════════════════════════════════════════════════════════╗');
-  console.log(`║  PRUEBA DE VOZ — modo: ${(modoRespaldo ? 'RESPALDO' : 'IA').padEnd(37)}║`);
+  console.log(`║  PRUEBA DE VOZ — modo: ${(modoRespaldo ? 'RESPALDO' : 'TEXTO FIJO + DEEPGRAM').padEnd(37)}║`);
   console.log('╠══════════════════════════════════════════════════════════════╣');
 
   if (modoRespaldo) {
     await probarRespaldo(outDir, datos, voz);
   } else {
-    await probarIA(outDir, datos, voz, totalSucursales);
+    await probarTextoFijo(outDir, datos, voz);
   }
 
   console.log('╚══════════════════════════════════════════════════════════════╝');
 }
 
-async function probarIA(
+async function probarTextoFijo(
   outDir: string,
   datos: ReturnType<typeof cargarTodosDatos>,
   voz: NonNullable<ReturnType<typeof cargarConfig>['voz']>,
-  totalSucursales: number,
 ): Promise<void> {
   console.log('║');
-  console.log('║  ── Discurso del director ──');
+  console.log('║  ── Discurso del director (texto fijo) ──');
+  console.log('║  Fuente: src/servidor/voz/guiones/director.txt');
+  console.log('║  Anthropic: NO SE USA en Acto 1');
 
-  const discurso = await generarDiscursoDirector(
-    datos.solicitudes.length,
-    datos.comentarios.length,
-    totalSucursales,
-    voz.terminos_prohibidos,
-    voz.max_palabras_director,
-    voz.timeout_ms,
-  );
+  const palabras = DISCURSO_DIRECTOR.split(/\s+/).length;
+  console.log(`║  Palabras:       ${palabras}`);
 
-  const textoDirector = discurso.fuente === 'ia' && discurso.texto
-    ? discurso.texto
-    : DISCURSO_DIRECTOR;
+  const valido = validarTerminosProhibidos(DISCURSO_DIRECTOR, voz.terminos_prohibidos);
+  console.log(`║  Validación:     ${valido ? 'PASÓ' : 'FALLÓ — contiene términos prohibidos'}`);
 
-  console.log(`║  Fuente texto:   ${discurso.fuente}`);
-  console.log(`║  Tiempo Anthropic: ${discurso.tiempoMs} ms`);
-  console.log(`║  Palabras:       ${textoDirector.split(/\s+/).length}`);
-  console.log(`║  Validación:     ${discurso.validacion ? 'PASÓ' : 'FALLÓ (usó respaldo)'}`);
-
-  writeFileSync(resolve(outDir, 'director.txt'), textoDirector);
+  writeFileSync(resolve(outDir, 'director.txt'), DISCURSO_DIRECTOR);
 
   const audioDir = await textoAAudio(
-    textoDirector,
+    DISCURSO_DIRECTOR,
     { voz: vozDirector(voz.voces) },
     voz.timeout_ms,
   );
@@ -91,18 +79,40 @@ async function probarIA(
     writeFileSync(path, audioDir.audio);
     console.log(`║  Audio:          ${path} (${(audioDir.audio.length / 1024).toFixed(1)} KB)`);
   } else {
-    console.log('║  Audio:          no generado');
+    console.log('║  Audio:          no generado (sin DEEPGRAM_API_KEY)');
   }
 
   console.log('║');
-  console.log('║  ── Parlamentos de clientes ──');
+  console.log('║  ── Adriana Rueda (texto fijo) ──');
+  console.log('║  Fuente: src/servidor/voz/guiones/adriana.txt');
 
-  const parlamentos = await generarParlamentosClientes(
+  const palabrasAdriana = DISCURSO_ADRIANA.split(/\s+/).length;
+  console.log(`║  Palabras:       ${palabrasAdriana}`);
+
+  const vozAdriana = voz.voces.clienteF?.[0] ?? 'aura-2-carina-es';
+  const audioAdriana = await textoAAudio(
+    DISCURSO_ADRIANA,
+    { voz: vozAdriana },
+    voz.timeout_ms,
+  );
+  console.log(`║  Fuente audio:   ${audioAdriana.fuente}`);
+  console.log(`║  Tiempo Deepgram: ${audioAdriana.tiempoMs} ms`);
+
+  if (audioAdriana.audio.length > 0) {
+    const path = resolve(outDir, 'adriana.mp3');
+    writeFileSync(path, audioAdriana.audio);
+    console.log(`║  Audio:          ${path} (${(audioAdriana.audio.length / 1024).toFixed(1)} KB)`);
+  } else {
+    console.log('║  Audio:          no generado (sin DEEPGRAM_API_KEY)');
+  }
+
+  console.log('║');
+  console.log('║  ── Testimonios de clientes (texto directo, sin Anthropic) ──');
+
+  const parlamentos = generarParlamentosDirectos(
     datos.comentarios,
     datos.solicitudes,
     datos.verdadOculta.semilla,
-    voz.max_palabras_testimonio,
-    voz.timeout_ms,
   );
 
   for (let i = 0; i < parlamentos.length; i++) {
@@ -110,7 +120,6 @@ async function probarIA(
     console.log(`║`);
     console.log(`║  Cliente ${i + 1}: ${p.nombre} (${p.genero}, suc ${p.sucursal}, ${p.estado})`);
     console.log(`║  Fuente texto:   ${p.fuente}`);
-    console.log(`║  Tiempo Anthropic: ${p.tiempoMs} ms`);
     console.log(`║  Palabras:       ${p.texto.split(/\s+/).length}`);
     console.log(`║  Texto:          ${p.texto.slice(0, 80)}...`);
 
@@ -132,15 +141,21 @@ async function probarIA(
 
   console.log('║');
   console.log('║  ── Validación de términos prohibidos ──');
-  const todosTextos = [textoDirector, ...parlamentos.map(p => p.texto)];
+  const todosTextos = [DISCURSO_DIRECTOR, ...parlamentos.map(p => p.texto)];
   let todosValidos = true;
   for (let i = 0; i < todosTextos.length; i++) {
     const etiqueta = i === 0 ? 'Director' : `Cliente ${i}`;
-    const valido = validarTerminosProhibidos(todosTextos[i], voz.terminos_prohibidos);
-    console.log(`║  ${etiqueta}: ${valido ? 'PASÓ' : 'FALLÓ'}`);
-    if (!valido) todosValidos = false;
+    const v = validarTerminosProhibidos(todosTextos[i], voz.terminos_prohibidos);
+    console.log(`║  ${etiqueta}: ${v ? 'PASÓ' : 'FALLÓ'}`);
+    if (!v) todosValidos = false;
   }
   console.log(`║  Resultado global: ${todosValidos ? 'TODOS PASARON' : 'HAY FALLOS'}`);
+
+  console.log('║');
+  console.log('║  ── Resumen ──');
+  console.log('║  Anthropic en Acto 1: NO (texto fijo + testimonios directos)');
+  console.log('║  Anthropic en consejo: SÍ (generarPreguntasConsejo, minuto 45)');
+  console.log('║  Deepgram TTS: en vivo como camino principal');
   console.log('║');
 }
 
@@ -205,6 +220,7 @@ async function probarRespaldo(
   const archivos = [
     { nombre: 'discurso-director.txt', esAudio: false },
     { nombre: 'discurso-director.mp3', esAudio: true },
+    { nombre: 'adriana.mp3', esAudio: true },
     { nombre: 'testimonios.json', esAudio: false },
     { nombre: 'cliente-0.mp3', esAudio: true },
     { nombre: 'cliente-1.mp3', esAudio: true },
@@ -248,11 +264,9 @@ async function probarRespaldo(
     console.log('║');
   }
 
-  console.log('║  ── Texto de respaldo del director ──');
-  const textoDir = readFileSync(resolve('src/servidor/voz/respaldo/discurso-director.txt'), 'utf-8');
-  const palabras = textoDir.split(/\s+/).length;
-  console.log(`║  Palabras: ${palabras}`);
-  const valido = validarTerminosProhibidos(textoDir, voz.terminos_prohibidos);
+  console.log('║  ── Guion fijo del director ──');
+  console.log(`║  Palabras: ${DISCURSO_DIRECTOR.split(/\s+/).length}`);
+  const valido = validarTerminosProhibidos(DISCURSO_DIRECTOR, voz.terminos_prohibidos);
   console.log(`║  Validación términos prohibidos: ${valido ? 'PASÓ' : 'FALLÓ'}`);
   console.log('║');
 
@@ -268,7 +282,7 @@ async function probarRespaldo(
   console.log(`║  Resultado: ${todoOk && errores.length === 0 ? 'RESPALDO VÁLIDO' : 'HAY PROBLEMAS — ver arriba'}`);
   console.log('║');
 
-  writeFileSync(resolve(outDir, 'director.txt'), textoDir);
+  writeFileSync(resolve(outDir, 'director.txt'), DISCURSO_DIRECTOR);
   for (let i = 0; i < TESTIMONIOS_RESPALDO.length; i++) {
     writeFileSync(resolve(outDir, `cliente-${i}.txt`), TESTIMONIOS_RESPALDO[i].texto);
   }

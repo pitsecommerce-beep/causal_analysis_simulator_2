@@ -238,6 +238,7 @@
     ],
     "voces": {
       "director": "aura-2-javier-es",
+      "adriana": "aura-2-diana-es",
       "clienteM": ["aura-2-aquila-es", "aura-2-javier-es"],
       "clienteF": ["aura-2-carina-es", "aura-2-diana-es", "aura-2-selena-es"]
     }

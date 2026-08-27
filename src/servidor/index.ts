@@ -7,8 +7,8 @@ import { cargarConfig } from './motor/dag.js';
 import { cargarTodosDatos } from './datos/cargador.js';
 import { conectarDB, ejecutarMigraciones, cerrarDB } from './db/conexion.js';
 import { configurarSockets } from './sockets/sala.js';
-import { TESTIMONIOS_RESPALDO, validarTestimoniosContraDatos } from './voz/guiones.js';
-import { sortearComentarios } from './voz/anthropic.js';
+import { DISCURSO_DIRECTOR, DISCURSO_ADRIANA, TESTIMONIOS_RESPALDO, validarTestimoniosContraDatos } from './voz/guiones.js';
+import { sortearComentarios, validarTerminosProhibidos } from './voz/anthropic.js';
 
 async function main(): Promise<void> {
   console.log('Cargando configuracion y datos...');
@@ -32,6 +32,14 @@ async function main(): Promise<void> {
   } else {
     console.log('  Testimonios de respaldo validados contra datos reales ✓');
   }
+
+  const terminosProhibidos = config.voz?.terminos_prohibidos ?? [];
+  const directorLimpio = validarTerminosProhibidos(DISCURSO_DIRECTOR, terminosProhibidos);
+  if (!directorLimpio) {
+    console.error('✗ El guion fijo del director contiene términos prohibidos. Revisar src/servidor/voz/guiones/director.txt');
+    process.exit(1);
+  }
+  console.log('  Guion fijo del director validado contra términos prohibidos ✓');
 
   const app = express();
   app.use(express.json());
@@ -85,13 +93,12 @@ async function main(): Promise<void> {
 
   const faltantes = verificarVariables();
   const modeloPensar = process.env.ANTHROPIC_MODEL_PENSAR || 'claude-sonnet-5';
-  const modeloRedactar = process.env.ANTHROPIC_MODEL_REDACTAR || 'claude-haiku-4-5';
   console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
   console.log(`║   SIMULADOR DE ANALISIS CAUSAL — ETF Bank                  ║`);
   console.log(`║   Servidor escuchando en puerto ${String(PORT).padEnd(29)}║`);
   console.log(`║   Base de datos: ${(dbConectada ? 'conectada' : 'solo memoria').padEnd(40)}║`);
-  console.log(`║   IA pensar:   ${modeloPensar.padEnd(42)}║`);
-  console.log(`║   IA redactar: ${modeloRedactar.padEnd(42)}║`);
+  console.log(`║   IA consejo:  ${modeloPensar.padEnd(42)}║`);
+  console.log(`║   Acto 1:      texto fijo + Deepgram en vivo${' '.padEnd(14)}║`);
   console.log(`╚══════════════════════════════════════════════════════════════╝`);
 
   if (faltantes.length > 0) {

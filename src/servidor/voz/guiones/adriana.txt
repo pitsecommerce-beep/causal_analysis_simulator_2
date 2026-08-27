@@ -1,0 +1,15 @@
+Bienvenidos a su mesa de trabajo. Soy Adriana Rueda, Gerente de Mejora Continua de ETF Bank, y voy a acompañarlos durante el ejercicio.
+
+Antes de que empiecen, necesito explicarles cómo va a funcionar su equipo. Cada uno tiene un rol con responsabilidades específicas, y las restricciones son intencionales.
+
+El Patrocinador del proceso es quien autoriza las intervenciones. Solo él puede aprobar cambios operativos y decidir en qué se gasta el presupuesto. Piensen en él como el directivo que firma.
+
+El Líder de mejora coordina el diagnóstico y es quien redacta las conclusiones finales del equipo. Es la voz que presenta ante el consejo.
+
+El Analista de datos es quien ejecuta las consultas al sistema. Cada consulta tiene un costo en créditos de indagación, así que deben pensar antes de actuar. Pueden tener más de un analista si el equipo lo requiere.
+
+La Voz del cliente tiene acceso a los noventa comentarios de clientes. Su trabajo es cruzar esos testimonios con lo que el equipo va encontrando en los datos, y marcar qué comentarios respaldan cada hipótesis.
+
+Ninguno puede hacer el trabajo del otro. Esa restricción existe porque en la realidad un directivo no corre consultas y un analista no autoriza presupuesto. Coordínense.
+
+Tienen tiempo limitado. Úsenlo bien.
