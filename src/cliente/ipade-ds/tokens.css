@@ -1,0 +1,295 @@
+/* ==========================================================================
+   IPADE Business School · Design System
+   tokens.css — Capa 1: tokens primitivos y semánticos
+   Versión 1.0.0
+   --------------------------------------------------------------------------
+   Arquitectura de tres capas:
+   1. Primitivos  --ipd-color-navy-700     valor crudo, nunca se usa en UI
+   2. Semánticos  --ipd-bg-brand           intención, sí se usa en UI
+   3. Componente  --ipd-btn-primary-bg     alias local, opcional
+   Regla: en componentes solo se consumen tokens semánticos o de componente.
+   ========================================================================== */
+
+/* ---------- 1. PRIMITIVOS ------------------------------------------------ */
+
+:root {
+  /* Marca · Azul institucional */
+  --ipd-color-navy-950: #00152B;
+  --ipd-color-navy-900: #001F3D;
+  --ipd-color-navy-800: #00284E;
+  --ipd-color-navy-700: #00305B; /* Azul IPADE — color ancla de marca */
+  --ipd-color-navy-600: #14487A;
+  --ipd-color-navy-500: #1E5A96;
+  --ipd-color-navy-400: #4C82B8;
+  --ipd-color-navy-300: #8AAFD3;
+  --ipd-color-navy-200: #C0D6E9;
+  --ipd-color-navy-100: #E1ECF5;
+  --ipd-color-navy-50:  #F0F6FB;
+
+  /* Marca · Oro académico (acento, jamás como fondo de texto largo) */
+  --ipd-color-gold-900: #6B5219;
+  --ipd-color-gold-800: #8A6A24;
+  --ipd-color-gold-700: #9C7A2C;
+  --ipd-color-gold-600: #B08D3F; /* Oro IPADE */
+  --ipd-color-gold-500: #C6A65C;
+  --ipd-color-gold-400: #D9BF86;
+  --ipd-color-gold-300: #E9DDBF;
+  --ipd-color-gold-200: #F3EDDC;
+  --ipd-color-gold-100: #FAF7EF;
+
+  /* Neutrales fríos, afinados para convivir con el azul de marca */
+  --ipd-color-neutral-0:   #FFFFFF;
+  --ipd-color-neutral-50:  #F7F8FA;
+  --ipd-color-neutral-100: #EFF1F4;
+  --ipd-color-neutral-200: #DDE1E7;
+  --ipd-color-neutral-300: #C2C8D1;
+  --ipd-color-neutral-400: #9AA3B0;
+  --ipd-color-neutral-500: #66707E;
+  --ipd-color-neutral-600: #4D5561;
+  --ipd-color-neutral-700: #343B45;
+  --ipd-color-neutral-800: #20252C;
+  --ipd-color-neutral-900: #10141A;
+
+  /* Estado */
+  --ipd-color-success-600: #1E7A46;
+  --ipd-color-success-100: #E3F3EA;
+  --ipd-color-warning-600: #A96206;
+  --ipd-color-warning-100: #FBEEDD;
+  --ipd-color-danger-700:  #93231C;
+  --ipd-color-danger-600:  #B3261E;
+  --ipd-color-danger-100:  #FBE7E5;
+  --ipd-color-info-600:    #1E5A96;
+  --ipd-color-info-100:    #E1ECF5;
+
+  /* Tipografía · familias
+     Sustituir por las licenciadas en el manual de marca cuando estén disponibles.
+     Los fallbacks están ordenados por métrica similar para evitar saltos de layout. */
+  --ipd-font-display: "Source Serif 4", "Georgia", "Times New Roman", serif;
+  --ipd-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ipd-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Tipografía · pesos */
+  --ipd-weight-regular: 400;
+  --ipd-weight-medium: 500;
+  --ipd-weight-semibold: 600;
+  --ipd-weight-bold: 700;
+
+  /* Tipografía · escala fluida (base 16px, razón 1.25 en desktop) */
+  --ipd-size-3xs: 0.6875rem;  /* 11px */
+  --ipd-size-2xs: 0.75rem;    /* 12px */
+  --ipd-size-xs:  0.8125rem;  /* 13px */
+  --ipd-size-sm:  0.875rem;   /* 14px */
+  --ipd-size-md:  1rem;       /* 16px — base */
+  --ipd-size-lg:  1.125rem;   /* 18px */
+  --ipd-size-xl:  1.3125rem;  /* 21px */
+  --ipd-size-2xl: clamp(1.375rem, 1.25rem + 0.6vw, 1.625rem);  /* 22 → 26 */
+  --ipd-size-3xl: clamp(1.625rem, 1.4rem + 1.1vw, 2rem);       /* 26 → 32 */
+  --ipd-size-4xl: clamp(2rem, 1.6rem + 1.9vw, 2.5rem);         /* 32 → 40 */
+  --ipd-size-5xl: clamp(2.25rem, 1.6rem + 3.1vw, 3.25rem);     /* 36 → 52 */
+  --ipd-size-6xl: clamp(2.75rem, 1.6rem + 5.2vw, 4.5rem);      /* 44 → 72 */
+
+  /* Tipografía · interlineado */
+  --ipd-leading-none: 1;
+  --ipd-leading-tight: 1.12;
+  --ipd-leading-snug: 1.28;
+  --ipd-leading-normal: 1.5;
+  --ipd-leading-relaxed: 1.65;
+  --ipd-leading-loose: 1.8;
+
+  /* Tipografía · tracking */
+  --ipd-tracking-tighter: -0.02em;
+  --ipd-tracking-tight: -0.01em;
+  --ipd-tracking-normal: 0;
+  --ipd-tracking-wide: 0.04em;
+  --ipd-tracking-wider: 0.12em;  /* overline / eyebrow */
+
+  /* Espaciado · base 4px */
+  --ipd-space-0: 0;
+  --ipd-space-1: 0.25rem;   /* 4 */
+  --ipd-space-2: 0.5rem;    /* 8 */
+  --ipd-space-3: 0.75rem;   /* 12 */
+  --ipd-space-4: 1rem;      /* 16 */
+  --ipd-space-5: 1.25rem;   /* 20 */
+  --ipd-space-6: 1.5rem;    /* 24 */
+  --ipd-space-8: 2rem;      /* 32 */
+  --ipd-space-10: 2.5rem;   /* 40 */
+  --ipd-space-12: 3rem;     /* 48 */
+  --ipd-space-16: 4rem;     /* 64 */
+  --ipd-space-20: 5rem;     /* 80 */
+  --ipd-space-24: 6rem;     /* 96 */
+  --ipd-space-32: 8rem;     /* 128 */
+  --ipd-space-40: 10rem;    /* 160 */
+
+  /* Ritmo vertical de secciones */
+  --ipd-section-y: clamp(3rem, 2rem + 5vw, 7.5rem);
+  --ipd-section-y-tight: clamp(2rem, 1.5rem + 3vw, 4rem);
+
+  /* Layout */
+  --ipd-container-max: 1200px;
+  --ipd-container-narrow: 760px;   /* lectura larga, 65-75 caracteres */
+  --ipd-container-wide: 1440px;
+  --ipd-gutter: 1rem;
+  --ipd-gutter-md: 1.5rem;
+  --ipd-gutter-lg: 2rem;
+  --ipd-grid-columns: 12;
+  --ipd-grid-gap: 1.5rem;
+
+  /* Radio de borde */
+  --ipd-radius-none: 0;
+  --ipd-radius-xs: 2px;
+  --ipd-radius-sm: 4px;
+  --ipd-radius-md: 8px;
+  --ipd-radius-lg: 12px;
+  --ipd-radius-xl: 20px;
+  --ipd-radius-pill: 999px;
+  --ipd-radius-circle: 50%;
+
+  /* Grosor de borde */
+  --ipd-border-hairline: 1px;
+  --ipd-border-thick: 2px;
+  --ipd-border-accent: 4px;
+
+  /* Sombras · frías, nunca negro puro */
+  --ipd-shadow-none: none;
+  --ipd-shadow-xs: 0 1px 2px rgba(0, 31, 61, 0.06);
+  --ipd-shadow-sm: 0 2px 6px rgba(0, 31, 61, 0.08);
+  --ipd-shadow-md: 0 8px 20px rgba(0, 31, 61, 0.10);
+  --ipd-shadow-lg: 0 16px 40px rgba(0, 31, 61, 0.14);
+  --ipd-shadow-xl: 0 28px 64px rgba(0, 31, 61, 0.18);
+  --ipd-shadow-focus: 0 0 0 3px rgba(30, 90, 150, 0.35);
+
+  /* Movimiento */
+  --ipd-duration-instant: 80ms;
+  --ipd-duration-fast: 140ms;
+  --ipd-duration-base: 220ms;
+  --ipd-duration-slow: 340ms;
+  --ipd-duration-deliberate: 520ms;
+  --ipd-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ipd-ease-entrance: cubic-bezier(0, 0, 0, 1);
+  --ipd-ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --ipd-ease-emphasis: cubic-bezier(0.2, 0, 0, 1.2);
+
+  /* Capas */
+  --ipd-z-base: 0;
+  --ipd-z-raised: 10;
+  --ipd-z-sticky: 100;
+  --ipd-z-header: 200;
+  --ipd-z-dropdown: 300;
+  --ipd-z-floating-cta: 400;
+  --ipd-z-overlay: 500;
+  --ipd-z-modal: 600;
+  --ipd-z-toast: 700;
+  --ipd-z-tooltip: 800;
+
+  /* Proporciones de imagen */
+  --ipd-ratio-hero: 16 / 7;
+  --ipd-ratio-wide: 16 / 9;
+  --ipd-ratio-card: 585 / 295;   /* proporción real de las tarjetas de Newsmedia */
+  --ipd-ratio-portrait: 3 / 4;
+  --ipd-ratio-square: 1 / 1;
+
+  /* Objetivos táctiles */
+  --ipd-target-min: 44px;
+  --ipd-target-comfortable: 48px;
+}
+
+/* ---------- 2. SEMÁNTICOS · tema claro (default) ------------------------- */
+
+:root {
+  /* Superficies */
+  --ipd-bg-page: var(--ipd-color-neutral-0);
+  --ipd-bg-subtle: var(--ipd-color-neutral-50);
+  --ipd-bg-muted: var(--ipd-color-neutral-100);
+  --ipd-bg-brand: var(--ipd-color-navy-700);
+  --ipd-bg-brand-strong: var(--ipd-color-navy-900);
+  --ipd-bg-brand-subtle: var(--ipd-color-navy-50);
+  --ipd-bg-accent: var(--ipd-color-gold-600);
+  --ipd-bg-accent-subtle: var(--ipd-color-gold-100);
+  --ipd-bg-inverse: var(--ipd-color-navy-950);
+  --ipd-bg-overlay: rgba(0, 21, 43, 0.72);
+
+  /* Texto */
+  --ipd-text-primary: var(--ipd-color-neutral-900);
+  --ipd-text-secondary: var(--ipd-color-neutral-600);
+  --ipd-text-tertiary: var(--ipd-color-neutral-500);
+  --ipd-text-disabled: var(--ipd-color-neutral-400);
+  --ipd-text-brand: var(--ipd-color-navy-700);
+  --ipd-text-accent: var(--ipd-color-gold-800);
+  --ipd-text-on-brand: var(--ipd-color-neutral-0);
+  --ipd-text-on-accent: var(--ipd-color-navy-950);
+  --ipd-text-link: var(--ipd-color-navy-600);
+  --ipd-text-link-hover: var(--ipd-color-navy-800);
+
+  /* Bordes */
+  --ipd-border-subtle: var(--ipd-color-neutral-200);
+  --ipd-border-default: var(--ipd-color-neutral-300);
+  --ipd-border-strong: var(--ipd-color-neutral-500);
+  --ipd-border-brand: var(--ipd-color-navy-700);
+  --ipd-border-accent: var(--ipd-color-gold-600);
+  --ipd-border-focus: var(--ipd-color-navy-500);
+
+  /* Interacción */
+  --ipd-interactive-default: var(--ipd-color-navy-700);
+  --ipd-interactive-hover: var(--ipd-color-navy-800);
+  --ipd-interactive-active: var(--ipd-color-navy-900);
+  --ipd-interactive-disabled: var(--ipd-color-neutral-200);
+
+  /* Feedback */
+  --ipd-feedback-success-bg: var(--ipd-color-success-100);
+  --ipd-feedback-success-fg: var(--ipd-color-success-600);
+  --ipd-feedback-warning-bg: var(--ipd-color-warning-100);
+  --ipd-feedback-warning-fg: var(--ipd-color-warning-600);
+  --ipd-feedback-danger-bg: var(--ipd-color-danger-100);
+  --ipd-feedback-danger-fg: var(--ipd-color-danger-600);
+  --ipd-feedback-info-bg: var(--ipd-color-info-100);
+  --ipd-feedback-info-fg: var(--ipd-color-info-600);
+}
+
+/* ---------- 3. SEMÁNTICOS · superficie oscura ---------------------------- */
+/* Aplicar con class="ipd-theme-dark" en cualquier contenedor: header sobre
+   video, footer, secciones de campaña. No es un modo oscuro de sistema. */
+
+.ipd-theme-dark {
+  --ipd-bg-page: var(--ipd-color-navy-900);
+  --ipd-bg-subtle: var(--ipd-color-navy-800);
+  --ipd-bg-muted: var(--ipd-color-navy-700);
+  --ipd-bg-brand-subtle: rgba(255, 255, 255, 0.06);
+
+  --ipd-text-primary: var(--ipd-color-neutral-0);
+  --ipd-text-secondary: var(--ipd-color-navy-200);
+  --ipd-text-tertiary: var(--ipd-color-navy-300);
+  --ipd-text-disabled: rgba(255, 255, 255, 0.38);
+  --ipd-text-brand: var(--ipd-color-neutral-0);
+  --ipd-text-accent: var(--ipd-color-gold-400);
+  --ipd-text-link: var(--ipd-color-gold-400);
+  --ipd-text-link-hover: var(--ipd-color-gold-300);
+
+  --ipd-border-subtle: rgba(255, 255, 255, 0.14);
+  --ipd-border-default: rgba(255, 255, 255, 0.28);
+  --ipd-border-strong: rgba(255, 255, 255, 0.5);
+  --ipd-border-focus: var(--ipd-color-gold-400);
+
+  --ipd-interactive-default: var(--ipd-color-neutral-0);
+  --ipd-interactive-hover: var(--ipd-color-navy-100);
+  --ipd-interactive-active: var(--ipd-color-navy-200);
+}
+
+/* ---------- 4. PREFERENCIAS DEL USUARIO --------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ipd-duration-instant: 1ms;
+    --ipd-duration-fast: 1ms;
+    --ipd-duration-base: 1ms;
+    --ipd-duration-slow: 1ms;
+    --ipd-duration-deliberate: 1ms;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --ipd-text-secondary: var(--ipd-color-neutral-800);
+    --ipd-border-subtle: var(--ipd-color-neutral-500);
+    --ipd-border-default: var(--ipd-color-neutral-700);
+  }
+}
