@@ -10,6 +10,11 @@ interface Props {
   clave: string;
 }
 
+interface EquipoConfig {
+  nombre: string;
+  emailsTexto: string;
+}
+
 function formatearTiempo(segundos: number): string {
   const min = Math.floor(segundos / 60);
   const seg = Math.floor(segundos % 60);
@@ -21,7 +26,12 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
   const [equipos, setEquipos] = useState<EquipoTablero[]>([]);
   const [escenaEstado, setEscenaEstado] = useState('');
   const [mensaje, setMensaje] = useState('');
-  const [muteados, setMuteados] = useState<Set<string>>(new Set());
+  const [panelEquipos, setPanelEquipos] = useState(false);
+  const [equiposConfig, setEquiposConfig] = useState<EquipoConfig[]>([
+    { nombre: 'Equipo 1', emailsTexto: '' },
+  ]);
+  const [guardando, setGuardando] = useState(false);
+  const [equiposGuardados, setEquiposGuardados] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const cargarEstado = useCallback(() => {
@@ -37,6 +47,16 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
     cargarEstado();
     pollingRef.current = setInterval(cargarEstado, 5000);
 
+    socket.emit('profesor:obtener_asignaciones', { clave, codigoSala }, (resp: any) => {
+      if (resp?.equipos && resp.equipos.length > 0) {
+        setEquiposConfig(resp.equipos.map((eq: any) => ({
+          nombre: eq.nombre,
+          emailsTexto: eq.emails.join('\n'),
+        })));
+        setEquiposGuardados(true);
+      }
+    });
+
     function onTick(data: EstadoReloj) {
       setReloj(data);
     }
@@ -45,8 +65,12 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
       setTimeout(() => setMensaje(''), 3000);
       cargarEstado();
     }
+    function onParticipante(data: { equipo: string; email: string }) {
+      setMensaje(`${data.email} se unio a ${data.equipo}`);
+      setTimeout(() => setMensaje(''), 3000);
+    }
     function onEquipoDiag(data: { equipo: string; resultado: ResultadoPuntuacion }) {
-      setMensaje(`${data.equipo} diagnosticó: ${data.resultado.total} pts — Final ${data.resultado.final}`);
+      setMensaje(`${data.equipo} diagnostico: ${data.resultado.total} pts — Final ${data.resultado.final}`);
       setTimeout(() => setMensaje(''), 5000);
       cargarEstado();
     }
@@ -57,6 +81,7 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
 
     socket.on('reloj:tick', onTick);
     socket.on('sesion:equipo_unido', onEquipoUnido);
+    socket.on('sesion:participante_conectado', onParticipante);
     socket.on('sesion:equipo_diagnostico', onEquipoDiag);
     socket.on('sesion:equipo_intervencion', onEquipoInterv);
 
@@ -64,10 +89,11 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
       if (pollingRef.current) clearInterval(pollingRef.current);
       socket.off('reloj:tick', onTick);
       socket.off('sesion:equipo_unido', onEquipoUnido);
+      socket.off('sesion:participante_conectado', onParticipante);
       socket.off('sesion:equipo_diagnostico', onEquipoDiag);
       socket.off('sesion:equipo_intervencion', onEquipoInterv);
     };
-  }, [cargarEstado]);
+  }, [cargarEstado, clave, codigoSala]);
 
   function iniciarReloj() {
     socket.emit('profesor:iniciar_reloj', { clave, codigoSala }, (resp: any) => {
@@ -92,6 +118,50 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
     socket.emit('profesor:revelar_dag', { clave, codigoSala }, (resp: any) => {
       if (resp?.error) { setMensaje(resp.error); setTimeout(() => setMensaje(''), 3000); }
       else { setMensaje('DAG revelado a todos los equipos'); setTimeout(() => setMensaje(''), 3000); }
+    });
+  }
+
+  function agregarEquipo() {
+    setEquiposConfig(prev => [...prev, { nombre: `Equipo ${prev.length + 1}`, emailsTexto: '' }]);
+  }
+
+  function eliminarEquipo(idx: number) {
+    setEquiposConfig(prev => prev.filter((_, i) => i !== idx));
+  }
+
+  function actualizarEquipoConfig(idx: number, campo: keyof EquipoConfig, valor: string) {
+    setEquiposConfig(prev => prev.map((eq, i) => i === idx ? { ...eq, [campo]: valor } : eq));
+  }
+
+  function guardarEquipos() {
+    const equiposPayload = equiposConfig
+      .filter(eq => eq.nombre.trim() && eq.emailsTexto.trim())
+      .map(eq => ({
+        nombre: eq.nombre.trim(),
+        emails: eq.emailsTexto
+          .split(/[\n,;]+/)
+          .map(e => e.trim().toLowerCase())
+          .filter(e => e.includes('@')),
+      }))
+      .filter(eq => eq.emails.length > 0);
+
+    if (equiposPayload.length === 0) {
+      setMensaje('Agrega al menos un equipo con emails validos');
+      setTimeout(() => setMensaje(''), 3000);
+      return;
+    }
+
+    setGuardando(true);
+    socket.emit('profesor:configurar_equipos', { clave, codigoSala, equipos: equiposPayload }, (resp: any) => {
+      setGuardando(false);
+      if (resp?.error) {
+        setMensaje(resp.error);
+        setTimeout(() => setMensaje(''), 4000);
+      } else {
+        setMensaje(`${resp.totalEquipos} equipos configurados con ${resp.totalParticipantes} participantes`);
+        setEquiposGuardados(true);
+        setTimeout(() => setMensaje(''), 4000);
+      }
     });
   }
 
@@ -120,6 +190,9 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
       </header>
 
       <div className="profesor__controles">
+        <button className="profesor__btn" onClick={() => setPanelEquipos(v => !v)}>
+          {panelEquipos ? 'Ocultar equipos' : 'Gestionar equipos'}
+        </button>
         {!reloj?.iniciado ? (
           <button className="profesor__btn" onClick={iniciarReloj}>Iniciar reloj</button>
         ) : (
@@ -136,6 +209,56 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
           Voz: {escenaEstado || 'desconocido'}
         </span>
       </div>
+
+      {panelEquipos && (
+        <div className="profesor__panel-equipos">
+          <h2>Configurar equipos y participantes</h2>
+          <p className="profesor__panel-desc">
+            Asigna correos a cada equipo. Los participantes ingresan su correo para unirse automaticamente al equipo asignado.
+          </p>
+
+          {equiposConfig.map((eq, idx) => (
+            <div key={idx} className="profesor__equipo-config">
+              <div className="profesor__equipo-config-header">
+                <input
+                  className="profesor__equipo-nombre-input"
+                  value={eq.nombre}
+                  onChange={e => actualizarEquipoConfig(idx, 'nombre', e.target.value)}
+                  placeholder="Nombre del equipo"
+                />
+                {equiposConfig.length > 1 && (
+                  <button className="profesor__btn-eliminar" onClick={() => eliminarEquipo(idx)}>
+                    Eliminar
+                  </button>
+                )}
+              </div>
+              <textarea
+                className="profesor__emails-textarea"
+                value={eq.emailsTexto}
+                onChange={e => actualizarEquipoConfig(idx, 'emailsTexto', e.target.value)}
+                placeholder={'correo1@ejemplo.com\ncorreo2@ejemplo.com\ncorreo3@ejemplo.com'}
+                rows={4}
+              />
+              <span className="profesor__email-count">
+                {eq.emailsTexto.split(/[\n,;]+/).filter(e => e.trim().includes('@')).length} correos
+              </span>
+            </div>
+          ))}
+
+          <div className="profesor__panel-acciones">
+            <button className="profesor__btn" onClick={agregarEquipo}>
+              + Agregar equipo
+            </button>
+            <button
+              className="profesor__btn profesor__btn--guardar"
+              onClick={guardarEquipos}
+              disabled={guardando}
+            >
+              {guardando ? 'Guardando...' : equiposGuardados ? 'Actualizar equipos' : 'Guardar equipos'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="profesor__grid">
         {equiposOrdenados.length === 0 && (

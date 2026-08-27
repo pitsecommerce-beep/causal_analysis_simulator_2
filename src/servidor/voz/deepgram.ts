@@ -37,8 +37,7 @@ export async function textoAAudio(
     return { audio: Buffer.alloc(0), fuente: 'respaldo', tiempoMs: 0 };
   }
 
-  const modelo = opciones.modelo ?? 'aura-2';
-  const url = `${DEEPGRAM_TTS_URL}?model=${modelo}&voice=${opciones.voz}&encoding=mp3&sample_rate=24000`;
+  const url = `${DEEPGRAM_TTS_URL}?model=${opciones.voz}&encoding=mp3&sample_rate=24000`;
 
   const inicio = Date.now();
   try {

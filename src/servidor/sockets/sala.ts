@@ -26,11 +26,17 @@ interface EquipoActivo {
   preguntasConsejo: PreguntaConsejo[] | null;
 }
 
+interface AsignacionMemoria {
+  nombreEquipo: string;
+  email: string;
+}
+
 interface SesionActiva {
   dbId: number | null;
   codigoSala: string;
   reloj: RelojSesion;
   equipos: Map<string, EquipoActivo>;
+  asignaciones: AsignacionMemoria[];
 }
 
 const sesiones = new Map<string, SesionActiva>();
@@ -113,6 +119,7 @@ export function configurarSockets(
         codigoSala: codigo,
         reloj: crearReloj(),
         equipos: new Map(),
+        asignaciones: [],
       };
       if (dbDisponible) {
         try {
@@ -241,31 +248,136 @@ export function configurarSockets(
       ack?.({ ok: true });
     });
 
+    socket.on('profesor:configurar_equipos', async (payload, ack) => {
+      if (!validarClaveProfesor(payload?.clave)) {
+        return ack?.({ error: 'Clave de profesor incorrecta' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
+
+      const equipos = payload?.equipos as { nombre: string; emails: string[] }[] | undefined;
+      if (!equipos || !Array.isArray(equipos) || equipos.length === 0) {
+        return ack?.({ error: 'Se requiere al menos un equipo con emails' });
+      }
+
+      for (const eq of equipos) {
+        if (!eq.nombre?.trim()) return ack?.({ error: 'Cada equipo necesita un nombre' });
+        if (!eq.emails || !Array.isArray(eq.emails) || eq.emails.length === 0) {
+          return ack?.({ error: `El equipo "${eq.nombre}" necesita al menos un email` });
+        }
+      }
+
+      const todosEmails = equipos.flatMap(e => e.emails.map(em => em.toLowerCase().trim()));
+      const setEmails = new Set(todosEmails);
+      if (setEmails.size !== todosEmails.length) {
+        return ack?.({ error: 'Hay emails duplicados entre equipos' });
+      }
+
+      sesion.asignaciones = equipos.flatMap(eq =>
+        eq.emails.map(email => ({ nombreEquipo: eq.nombre.trim(), email: email.toLowerCase().trim() }))
+      );
+
+      for (const eq of equipos) {
+        const nombre = eq.nombre.trim();
+        if (!sesion.equipos.has(nombre)) {
+          const estadoMotor = crearEstadoInicial(config);
+          const equipo: EquipoActivo = {
+            dbId: null, nombre, estadoMotor, miembros: [], evidencias: [],
+            consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null,
+          };
+          if (dbDisponible && sesion.dbId) {
+            try {
+              const row = await db.crearEquipo(sesion.dbId, nombre, estadoMotor);
+              equipo.dbId = row.id;
+            } catch (_) { /* sin persistencia */ }
+          }
+          sesion.equipos.set(nombre, equipo);
+        }
+      }
+
+      if (dbDisponible && sesion.dbId) {
+        try {
+          await db.guardarAsignaciones(sesion.dbId, equipos.map(eq => ({
+            nombre: eq.nombre.trim(),
+            emails: eq.emails.map(e => e.toLowerCase().trim()),
+          })));
+        } catch (_) { /* sin persistencia */ }
+      }
+
+      io.to(`profesor:${sesion.codigoSala}`).emit('sesion:equipos_configurados', {
+        equipos: equipos.map(eq => ({
+          nombre: eq.nombre.trim(),
+          emails: eq.emails.map(e => e.toLowerCase().trim()),
+        })),
+      });
+
+      ack?.({ ok: true, totalEquipos: equipos.length, totalParticipantes: todosEmails.length });
+    });
+
+    socket.on('profesor:obtener_asignaciones', (payload, ack) => {
+      if (!validarClaveProfesor(payload?.clave)) {
+        return ack?.({ error: 'Clave de profesor incorrecta' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
+
+      const equiposMap = new Map<string, string[]>();
+      for (const a of sesion.asignaciones) {
+        const lista = equiposMap.get(a.nombreEquipo) ?? [];
+        lista.push(a.email);
+        equiposMap.set(a.nombreEquipo, lista);
+      }
+
+      const equipos = Array.from(equiposMap.entries()).map(([nombre, emails]) => ({ nombre, emails }));
+      ack?.({ equipos });
+    });
+
     socket.on('equipo:unirse', async (payload, ack) => {
       const codigo = payload?.codigoSala?.toUpperCase();
-      const nombre = payload?.nombre?.trim();
-      if (!codigo || !nombre) return ack?.({ error: 'Código de sala y nombre requeridos' });
+      const email = payload?.email?.toLowerCase()?.trim();
+      const nombreDirecto = payload?.nombre?.trim();
+
+      if (!codigo) return ack?.({ error: 'Código de sala requerido' });
 
       const sesion = sesiones.get(codigo);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
 
-      let equipo = sesion.equipos.get(nombre);
+      let nombreEquipo: string;
+
+      if (sesion.asignaciones.length > 0) {
+        if (!email) return ack?.({ error: 'Ingresa tu correo electrónico' });
+        const asignacion = sesion.asignaciones.find(a => a.email === email);
+        if (!asignacion) {
+          return ack?.({ error: 'Tu correo no está registrado en esta sesión. Contacta al profesor.' });
+        }
+        nombreEquipo = asignacion.nombreEquipo;
+      } else {
+        if (!nombreDirecto) return ack?.({ error: 'Código de sala y nombre de equipo requeridos' });
+        nombreEquipo = nombreDirecto;
+      }
+
+      let equipo = sesion.equipos.get(nombreEquipo);
       if (!equipo) {
         const estadoMotor = crearEstadoInicial(config);
-        equipo = { dbId: null, nombre, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null };
+        equipo = { dbId: null, nombre: nombreEquipo, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null };
         if (dbDisponible && sesion.dbId) {
           try {
-            const row = await db.crearEquipo(sesion.dbId, nombre, estadoMotor);
+            const row = await db.crearEquipo(sesion.dbId, nombreEquipo, estadoMotor);
             equipo.dbId = row.id;
           } catch (_) { /* sin persistencia */ }
         }
-        sesion.equipos.set(nombre, equipo);
-        io.to(`profesor:${codigo}`).emit('sesion:equipo_unido', { nombre });
+        sesion.equipos.set(nombreEquipo, equipo);
+        io.to(`profesor:${codigo}`).emit('sesion:equipo_unido', { nombre: nombreEquipo });
       }
 
       socket.join(`sala:${codigo}`);
-      socket.join(`equipo:${codigo}:${nombre}`);
-      (socket as any).__equipo = { codigoSala: codigo, nombre };
+      socket.join(`equipo:${codigo}:${nombreEquipo}`);
+      (socket as any).__equipo = { codigoSala: codigo, nombre: nombreEquipo, email };
+
+      io.to(`profesor:${codigo}`).emit('sesion:participante_conectado', {
+        equipo: nombreEquipo,
+        email: email ?? '',
+      });
 
       ack?.({
         estadoMotor: equipo.estadoMotor,
@@ -273,6 +385,11 @@ export function configurarSockets(
         intervencionesCatalogo: listarIntervencionesDisponibles(equipo.estadoMotor, config),
         solicitudes: prepararDatosCliente(datos.solicitudes),
         tamanoEquipo: config.equipo.tamano,
+        nombreEquipo,
+        miembros: equipo.miembros,
+        evidencias: equipo.evidencias,
+        resultado: equipo.resultado,
+        preguntasConsejo: equipo.preguntasConsejo,
       });
     });
 

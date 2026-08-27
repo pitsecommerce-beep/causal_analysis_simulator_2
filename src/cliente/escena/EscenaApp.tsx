@@ -272,7 +272,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     <div className="escena">
       <div className="escena__cargando">
         <span>Escena no disponible</span>
-        <button className="escena__boton" onClick={onTerminar}>
+        <button className="escena__boton" onClick={() => onTerminar([], 'analista' as RolEquipo, '')}>
           Continuar al simulador
         </button>
       </div>

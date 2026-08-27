@@ -19,14 +19,18 @@ interface Props {
 export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse }: Props) {
   const [modo, setModo] = useState<'equipo' | 'profesor'>('equipo');
   const [codigo, setCodigo] = useState('');
-  const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
   const [clave, setClave] = useState('');
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
 
   const handleUnirse = () => {
-    if (!codigo.trim() || !nombre.trim()) {
-      setError('Ingresa el codigo de sala y el nombre del equipo.');
+    if (!codigo.trim() || !email.trim()) {
+      setError('Ingresa el codigo de sala y tu correo electronico.');
+      return;
+    }
+    if (!email.includes('@')) {
+      setError('Ingresa un correo electronico valido.');
       return;
     }
     setCargando(true);
@@ -34,7 +38,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse }: Props) {
 
     if (!socket.connected) socket.connect();
 
-    socket.emit('equipo:unirse', { codigoSala: codigo.toUpperCase(), nombre: nombre.trim() }, (resp: any) => {
+    socket.emit('equipo:unirse', { codigoSala: codigo.toUpperCase(), email: email.trim().toLowerCase() }, (resp: any) => {
       setCargando(false);
       if (resp?.error) {
         setError(resp.error);
@@ -46,7 +50,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse }: Props) {
         catalogo: resp.intervencionesCatalogo,
         solicitudes: resp.solicitudes ?? [],
         codigoSala: codigo.toUpperCase(),
-        nombreEquipo: nombre.trim(),
+        nombreEquipo: resp.nombreEquipo,
         tamanoEquipo: resp.tamanoEquipo ?? 4,
       });
     });
@@ -108,11 +112,12 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse }: Props) {
             </div>
 
             <div className="unirse__campo">
-              <label>Nombre del equipo</label>
+              <label>Correo electronico</label>
               <input
-                value={nombre}
-                onChange={e => setNombre(e.target.value)}
-                placeholder="Equipo 1"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="tu.correo@ejemplo.com"
                 onKeyDown={e => e.key === 'Enter' && handleUnirse()}
               />
             </div>
