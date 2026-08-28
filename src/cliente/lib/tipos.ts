@@ -250,6 +250,70 @@ export const NOMBRES_FINALES: Record<string, string> = {
   H: 'Falso positivo',
 };
 
+export interface PropuestaIntervencion {
+  id: string;
+  intervencionId: number;
+  intervencionNombre: string;
+  costo: number;
+  justificacion: string;
+  propuestoPor: string;
+  rolPropuesto: RolEquipo;
+  estado: 'pendiente' | 'aprobada' | 'rechazada';
+  respuesta?: string;
+  timestamp: string;
+  sucursales?: number[];
+}
+
+export interface SolicitudAccion {
+  id: string;
+  de: string;
+  rolDe: RolEquipo;
+  para: RolEquipo;
+  tipo: 'consulta' | 'testimonios' | 'diagnostico' | 'general';
+  mensaje: string;
+  estado: 'pendiente' | 'completada' | 'descartada';
+  timestamp: string;
+}
+
+export interface ObjetivoFase {
+  equipo: string;
+  rol: Record<RolEquipo, string>;
+  faltante: string;
+}
+
+export const OBJETIVOS_FASE: Record<string, ObjetivoFase> = {
+  trimestre_1: {
+    equipo: 'Formular y probar al menos dos hipotesis, y decidir la primera intervencion.',
+    rol: {
+      analista: 'Ejecuta consultas para probar hipotesis.',
+      voz_cliente: 'Revisa testimonios y marca evidencia relevante.',
+      patrocinador: 'Espera propuestas de intervencion para autorizar.',
+      lider: 'Coordina al equipo y revisa hallazgos.',
+    },
+    faltante: 'Sin propuesta de intervencion aprobada.',
+  },
+  trimestre_2: {
+    equipo: 'Revisar consecuencias de la intervencion y corregir el rumbo.',
+    rol: {
+      analista: 'Verifica como cambiaron los KPIs tras la intervencion.',
+      voz_cliente: 'Busca cambios en la percepcion de clientes.',
+      patrocinador: 'Evalua si se necesita una nueva intervencion.',
+      lider: 'Revisa el avance del diagnostico.',
+    },
+    faltante: 'Revisen el impacto y decidan si intervienen de nuevo.',
+  },
+  trimestre_3: {
+    equipo: 'Cerrar el diagnostico y preparar la entrega al consejo.',
+    rol: {
+      analista: 'Completa las consultas pendientes.',
+      voz_cliente: 'Confirma la evidencia de comentarios.',
+      patrocinador: 'Autoriza la ultima intervencion si aplica.',
+      lider: 'Completa los campos del diagnostico final.',
+    },
+    faltante: 'Diagnostico incompleto.',
+  },
+};
+
 export const NOMBRES_FASES: Record<string, string> = {
   espera: 'Esperando inicio',
   sala_juntas: 'Sala de juntas',

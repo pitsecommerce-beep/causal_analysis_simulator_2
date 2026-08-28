@@ -15,6 +15,31 @@ import { generarPreguntasConsejo, type PreguntaConsejo } from '../voz/anthropic.
 
 const ROLES_VALIDOS: RolEquipo[] = ['patrocinador', 'lider', 'analista', 'voz_cliente'];
 
+interface PropuestaEnMemoria {
+  id: string;
+  intervencionId: number;
+  intervencionNombre: string;
+  costo: number;
+  justificacion: string;
+  propuestoPor: string;
+  rolPropuesto: RolEquipo;
+  estado: 'pendiente' | 'aprobada' | 'rechazada';
+  respuesta?: string;
+  timestamp: string;
+  sucursales?: number[];
+}
+
+interface SolicitudAccionEnMemoria {
+  id: string;
+  de: string;
+  rolDe: RolEquipo;
+  para: RolEquipo;
+  tipo: 'consulta' | 'testimonios' | 'diagnostico' | 'general';
+  mensaje: string;
+  estado: 'pendiente' | 'completada' | 'descartada';
+  timestamp: string;
+}
+
 interface EquipoActivo {
   dbId: number | null;
   nombre: string;
@@ -26,6 +51,8 @@ interface EquipoActivo {
   preguntasConsejo: PreguntaConsejo[] | null;
   codigosPersonales: Map<string, string>;
   socketsActivos: Map<string, string>;
+  propuestas: PropuestaEnMemoria[];
+  solicitudesAccion: SolicitudAccionEnMemoria[];
 }
 
 interface AsignacionMemoria {
@@ -328,7 +355,7 @@ export function configurarSockets(
           const estadoMotor = crearEstadoInicial(config);
           const equipo: EquipoActivo = {
             dbId: null, nombre, estadoMotor, miembros: [], evidencias: [],
-            consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(), socketsActivos: new Map(),
+            consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(), socketsActivos: new Map(), propuestas: [], solicitudesAccion: [],
           };
           if (dbDisponible && sesion.dbId) {
             try {
@@ -404,7 +431,7 @@ export function configurarSockets(
       let equipo = sesion.equipos.get(nombreEquipo);
       if (!equipo) {
         const estadoMotor = crearEstadoInicial(config);
-        equipo = { dbId: null, nombre: nombreEquipo, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(), socketsActivos: new Map() };
+        equipo = { dbId: null, nombre: nombreEquipo, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(), socketsActivos: new Map(), propuestas: [], solicitudesAccion: [] };
         if (dbDisponible && sesion.dbId) {
           try {
             const row = await db.crearEquipo(sesion.dbId, nombreEquipo, estadoMotor);
@@ -436,6 +463,8 @@ export function configurarSockets(
         evidencias: equipo.evidencias,
         resultado: equipo.resultado,
         preguntasConsejo: equipo.preguntasConsejo,
+        propuestas: equipo.propuestas,
+        solicitudesAccion: equipo.solicitudesAccion,
       });
     });
 
@@ -608,6 +637,8 @@ export function configurarSockets(
         miNombre: nombreEncontrado,
         miRol: rolEncontrado,
         codigoPersonal,
+        propuestas: equipoEncontrado.propuestas,
+        solicitudesAccion: equipoEncontrado.solicitudesAccion,
       });
     });
 
@@ -643,6 +674,181 @@ export function configurarSockets(
       }
 
       ack?.(resultado);
+    });
+
+    socket.on('equipo:proponer_intervencion', async (payload, ack) => {
+      const info = (socket as any).__equipo;
+      if (!info?.participante) return ack?.({ error: 'No estás en un equipo' });
+
+      const sesion = sesiones.get(info.codigoSala);
+      const equipo = sesion?.equipos.get(info.nombre);
+      if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
+
+      const intervencionId = parseInt(payload?.intervencionId, 10);
+      if (isNaN(intervencionId)) return ack?.({ error: 'ID de intervención no válido' });
+
+      const justificacion = (payload?.justificacion ?? '').trim();
+      if (!justificacion) return ack?.({ error: 'Escribe una justificación para la propuesta' });
+
+      const cfgInterv = config.intervenciones.find(i => i.id === intervencionId);
+      if (!cfgInterv) return ack?.({ error: 'Intervención no encontrada' });
+
+      const yaAplicada = equipo.estadoMotor.intervenciones.some(i => i.id === intervencionId);
+      if (yaAplicada) return ack?.({ error: 'Esta intervención ya fue aplicada' });
+
+      if (cfgInterv.costo > equipo.estadoMotor.presupuesto) {
+        return ack?.({ error: `Presupuesto insuficiente (necesitas ${cfgInterv.costo}, tienes ${equipo.estadoMotor.presupuesto})` });
+      }
+
+      const yaPendiente = equipo.propuestas.some(p => p.intervencionId === intervencionId && p.estado === 'pendiente');
+      if (yaPendiente) return ack?.({ error: 'Ya hay una propuesta pendiente para esta intervención' });
+
+      const propuesta: PropuestaEnMemoria = {
+        id: `prop_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        intervencionId,
+        intervencionNombre: cfgInterv.nombre,
+        costo: cfgInterv.costo,
+        justificacion,
+        propuestoPor: info.participante,
+        rolPropuesto: info.rol,
+        estado: 'pendiente',
+        timestamp: new Date().toISOString(),
+        sucursales: payload?.sucursales as number[] | undefined,
+      };
+
+      equipo.propuestas.push(propuesta);
+
+      io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:propuesta_nueva', propuesta);
+      io.to(`profesor:${info.codigoSala}`).emit('sesion:equipo_propuesta', {
+        equipo: info.nombre,
+        propuesta,
+      });
+
+      ack?.({ ok: true, propuesta });
+    });
+
+    socket.on('equipo:responder_propuesta', async (payload, ack) => {
+      const info = (socket as any).__equipo;
+      if (!info?.participante) return ack?.({ error: 'No estás en un equipo' });
+
+      const sesion = sesiones.get(info.codigoSala);
+      const equipo = sesion?.equipos.get(info.nombre);
+      if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
+
+      if (equipo.miembros.length > 0 && info.rol !== 'patrocinador') {
+        return ack?.({ error: 'Solo el Patrocinador puede aprobar o rechazar propuestas' });
+      }
+
+      const propuestaId = payload?.propuestaId;
+      const decision: 'aprobada' | 'rechazada' = payload?.decision;
+      const respuesta = (payload?.respuesta ?? '').trim();
+
+      if (!propuestaId) return ack?.({ error: 'ID de propuesta requerido' });
+      if (decision !== 'aprobada' && decision !== 'rechazada') {
+        return ack?.({ error: 'Decisión debe ser "aprobada" o "rechazada"' });
+      }
+
+      const propuesta = equipo.propuestas.find(p => p.id === propuestaId);
+      if (!propuesta) return ack?.({ error: 'Propuesta no encontrada' });
+      if (propuesta.estado !== 'pendiente') return ack?.({ error: 'Esta propuesta ya fue resuelta' });
+
+      propuesta.estado = decision;
+      propuesta.respuesta = respuesta || undefined;
+
+      if (decision === 'aprobada') {
+        const resultado = aplicarIntervencion(
+          equipo.estadoMotor, propuesta.intervencionId, config, propuesta.sucursales,
+        );
+        if (!resultado.exito) {
+          propuesta.estado = 'pendiente';
+          propuesta.respuesta = undefined;
+          return ack?.({ error: resultado.mensaje });
+        }
+        persistirEquipo(sesion, equipo);
+
+        io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('sesion:estado', {
+          estadoMotor: equipo.estadoMotor,
+          intervencionesCatalogo: listarIntervencionesDisponibles(equipo.estadoMotor, config),
+        });
+        io.to(`profesor:${info.codigoSala}`).emit('sesion:equipo_intervencion', {
+          equipo: info.nombre,
+          intervencionId: propuesta.intervencionId,
+          intervencionNombre: propuesta.intervencionNombre,
+        });
+      }
+
+      io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:propuesta_resuelta', {
+        propuestaId,
+        estado: decision,
+        respuesta: propuesta.respuesta,
+        resueltoPor: info.participante,
+      });
+
+      ack?.({ ok: true, estado: decision });
+    });
+
+    socket.on('equipo:solicitar_accion', async (payload, ack) => {
+      const info = (socket as any).__equipo;
+      if (!info?.participante) return ack?.({ error: 'No estás en un equipo' });
+
+      const sesion = sesiones.get(info.codigoSala);
+      const equipo = sesion?.equipos.get(info.nombre);
+      if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
+
+      const para = payload?.para as RolEquipo;
+      if (!ROLES_VALIDOS.includes(para)) return ack?.({ error: 'Rol destinatario no válido' });
+      if (para === info.rol) return ack?.({ error: 'No puedes solicitar una acción a tu propio rol' });
+
+      const tipo = payload?.tipo ?? 'general';
+      const mensaje = (payload?.mensaje ?? '').trim();
+      if (!mensaje) return ack?.({ error: 'Escribe un mensaje para la solicitud' });
+
+      const solicitud: SolicitudAccionEnMemoria = {
+        id: `sol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        de: info.participante,
+        rolDe: info.rol,
+        para,
+        tipo,
+        mensaje,
+        estado: 'pendiente',
+        timestamp: new Date().toISOString(),
+      };
+
+      equipo.solicitudesAccion.push(solicitud);
+
+      io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:solicitud_nueva', solicitud);
+
+      ack?.({ ok: true, solicitud });
+    });
+
+    socket.on('equipo:resolver_solicitud', async (payload, ack) => {
+      const info = (socket as any).__equipo;
+      if (!info?.participante) return ack?.({ error: 'No estás en un equipo' });
+
+      const sesion = sesiones.get(info.codigoSala);
+      const equipo = sesion?.equipos.get(info.nombre);
+      if (!sesion || !equipo) return ack?.({ error: 'Equipo no encontrado' });
+
+      const solicitudId = payload?.solicitudId;
+      const accion: 'completada' | 'descartada' = payload?.accion;
+      if (!solicitudId) return ack?.({ error: 'ID de solicitud requerido' });
+      if (accion !== 'completada' && accion !== 'descartada') {
+        return ack?.({ error: 'Acción debe ser "completada" o "descartada"' });
+      }
+
+      const solicitud = equipo.solicitudesAccion.find(s => s.id === solicitudId);
+      if (!solicitud) return ack?.({ error: 'Solicitud no encontrada' });
+      if (solicitud.estado !== 'pendiente') return ack?.({ error: 'Esta solicitud ya fue resuelta' });
+
+      solicitud.estado = accion;
+
+      io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:solicitud_resuelta', {
+        solicitudId,
+        estado: accion,
+        resueltoPor: info.participante,
+      });
+
+      ack?.({ ok: true });
     });
 
     socket.on('equipo:consulta', async (payload, ack) => {
@@ -1011,7 +1217,7 @@ export async function recuperarSesionesDB(
           consultasRealizadas: new Set(),
           resultado: null,
           preguntasConsejo: null,
-          codigosPersonales: new Map(), socketsActivos: new Map(),
+          codigosPersonales: new Map(), socketsActivos: new Map(), propuestas: [], solicitudesAccion: [],
         };
         sesion.equipos.set(eDB.nombre, equipo);
       }

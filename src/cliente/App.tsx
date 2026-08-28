@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
 import { BannerConexion } from './componentes/BannerConexion';
-import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico, RolEquipo, MiembroEquipo } from './lib/tipos';
+import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico, RolEquipo, MiembroEquipo, PropuestaIntervencion, SolicitudAccion } from './lib/tipos';
 import { socket } from './lib/socket';
 
 const STORAGE_KEY = 'etfbank_sesion';
@@ -46,6 +46,8 @@ interface DatosSesion {
   codigoSala: string;
   nombreEquipo: string;
   tamanoEquipo: number;
+  propuestas: PropuestaIntervencion[];
+  solicitudesAccion: SolicitudAccion[];
 }
 
 interface DatosRol {
@@ -96,6 +98,8 @@ export function App() {
         codigoSala: sesionGuardada.codigoSala,
         nombreEquipo: resp.nombreEquipo,
         tamanoEquipo: resp.tamanoEquipo ?? 4,
+        propuestas: resp.propuestas ?? [],
+        solicitudesAccion: resp.solicitudesAccion ?? [],
       });
       setDatosRol({
         miembros: resp.miembros,
@@ -131,6 +135,8 @@ export function App() {
         codigoSala,
         nombreEquipo: resp.nombreEquipo,
         tamanoEquipo: resp.tamanoEquipo ?? 4,
+        propuestas: resp.propuestas ?? [],
+        solicitudesAccion: resp.solicitudesAccion ?? [],
       });
       setDatosRol({
         miembros: resp.miembros,
@@ -283,6 +289,8 @@ export function App() {
           miembros={datosRol?.miembros ?? []}
           tamanoEquipo={sesion.tamanoEquipo}
           onAbandonar={abandonarSesion}
+          propuestasIniciales={sesion.propuestas}
+          solicitudesAccionIniciales={sesion.solicitudesAccion}
         />
       </Suspense>
     </>
