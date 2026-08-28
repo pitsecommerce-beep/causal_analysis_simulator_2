@@ -2419,6 +2419,90 @@ input, select, textarea, button {
   margin-top: var(--ipd-space-2);
 }
 
+/* — Connection banner — */
+.banner-conexion {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ipd-space-3);
+  padding: var(--ipd-space-2) var(--ipd-space-4);
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-2xs);
+  font-weight: var(--ipd-weight-medium);
+}
+.banner-conexion--reconectando {
+  background: var(--ipd-color-warning-600);
+  color: #fff;
+}
+.banner-conexion--tomada {
+  background: var(--ipd-color-danger-600);
+  color: #fff;
+}
+.banner-conexion__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin-banner 0.8s linear infinite;
+}
+@keyframes spin-banner {
+  to { transform: rotate(360deg); }
+}
+.banner-conexion__btn {
+  margin-left: var(--ipd-space-3);
+  padding: var(--ipd-space-1) var(--ipd-space-3);
+  border-radius: var(--ipd-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-3xs);
+  cursor: pointer;
+  transition: background var(--ipd-duration-fast);
+}
+.banner-conexion__btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* — Responsive: mobile — */
+@media (max-width: 768px) {
+  .consola {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-areas:
+      "header"
+      "kpis"
+      "resultados"
+      "consultas"
+      "bitacora";
+  }
+  .consola__header {
+    flex-wrap: wrap;
+    gap: var(--ipd-space-2);
+    padding: var(--ipd-space-2) var(--ipd-space-3);
+  }
+  .consola__header h1 { font-size: var(--ipd-size-sm); }
+  .consola__header-info { gap: var(--ipd-space-2); font-size: var(--ipd-size-3xs); }
+
+  .juego__hud {
+    flex-wrap: wrap;
+    gap: var(--ipd-space-2);
+    padding: var(--ipd-space-2) var(--ipd-space-3);
+  }
+
+  .unirse__tarjeta {
+    width: 95vw;
+    max-width: 95vw;
+    padding: var(--ipd-space-5);
+  }
+}
+
 /* — Reduced motion — */
 @media (prefers-reduced-motion: reduce) {
   .juego__sala { transition: none; }

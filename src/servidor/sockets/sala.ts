@@ -25,6 +25,7 @@ interface EquipoActivo {
   resultado: import('../motor/tipos.js').ResultadoPuntuacion | null;
   preguntasConsejo: PreguntaConsejo[] | null;
   codigosPersonales: Map<string, string>;
+  socketsActivos: Map<string, string>;
 }
 
 interface AsignacionMemoria {
@@ -46,11 +47,8 @@ let dbDisponible = false;
 const CHARS_SIN_AMBIGUOS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function generarCodigoSala(): string {
-  let codigo = '';
-  for (let i = 0; i < 6; i++) {
-    codigo += CHARS_SIN_AMBIGUOS[Math.floor(Math.random() * CHARS_SIN_AMBIGUOS.length)];
-  }
-  return codigo;
+  const numero = Math.floor(Math.random() * 9000 + 1000);
+  return `IPADE-${numero}`;
 }
 
 function generarCodigoPersonal(sesion: SesionActiva): string {
@@ -134,6 +132,26 @@ export function configurarSockets(
   conDB: boolean,
 ): void {
   dbDisponible = conDB;
+
+  function tomarSocketActivo(
+    equipo: EquipoActivo,
+    participante: string,
+    nuevoSocket: Socket,
+    codigoSala: string,
+  ) {
+    const anteriorId = equipo.socketsActivos.get(participante);
+    if (anteriorId && anteriorId !== nuevoSocket.id) {
+      const anterior = io.sockets.sockets.get(anteriorId);
+      if (anterior) {
+        anterior.emit('sesion:tomada', {
+          mensaje: 'Tu sesion fue abierta en otro dispositivo.',
+        });
+        anterior.leave(`sala:${codigoSala}`);
+        anterior.leave(`equipo:${codigoSala}:${equipo.nombre}`);
+      }
+    }
+    equipo.socketsActivos.set(participante, nuevoSocket.id);
+  }
 
   io.on('connection', (socket: Socket) => {
     socket.on('profesor:crear_sesion', async (payload, ack) => {
@@ -310,7 +328,7 @@ export function configurarSockets(
           const estadoMotor = crearEstadoInicial(config);
           const equipo: EquipoActivo = {
             dbId: null, nombre, estadoMotor, miembros: [], evidencias: [],
-            consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(),
+            consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(), socketsActivos: new Map(),
           };
           if (dbDisponible && sesion.dbId) {
             try {
@@ -386,7 +404,7 @@ export function configurarSockets(
       let equipo = sesion.equipos.get(nombreEquipo);
       if (!equipo) {
         const estadoMotor = crearEstadoInicial(config);
-        equipo = { dbId: null, nombre: nombreEquipo, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map() };
+        equipo = { dbId: null, nombre: nombreEquipo, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(), socketsActivos: new Map() };
         if (dbDisponible && sesion.dbId) {
           try {
             const row = await db.crearEquipo(sesion.dbId, nombreEquipo, estadoMotor);
@@ -485,6 +503,8 @@ export function configurarSockets(
       (socket as any).__equipo.participante = participante;
       (socket as any).__equipo.rol = rol;
 
+      tomarSocketActivo(equipo, participante, socket, info.codigoSala);
+
       const yaExiste = equipo.miembros.some(m => m.nombre === participante);
       if (!yaExiste) {
         equipo.miembros.push({ nombre: participante, rol });
@@ -547,6 +567,8 @@ export function configurarSockets(
       if (!equipoEncontrado || !rolEncontrado) {
         return ack?.({ error: 'Código personal no encontrado en esta sesión' });
       }
+
+      tomarSocketActivo(equipoEncontrado, nombreEncontrado, socket, codigo);
 
       socket.join(`sala:${codigo}`);
       socket.join(`equipo:${codigo}:${equipoEncontrado.nombre}`);
@@ -881,6 +903,11 @@ export function configurarSockets(
     socket.on('disconnect', () => {
       const info = (socket as any).__equipo;
       if (info?.participante) {
+        const sesion = sesiones.get(info.codigoSala);
+        const equipo = sesion?.equipos.get(info.nombre);
+        if (equipo && equipo.socketsActivos.get(info.participante) === socket.id) {
+          equipo.socketsActivos.delete(info.participante);
+        }
         socket.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:presencia', {
           participante: info.participante,
           estado: 'desconectado',
@@ -984,7 +1011,7 @@ export async function recuperarSesionesDB(
           consultasRealizadas: new Set(),
           resultado: null,
           preguntasConsejo: null,
-          codigosPersonales: new Map(),
+          codigosPersonales: new Map(), socketsActivos: new Map(),
         };
         sesion.equipos.set(eDB.nombre, equipo);
       }

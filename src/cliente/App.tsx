@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
+import { BannerConexion } from './componentes/BannerConexion';
 import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico, RolEquipo, MiembroEquipo } from './lib/tipos';
 import { socket } from './lib/socket';
 
@@ -243,8 +244,33 @@ export function App() {
 
   if (pantalla === 'juego' && datosRol) {
     return (
+      <>
+        <BannerConexion onSesionTomada={abandonarSesion} />
+        <Suspense fallback={cargando}>
+          <JuegoApp
+            estadoInicial={sesion.estadoMotor}
+            relojInicial={sesion.reloj}
+            catalogoInicial={sesion.catalogo}
+            solicitudes={sesion.solicitudes}
+            comentariosClientes={sesion.comentariosClientes}
+            codigoSala={sesion.codigoSala}
+            nombreEquipo={sesion.nombreEquipo}
+            miRol={datosRol.miRol}
+            miNombre={datosRol.miNombre}
+            miembros={datosRol.miembros}
+            tamanoEquipo={sesion.tamanoEquipo}
+            onAbandonar={abandonarSesion}
+          />
+        </Suspense>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <BannerConexion onSesionTomada={abandonarSesion} />
       <Suspense fallback={cargando}>
-        <JuegoApp
+        <ConsolaApp
           estadoInicial={sesion.estadoMotor}
           relojInicial={sesion.reloj}
           catalogoInicial={sesion.catalogo}
@@ -252,32 +278,13 @@ export function App() {
           comentariosClientes={sesion.comentariosClientes}
           codigoSala={sesion.codigoSala}
           nombreEquipo={sesion.nombreEquipo}
-          miRol={datosRol.miRol}
-          miNombre={datosRol.miNombre}
-          miembros={datosRol.miembros}
+          miRol={datosRol?.miRol ?? null}
+          miNombre={datosRol?.miNombre ?? null}
+          miembros={datosRol?.miembros ?? []}
           tamanoEquipo={sesion.tamanoEquipo}
           onAbandonar={abandonarSesion}
         />
       </Suspense>
-    );
-  }
-
-  return (
-    <Suspense fallback={cargando}>
-      <ConsolaApp
-        estadoInicial={sesion.estadoMotor}
-        relojInicial={sesion.reloj}
-        catalogoInicial={sesion.catalogo}
-        solicitudes={sesion.solicitudes}
-        comentariosClientes={sesion.comentariosClientes}
-        codigoSala={sesion.codigoSala}
-        nombreEquipo={sesion.nombreEquipo}
-        miRol={datosRol?.miRol ?? null}
-        miNombre={datosRol?.miNombre ?? null}
-        miembros={datosRol?.miembros ?? []}
-        tamanoEquipo={sesion.tamanoEquipo}
-        onAbandonar={abandonarSesion}
-      />
-    </Suspense>
+    </>
   );
 }

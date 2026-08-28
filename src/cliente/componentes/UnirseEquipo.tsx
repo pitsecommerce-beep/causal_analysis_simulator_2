@@ -123,10 +123,10 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
               <label>Codigo de sala</label>
               <input
                 className="mono"
-                maxLength={6}
+                maxLength={10}
                 value={codigo}
                 onChange={e => setCodigo(e.target.value.toUpperCase())}
-                placeholder="ABC123"
+                placeholder="IPADE-1234"
                 onKeyDown={e => e.key === 'Enter' && handleUnirse()}
               />
             </div>
@@ -200,10 +200,10 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
               <label>Codigo de sala</label>
               <input
                 className="mono"
-                maxLength={6}
+                maxLength={10}
                 value={codigo}
                 onChange={e => setCodigo(e.target.value.toUpperCase())}
-                placeholder="ABC123"
+                placeholder="IPADE-1234"
                 onKeyDown={e => e.key === 'Enter' && handleUnirseSesion()}
               />
             </div>
