@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { socket } from '../lib/socket';
 import type {
   EstadoMotorCliente, EstadoReloj, IntervencionCatalogo,
-  SolicitudCliente, ResultadoConsulta, EntradaBitacoraLocal,
-  RolEquipo, MiembroEquipo, ResultadoPuntuacion, PreguntaConsejo,
+  SolicitudCliente, ComentarioClientePublico, ResultadoConsulta,
+  EntradaBitacoraLocal, RolEquipo, MiembroEquipo, ResultadoPuntuacion,
+  PreguntaConsejo, PropuestaIntervencion, SolicitudAccion,
 } from '../lib/tipos';
-import { NOMBRES_ROLES } from '../lib/tipos';
+import { NOMBRES_ROLES, DESC_ROLES } from '../lib/tipos';
 import { usePresencia } from '../lib/presencia';
 import { Reloj } from './Reloj';
 import { PanelKPIs } from './PanelKPIs';
@@ -15,23 +16,31 @@ import { Bitacora } from './Bitacora';
 import { FormDiagnostico } from './FormDiagnostico';
 import { TableroFinal } from './TableroFinal';
 import { PanelComentarios } from '../juego/PanelComentarios';
+import { PanelObjetivos } from './PanelObjetivos';
+import { PanelPropuestas } from './PanelPropuestas';
+import { PanelSolicitudes } from './PanelSolicitudes';
 
 interface Props {
   estadoInicial: EstadoMotorCliente;
   relojInicial: EstadoReloj;
   catalogoInicial: IntervencionCatalogo[];
   solicitudes: SolicitudCliente[];
+  comentariosClientes: ComentarioClientePublico[];
   codigoSala: string;
   nombreEquipo: string;
   miRol: RolEquipo | null;
   miNombre: string | null;
   miembros: MiembroEquipo[];
   tamanoEquipo: number;
+  onAbandonar?: () => void;
+  propuestasIniciales?: PropuestaIntervencion[];
+  solicitudesAccionIniciales?: SolicitudAccion[];
 }
 
 export function ConsolaApp({
-  estadoInicial, relojInicial, catalogoInicial, solicitudes,
-  codigoSala, nombreEquipo, miRol, miNombre, miembros, tamanoEquipo,
+  estadoInicial, relojInicial, catalogoInicial, solicitudes, comentariosClientes,
+  codigoSala, nombreEquipo, miRol, miNombre, miembros, tamanoEquipo, onAbandonar,
+  propuestasIniciales, solicitudesAccionIniciales,
 }: Props) {
   const [estado, setEstado] = useState<EstadoMotorCliente>(estadoInicial);
   const [reloj, setReloj] = useState<EstadoReloj>(relojInicial);
@@ -43,6 +52,8 @@ export function ConsolaApp({
   const [puntuacion, setPuntuacion] = useState<ResultadoPuntuacion | null>(null);
   const [preguntas, setPreguntas] = useState<PreguntaConsejo[]>([]);
   const [dagRevelado, setDagRevelado] = useState(false);
+  const [propuestas, setPropuestas] = useState<PropuestaIntervencion[]>(propuestasIniciales ?? []);
+  const [solicitudesAccion, setSolicitudesAccion] = useState<SolicitudAccion[]>(solicitudesAccionIniciales ?? []);
 
   const tieneRoles = roster.length > 0;
   const esAnalista = miRol === 'analista';
@@ -50,13 +61,21 @@ export function ConsolaApp({
   const esLider = miRol === 'lider';
   const esVozCliente = miRol === 'voz_cliente' || (tamanoEquipo <= 3 && miRol === 'lider');
   const esConsejoOFin = reloj.fase === 'consejo' || reloj.fase === 'finalizado';
+  const esTrimestre = reloj.fase.startsWith('trimestre_');
 
   const mostrarConsultas = !tieneRoles || esAnalista;
   const mostrarIntervenciones = !tieneRoles || esPatrocinador;
   const mostrarDiagnostico = (!tieneRoles || esLider) && esConsejoOFin;
-  const tienePanelAcciones = mostrarConsultas || mostrarIntervenciones || esVozCliente || mostrarDiagnostico;
+
+  const tieneProPendiente = propuestas.some(p => p.estado === 'pendiente');
+  const tieneProAprobada = propuestas.some(p => p.estado === 'aprobada');
 
   const { pares: presenciaPares, emitir: emitirPresencia } = usePresencia(miNombre);
+
+  const mostrarMensaje = useCallback((msg: string) => {
+    setMensaje(msg);
+    setTimeout(() => setMensaje(null), 3000);
+  }, []);
 
   useEffect(() => {
     function onTick(data: EstadoReloj) {
@@ -92,6 +111,26 @@ export function ConsolaApp({
     function onDagRevelado() {
       setDagRevelado(true);
     }
+    function onPropuestaNueva(data: PropuestaIntervencion) {
+      setPropuestas(prev => [...prev, data]);
+    }
+    function onPropuestaResuelta(data: { propuestaId: string; estado: 'aprobada' | 'rechazada'; respuesta?: string }) {
+      setPropuestas(prev => prev.map(p =>
+        p.id === data.propuestaId
+          ? { ...p, estado: data.estado, respuesta: data.respuesta }
+          : p
+      ));
+    }
+    function onSolicitudNueva(data: SolicitudAccion) {
+      setSolicitudesAccion(prev => [...prev, data]);
+    }
+    function onSolicitudResuelta(data: { solicitudId: string; estado: 'completada' | 'descartada' }) {
+      setSolicitudesAccion(prev => prev.map(s =>
+        s.id === data.solicitudId
+          ? { ...s, estado: data.estado }
+          : s
+      ));
+    }
 
     socket.on('reloj:tick', onTick);
     socket.on('reloj:fase_cambio', onFaseCambio);
@@ -101,6 +140,10 @@ export function ConsolaApp({
     socket.on('equipo:roles_asignados', onRolesAsignados);
     socket.on('consejo:preguntas', onConsejoPreguntas);
     socket.on('sesion:dag_revelado', onDagRevelado);
+    socket.on('equipo:propuesta_nueva', onPropuestaNueva);
+    socket.on('equipo:propuesta_resuelta', onPropuestaResuelta);
+    socket.on('equipo:solicitud_nueva', onSolicitudNueva);
+    socket.on('equipo:solicitud_resuelta', onSolicitudResuelta);
 
     return () => {
       socket.off('reloj:tick', onTick);
@@ -111,6 +154,10 @@ export function ConsolaApp({
       socket.off('equipo:roles_asignados', onRolesAsignados);
       socket.off('consejo:preguntas', onConsejoPreguntas);
       socket.off('sesion:dag_revelado', onDagRevelado);
+      socket.off('equipo:propuesta_nueva', onPropuestaNueva);
+      socket.off('equipo:propuesta_resuelta', onPropuestaResuelta);
+      socket.off('equipo:solicitud_nueva', onSolicitudNueva);
+      socket.off('equipo:solicitud_resuelta', onSolicitudResuelta);
     };
   }, []);
 
@@ -119,16 +166,14 @@ export function ConsolaApp({
     socket.emit('equipo:intervenir', { intervencionId: id, sucursales }, (resp: any) => {
       emitirPresencia('idle');
       if (resp?.error) {
-        setMensaje(resp.error);
-        setTimeout(() => setMensaje(null), 3000);
+        mostrarMensaje(resp.error);
         return;
       }
       if (resp?.exito) {
-        setMensaje(resp.mensaje);
-        setTimeout(() => setMensaje(null), 3000);
+        mostrarMensaje(resp.mensaje);
       }
     });
-  }, [emitirPresencia]);
+  }, [emitirPresencia, mostrarMensaje]);
 
   const handleBitacora = useCallback((entrada: EntradaBitacoraLocal) => {
     setBitacora(prev => [...prev, entrada]);
@@ -137,6 +182,10 @@ export function ConsolaApp({
   const handleSeleccionarBitacora = useCallback((entrada: EntradaBitacoraLocal) => {
     if (entrada.resultado) setResultado(entrada.resultado);
   }, []);
+
+  const solicitudesPendientesMi = solicitudesAccion.filter(
+    s => s.para === miRol && s.estado === 'pendiente'
+  ).length;
 
   if (puntuacion) {
     return (
@@ -164,12 +213,17 @@ export function ConsolaApp({
         <div className="consola__header-info">
           <span>Sala: {codigoSala}</span>
           <span>T{estado.trimestre}</span>
-          <span>Creditos: {estado.creditosIndagacion}/12</span>
+          <span>Créditos: {estado.creditosIndagacion}/12</span>
           <span>Presupuesto: ${estado.presupuesto}/100</span>
         </div>
         {miRol && miNombre && (
           <span className="consola__mi-rol">
             {miNombre} — {NOMBRES_ROLES[miRol]}
+          </span>
+        )}
+        {solicitudesPendientesMi > 0 && (
+          <span className="consola__badge-solicitudes">
+            {solicitudesPendientesMi} solicitud{solicitudesPendientesMi > 1 ? 'es' : ''}
           </span>
         )}
         {mensaje && (
@@ -178,44 +232,145 @@ export function ConsolaApp({
           </span>
         )}
         <Reloj reloj={reloj} />
+        {onAbandonar && (
+          <button
+            className="consola__btn-abandonar"
+            onClick={() => {
+              if (confirm('¿Abandonar la sesión? Podrás reconectarte con tu código personal.')) {
+                onAbandonar();
+              }
+            }}
+          >
+            Salir
+          </button>
+        )}
       </header>
 
       <aside className="consola__consultas">
-        {tienePanelAcciones ? (
-          <>
-            {(mostrarConsultas || mostrarIntervenciones) && (
-              <PanelConsultas
-                solicitudes={solicitudes}
-                creditosRestantes={estado.creditosIndagacion}
-                presupuesto={estado.presupuesto}
-                catalogo={catalogo}
-                onResultado={setResultado}
-                onBitacora={handleBitacora}
-                onIntervencion={handleIntervencion}
-                puedeConsultar={mostrarConsultas}
-                puedeIntervenir={mostrarIntervenciones}
-                mostrarConsultas={mostrarConsultas}
-                mostrarIntervenciones={mostrarIntervenciones}
-              />
-            )}
-            {esVozCliente && (
-              <PanelComentarios solicitudes={solicitudes} />
-            )}
-            {mostrarDiagnostico && (
-              <FormDiagnostico
-                onResultado={(r) => {
-                  setPuntuacion(r);
-                  setEstado(prev => ({ ...prev, trimestre: 3 }));
-                }}
-                onPreguntas={setPreguntas}
-              />
-            )}
-          </>
-        ) : (
-          <div className="consola__sin-acciones">
-            <p>Tu rol actual no tiene acciones en esta fase.</p>
-            <p>Observa los resultados y colabora con tu equipo.</p>
-          </div>
+        {esTrimestre && (
+          <PanelObjetivos
+            fase={reloj.fase}
+            miRol={miRol}
+            tieneProPendiente={tieneProPendiente}
+            tieneProAprobada={tieneProAprobada}
+          />
+        )}
+
+        <div className="consola__descargas" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <a href="/api/descargar/solicitudes" className="consola__btn-descarga" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
+            fontSize: 12, borderRadius: 4, background: 'var(--ipd-surface-secondary, rgba(255,255,255,0.08))',
+            color: 'var(--ipd-text-secondary)', textDecoration: 'none', border: '1px solid var(--ipd-border-subtle, rgba(255,255,255,0.1))',
+          }}>
+            Descargar base de datos (.xlsx)
+          </a>
+          {esVozCliente && (
+            <a href="/api/descargar/comentarios" className="consola__btn-descarga" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
+              fontSize: 12, borderRadius: 4, background: 'var(--ipd-surface-secondary, rgba(255,255,255,0.08))',
+              color: 'var(--ipd-text-secondary)', textDecoration: 'none', border: '1px solid var(--ipd-border-subtle, rgba(255,255,255,0.1))',
+            }}>
+              Descargar comentarios (.xlsx)
+            </a>
+          )}
+        </div>
+
+        {/* B4: Always show all sections, disabled with explanation when role doesn't match */}
+        {mostrarConsultas ? (
+          <PanelConsultas
+            solicitudes={solicitudes}
+            creditosRestantes={estado.creditosIndagacion}
+            presupuesto={estado.presupuesto}
+            catalogo={catalogo}
+            onResultado={setResultado}
+            onBitacora={handleBitacora}
+            onIntervencion={handleIntervencion}
+            puedeConsultar={mostrarConsultas}
+            puedeIntervenir={mostrarIntervenciones}
+            mostrarConsultas={true}
+            mostrarIntervenciones={false}
+          />
+        ) : tieneRoles ? (
+          <SeccionBloqueada
+            titulo="Consultas"
+            rolRequerido="analista"
+            miRol={miRol}
+            onSolicitar={(msg) => {
+              socket.emit('equipo:solicitar_accion', { para: 'analista', tipo: 'consulta', mensaje: msg }, (resp: any) => {
+                if (resp?.error) mostrarMensaje(resp.error);
+                else mostrarMensaje('Solicitud enviada al Analista.');
+              });
+            }}
+          />
+        ) : null}
+
+        {esTrimestre && (
+          <PanelPropuestas
+            propuestas={propuestas}
+            catalogo={catalogo}
+            presupuesto={estado.presupuesto}
+            esPatrocinador={esPatrocinador || !tieneRoles}
+            miRol={miRol}
+            miNombre={miNombre}
+            onMensaje={mostrarMensaje}
+          />
+        )}
+
+        {!mostrarIntervenciones && tieneRoles && esTrimestre && (
+          <SeccionBloqueada
+            titulo="Autorizar intervenciones"
+            rolRequerido="patrocinador"
+            miRol={miRol}
+            descripcion="Solo el Patrocinador puede aprobar propuestas de intervención."
+          />
+        )}
+
+        {esVozCliente ? (
+          <PanelComentarios comentariosClientes={comentariosClientes} />
+        ) : tieneRoles ? (
+          <SeccionBloqueada
+            titulo="Comentarios de clientes"
+            rolRequerido="voz_cliente"
+            miRol={miRol}
+            onSolicitar={(msg) => {
+              socket.emit('equipo:solicitar_accion', { para: 'voz_cliente', tipo: 'testimonios', mensaje: msg }, (resp: any) => {
+                if (resp?.error) mostrarMensaje(resp.error);
+                else mostrarMensaje('Solicitud enviada a Voz del cliente.');
+              });
+            }}
+          />
+        ) : null}
+
+        {mostrarDiagnostico && (
+          <FormDiagnostico
+            onResultado={(r) => {
+              setPuntuacion(r);
+              setEstado(prev => ({ ...prev, trimestre: 3 }));
+            }}
+            onPreguntas={setPreguntas}
+          />
+        )}
+        {!mostrarDiagnostico && esConsejoOFin && tieneRoles && (
+          <SeccionBloqueada
+            titulo="Diagnóstico final"
+            rolRequerido="lider"
+            miRol={miRol}
+            onSolicitar={(msg) => {
+              socket.emit('equipo:solicitar_accion', { para: 'lider', tipo: 'diagnostico', mensaje: msg }, (resp: any) => {
+                if (resp?.error) mostrarMensaje(resp.error);
+                else mostrarMensaje('Solicitud enviada al Líder.');
+              });
+            }}
+          />
+        )}
+
+        {tieneRoles && esTrimestre && (
+          <PanelSolicitudes
+            solicitudes={solicitudesAccion}
+            miRol={miRol}
+            miNombre={miNombre}
+            onMensaje={mostrarMensaje}
+          />
         )}
       </aside>
 
@@ -241,6 +396,66 @@ export function ConsolaApp({
       <footer className="consola__bitacora">
         <Bitacora entradas={bitacora} onSeleccionar={handleSeleccionarBitacora} />
       </footer>
+    </div>
+  );
+}
+
+function SeccionBloqueada({
+  titulo,
+  rolRequerido,
+  miRol,
+  descripcion,
+  onSolicitar,
+}: {
+  titulo: string;
+  rolRequerido: RolEquipo;
+  miRol: RolEquipo | null;
+  descripcion?: string;
+  onSolicitar?: (msg: string) => void;
+}) {
+  const [pedirAbierto, setPedirAbierto] = useState(false);
+  const [msgPedir, setMsgPedir] = useState('');
+
+  return (
+    <div className="seccion-bloqueada">
+      <h3 className="seccion-bloqueada__titulo">{titulo}</h3>
+      <p className="seccion-bloqueada__info">
+        {descripcion ?? `Solo ${NOMBRES_ROLES[rolRequerido]} puede hacer esto.`}
+      </p>
+      <p className="seccion-bloqueada__desc">{DESC_ROLES[rolRequerido]}</p>
+      {onSolicitar && !pedirAbierto && (
+        <button className="seccion-bloqueada__btn" onClick={() => setPedirAbierto(true)}>
+          Pedir a {NOMBRES_ROLES[rolRequerido]}
+        </button>
+      )}
+      {onSolicitar && pedirAbierto && (
+        <div className="seccion-bloqueada__pedir">
+          <input
+            value={msgPedir}
+            onChange={e => setMsgPedir(e.target.value)}
+            placeholder="¿Qué necesitas?"
+            onKeyDown={e => {
+              if (e.key === 'Enter' && msgPedir.trim()) {
+                onSolicitar(msgPedir.trim());
+                setMsgPedir('');
+                setPedirAbierto(false);
+              }
+            }}
+          />
+          <button
+            disabled={!msgPedir.trim()}
+            onClick={() => {
+              if (msgPedir.trim()) {
+                onSolicitar(msgPedir.trim());
+                setMsgPedir('');
+                setPedirAbierto(false);
+              }
+            }}
+          >
+            Enviar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

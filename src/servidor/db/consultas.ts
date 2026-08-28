@@ -17,6 +17,9 @@ export interface SesionDB {
   reloj_pausado: boolean;
   segundo_actual: number;
   extensiones: Record<string, number>;
+  reloj_iniciado_en: string | null;
+  reloj_pausado_en: string | null;
+  tiempo_pausado_total_ms: number;
 }
 
 export interface EquipoDB {
@@ -56,9 +59,30 @@ export async function obtenerSesion(codigoSala: string): Promise<SesionDB | null
   return rows[0] ?? null;
 }
 
+export async function obtenerSesionesActivas(): Promise<SesionDB[]> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    `SELECT * FROM sesiones
+     WHERE reloj_iniciado = true
+       AND fase_actual NOT IN ('finalizado')
+     ORDER BY id DESC
+     LIMIT 50`,
+  );
+  return rows;
+}
+
 export async function actualizarRelojSesion(
   sesionId: number,
-  datos: { fase_actual?: string; reloj_iniciado?: boolean; reloj_pausado?: boolean; segundo_actual?: number; extensiones?: Record<string, number> },
+  datos: {
+    fase_actual?: string;
+    reloj_iniciado?: boolean;
+    reloj_pausado?: boolean;
+    segundo_actual?: number;
+    extensiones?: Record<string, number>;
+    reloj_iniciado_en?: string | null;
+    reloj_pausado_en?: string | null;
+    tiempo_pausado_total_ms?: number;
+  },
 ): Promise<void> {
   const pool = obtenerPool();
   const campos: string[] = [];
@@ -285,6 +309,19 @@ export async function guardarCodigoPersonal(
     `UPDATE miembros SET codigo_personal = $1
      WHERE equipo_id = $2 AND nombre_participante = $3`,
     [codigoPersonal, equipoId, nombreParticipante],
+  );
+}
+
+export async function actualizarConexionMiembro(
+  equipoId: number,
+  nombreParticipante: string,
+  socketId: string,
+): Promise<void> {
+  const pool = obtenerPool();
+  await pool.query(
+    `UPDATE miembros SET ultimo_socket = $1, ultima_conexion = NOW()
+     WHERE equipo_id = $2 AND nombre_participante = $3`,
+    [socketId, equipoId, nombreParticipante],
   );
 }
 

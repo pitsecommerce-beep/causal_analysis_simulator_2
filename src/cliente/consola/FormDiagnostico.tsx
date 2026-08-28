@@ -43,7 +43,7 @@ export function FormDiagnostico({ onResultado, onPreguntas }: Props) {
     const diagnChecked = form.ventanaCapturaEsCuello || form.reprocesoEsMecanismo ||
       form.fugaPlastico || form.trabajoPerdidoBuro || form.causasEspurias.length > 0;
     if (!diagnChecked) {
-      setError('Selecciona al menos un hallazgo en tu diagnostico.');
+      setError('Selecciona al menos un hallazgo en tu diagnóstico.');
       return;
     }
     setError('');
@@ -64,7 +64,7 @@ export function FormDiagnostico({ onResultado, onPreguntas }: Props) {
 
   return (
     <div className="diagnostico">
-      <h3 className="diagnostico__titulo">Diagnostico final</h3>
+      <h3 className="diagnostico__titulo">Diagnóstico final</h3>
       <div className="diagnostico__seccion">
         <h4>Hallazgos causales</h4>
         <label className="diagnostico__check">
@@ -80,21 +80,21 @@ export function FormDiagnostico({ onResultado, onPreguntas }: Props) {
         <label className="diagnostico__check">
           <input type="checkbox" checked={form.fugaPlastico}
             onChange={e => setForm(p => ({ ...p, fugaPlastico: e.target.checked }))} />
-          Hay fuga de plasticos aprobados que nunca se envian
+          Hay fuga de plásticos aprobados que nunca se envían
         </label>
         <label className="diagnostico__check">
           <input type="checkbox" checked={form.trabajoPerdidoBuro}
             onChange={e => setForm(p => ({ ...p, trabajoPerdidoBuro: e.target.checked }))} />
-          Se pierde trabajo en casos que el buro rechazara
+          Se pierde trabajo en casos que el buró rechazaría
         </label>
       </div>
 
       <div className="diagnostico__seccion">
-        <h4>Concentracion</h4>
+        <h4>Concentración</h4>
         <label className="diagnostico__check">
           <input type="checkbox" checked={form.concentracionSinMasa}
             onChange={e => setForm(p => ({ ...p, concentracionSinMasa: e.target.checked }))} />
-          Los errores estan concentrados en pocas sucursales (sin masa real)
+          Los errores están concentrados en pocas sucursales (sin masa real)
         </label>
       </div>
 
@@ -116,7 +116,7 @@ export function FormDiagnostico({ onResultado, onPreguntas }: Props) {
 
       <button className="diagnostico__enviar" onClick={enviar}
         disabled={enviando}>
-        {enviando ? 'Enviando...' : 'Enviar diagnostico al consejo'}
+        {enviando ? 'Enviando...' : 'Enviar diagnóstico al consejo'}
       </button>
     </div>
   );

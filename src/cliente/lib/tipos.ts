@@ -12,7 +12,6 @@ export interface SolicitudCliente {
   intentos: number;
   fechaPrimerCaptura: string;
   fechaUltimaCaptura: string;
-  ventanaCaptura: number;
   fechaEnvioDocumentos: string | null;
   fechaRecepcionCrOP: string | null;
   resultadoBuro: string | null;
@@ -23,10 +22,6 @@ export interface SolicitudCliente {
   ultimoEstatus: string;
   lineaCredito: number | null;
   comentariosRaw: string;
-  erroresCaptura: number;
-  incompletos: number;
-  ilegibles: number;
-  mes: string;
 }
 
 export interface KPIsCliente {
@@ -172,6 +167,19 @@ export const CAMPOS_SERIE: Record<string, string> = {
   count: 'Total solicitudes',
 };
 
+export interface ComentarioClientePublico {
+  id: string;
+  solicitudId: number;
+  estado: string;
+  sucursal: number;
+  intentos: number;
+  canal: string;
+  fecha: string;
+  categoriaPrimaria: string;
+  categoriaSecundaria: string | null;
+  comentario: string;
+}
+
 export type RolEquipo = 'patrocinador' | 'lider' | 'analista' | 'voz_cliente';
 
 export interface MiembroEquipo {
@@ -232,14 +240,78 @@ export interface DiagnosticoForm {
 }
 
 export const NOMBRES_FINALES: Record<string, string> = {
-  A: 'Reconversion',
+  A: 'Reconversión',
   B: 'Buen proyecto incompleto',
   C: 'Ataque al mediador',
-  D: 'La metrica traicionera',
+  D: 'La métrica traicionera',
   E: 'El incentivo perverso',
-  F: 'Dispersion',
-  G: 'Paralisis por analisis',
+  F: 'Dispersión',
+  G: 'Parálisis por análisis',
   H: 'Falso positivo',
+};
+
+export interface PropuestaIntervencion {
+  id: string;
+  intervencionId: number;
+  intervencionNombre: string;
+  costo: number;
+  justificacion: string;
+  propuestoPor: string;
+  rolPropuesto: RolEquipo;
+  estado: 'pendiente' | 'aprobada' | 'rechazada';
+  respuesta?: string;
+  timestamp: string;
+  sucursales?: number[];
+}
+
+export interface SolicitudAccion {
+  id: string;
+  de: string;
+  rolDe: RolEquipo;
+  para: RolEquipo;
+  tipo: 'consulta' | 'testimonios' | 'diagnostico' | 'general';
+  mensaje: string;
+  estado: 'pendiente' | 'completada' | 'descartada';
+  timestamp: string;
+}
+
+export interface ObjetivoFase {
+  equipo: string;
+  rol: Record<RolEquipo, string>;
+  faltante: string;
+}
+
+export const OBJETIVOS_FASE: Record<string, ObjetivoFase> = {
+  trimestre_1: {
+    equipo: 'Formular y probar al menos dos hipótesis, y decidir la primera intervención.',
+    rol: {
+      analista: 'Ejecuta consultas para probar hipótesis.',
+      voz_cliente: 'Revisa testimonios y marca evidencia relevante.',
+      patrocinador: 'Espera propuestas de intervención para autorizar.',
+      lider: 'Coordina al equipo y revisa hallazgos.',
+    },
+    faltante: 'Sin propuesta de intervención aprobada.',
+  },
+  trimestre_2: {
+    equipo: 'Revisar consecuencias de la intervención y corregir el rumbo.',
+    rol: {
+      analista: 'Verifica cómo cambiaron los KPIs tras la intervención.',
+      voz_cliente: 'Busca cambios en la percepción de clientes.',
+      patrocinador: 'Evalúa si se necesita una nueva intervención.',
+      lider: 'Revisa el avance del diagnóstico.',
+    },
+    faltante: 'Revisen el impacto y decidan si intervienen de nuevo.',
+  },
+  trimestre_3: {
+    equipo: 'Cerrar el diagnóstico y preparar la entrega al consejo.',
+    rol: {
+      analista: 'Completa las consultas pendientes.',
+      voz_cliente: 'Confirma la evidencia de comentarios.',
+      patrocinador: 'Autoriza la última intervención si aplica.',
+      lider: 'Completa los campos del diagnóstico final.',
+    },
+    faltante: 'Diagnóstico incompleto.',
+  },
 };
 
 export const NOMBRES_FASES: Record<string, string> = {

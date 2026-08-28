@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
-import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, RolEquipo, MiembroEquipo } from './lib/tipos';
+import { BannerConexion } from './componentes/BannerConexion';
+import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico, RolEquipo, MiembroEquipo, PropuestaIntervencion, SolicitudAccion } from './lib/tipos';
 import { socket } from './lib/socket';
 
 const STORAGE_KEY = 'etfbank_sesion';
@@ -41,9 +42,12 @@ interface DatosSesion {
   reloj: EstadoReloj;
   catalogo: IntervencionCatalogo[];
   solicitudes: SolicitudCliente[];
+  comentariosClientes: ComentarioClientePublico[];
   codigoSala: string;
   nombreEquipo: string;
   tamanoEquipo: number;
+  propuestas: PropuestaIntervencion[];
+  solicitudesAccion: SolicitudAccion[];
 }
 
 interface DatosRol {
@@ -62,6 +66,14 @@ export function App() {
   const [datosRol, setDatosRol] = useState<DatosRol | null>(null);
   const [profesorData, setProfesorData] = useState<{ codigoSala: string; clave: string } | null>(null);
   const [errorReconexion, setErrorReconexion] = useState('');
+
+  function abandonarSesion() {
+    borrarSesion();
+    socket.disconnect();
+    setSesion(null);
+    setDatosRol(null);
+    setPantalla('unirse');
+  }
 
   useEffect(() => {
     if (!sesionGuardada || pantalla !== 'reconectando') return;
@@ -82,9 +94,12 @@ export function App() {
         reloj: resp.reloj,
         catalogo: resp.intervencionesCatalogo,
         solicitudes: resp.solicitudes ?? [],
+        comentariosClientes: resp.comentariosClientes ?? [],
         codigoSala: sesionGuardada.codigoSala,
         nombreEquipo: resp.nombreEquipo,
         tamanoEquipo: resp.tamanoEquipo ?? 4,
+        propuestas: resp.propuestas ?? [],
+        solicitudesAccion: resp.solicitudesAccion ?? [],
       });
       setDatosRol({
         miembros: resp.miembros,
@@ -116,9 +131,12 @@ export function App() {
         reloj: resp.reloj,
         catalogo: resp.intervencionesCatalogo,
         solicitudes: resp.solicitudes ?? [],
+        comentariosClientes: resp.comentariosClientes ?? [],
         codigoSala,
         nombreEquipo: resp.nombreEquipo,
         tamanoEquipo: resp.tamanoEquipo ?? 4,
+        propuestas: resp.propuestas ?? [],
+        solicitudesAccion: resp.solicitudesAccion ?? [],
       });
       setDatosRol({
         miembros: resp.miembros,
@@ -232,37 +250,49 @@ export function App() {
 
   if (pantalla === 'juego' && datosRol) {
     return (
-      <Suspense fallback={cargando}>
-        <JuegoApp
-          estadoInicial={sesion.estadoMotor}
-          relojInicial={sesion.reloj}
-          catalogoInicial={sesion.catalogo}
-          solicitudes={sesion.solicitudes}
-          codigoSala={sesion.codigoSala}
-          nombreEquipo={sesion.nombreEquipo}
-          miRol={datosRol.miRol}
-          miNombre={datosRol.miNombre}
-          miembros={datosRol.miembros}
-          tamanoEquipo={sesion.tamanoEquipo}
-        />
-      </Suspense>
+      <>
+        <BannerConexion onSesionTomada={abandonarSesion} />
+        <Suspense fallback={cargando}>
+          <JuegoApp
+            estadoInicial={sesion.estadoMotor}
+            relojInicial={sesion.reloj}
+            catalogoInicial={sesion.catalogo}
+            solicitudes={sesion.solicitudes}
+            comentariosClientes={sesion.comentariosClientes}
+            codigoSala={sesion.codigoSala}
+            nombreEquipo={sesion.nombreEquipo}
+            miRol={datosRol.miRol}
+            miNombre={datosRol.miNombre}
+            miembros={datosRol.miembros}
+            tamanoEquipo={sesion.tamanoEquipo}
+            onAbandonar={abandonarSesion}
+          />
+        </Suspense>
+      </>
     );
   }
 
   return (
-    <Suspense fallback={cargando}>
-      <ConsolaApp
-        estadoInicial={sesion.estadoMotor}
-        relojInicial={sesion.reloj}
-        catalogoInicial={sesion.catalogo}
-        solicitudes={sesion.solicitudes}
-        codigoSala={sesion.codigoSala}
-        nombreEquipo={sesion.nombreEquipo}
-        miRol={datosRol?.miRol ?? null}
-        miNombre={datosRol?.miNombre ?? null}
-        miembros={datosRol?.miembros ?? []}
-        tamanoEquipo={sesion.tamanoEquipo}
-      />
-    </Suspense>
+    <>
+      <BannerConexion onSesionTomada={abandonarSesion} />
+      <Suspense fallback={cargando}>
+        <ConsolaApp
+          estadoInicial={sesion.estadoMotor}
+          relojInicial={sesion.reloj}
+          catalogoInicial={sesion.catalogo}
+          solicitudes={sesion.solicitudes}
+          comentariosClientes={sesion.comentariosClientes}
+          codigoSala={sesion.codigoSala}
+          nombreEquipo={sesion.nombreEquipo}
+          miRol={datosRol?.miRol ?? null}
+          miNombre={datosRol?.miNombre ?? null}
+          miembros={datosRol?.miembros ?? []}
+          tamanoEquipo={sesion.tamanoEquipo}
+          onAbandonar={abandonarSesion}
+          propuestasIniciales={sesion.propuestas}
+          solicitudesAccionIniciales={sesion.solicitudesAccion}
+        />
+      </Suspense>
+    </>
   );
 }

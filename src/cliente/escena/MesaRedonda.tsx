@@ -100,7 +100,7 @@ export function MesaRedonda({ nombreEquipo, tamanoEquipo, onIniciar }: Props) {
       </div>
 
       <div className="escena__mesa-redonda-brief">
-        <h2 className="escena__mesa-redonda-titulo">Asignacion de roles</h2>
+        <h2 className="escena__mesa-redonda-titulo">Asignación de roles</h2>
         <div className="escena__mesa-redonda-equipo">{nombreEquipo}</div>
 
         {miembros.length > 0 && (
@@ -146,7 +146,7 @@ export function MesaRedonda({ nombreEquipo, tamanoEquipo, onIniciar }: Props) {
                       <span className="roles__opcion-nombre">{NOMBRES_ROLES[rol]}</span>
                       <span className="roles__opcion-desc">{DESC_ROLES[rol]}</span>
                       {liderEsVoz && rol === 'lider' && (
-                        <span className="roles__opcion-nota">Tambien actua como Voz del cliente</span>
+                        <span className="roles__opcion-nota">También actúa como Voz del cliente</span>
                       )}
                       {ocupado && <span className="roles__opcion-badge">Ocupado</span>}
                     </button>
@@ -169,9 +169,9 @@ export function MesaRedonda({ nombreEquipo, tamanoEquipo, onIniciar }: Props) {
 
             {codigoPersonal && (
               <div className="roles__codigo-personal">
-                <span className="roles__codigo-label">Tu codigo de reconexion:</span>
+                <span className="roles__codigo-label">Tu código de reconexión:</span>
                 <span className="roles__codigo-valor">{codigoPersonal}</span>
-                <span className="roles__codigo-nota">Apuntalo para reconectar si se cierra tu navegador.</span>
+                <span className="roles__codigo-nota">Apúntalo para reconectar si se cierra tu navegador.</span>
               </div>
             )}
 

@@ -12,6 +12,7 @@ import type {
   EstadoReloj,
   IntervencionCatalogo,
   SolicitudCliente,
+  ComentarioClientePublico,
   RolEquipo,
   MiembroEquipo,
 } from '../lib/tipos';
@@ -21,12 +22,14 @@ interface Props {
   relojInicial: EstadoReloj;
   catalogoInicial: IntervencionCatalogo[];
   solicitudes: SolicitudCliente[];
+  comentariosClientes: ComentarioClientePublico[];
   codigoSala: string;
   nombreEquipo: string;
   miRol: RolEquipo;
   miNombre: string;
   miembros: MiembroEquipo[];
   tamanoEquipo: number;
+  onAbandonar: () => void;
 }
 
 const POS = CAMARA.posiciones;
@@ -125,6 +128,17 @@ export function JuegoApp(props: Props) {
             >
               {ambienteActivo ? '\u{1F50A}' : '\u{1F507}'}
             </button>
+            <button
+              className="juego__btn-abandonar"
+              onClick={() => {
+                if (confirm('¿Abandonar la sesión? Podrás reconectarte con tu código personal.')) {
+                  props.onAbandonar();
+                }
+              }}
+              title="Abandonar sesión"
+            >
+              Salir
+            </button>
           </div>
 
           <div className="juego__hud-companeros">
@@ -164,12 +178,14 @@ export function JuegoApp(props: Props) {
               relojInicial={props.relojInicial}
               catalogoInicial={props.catalogoInicial}
               solicitudes={props.solicitudes}
+              comentariosClientes={props.comentariosClientes}
               codigoSala={props.codigoSala}
               nombreEquipo={props.nombreEquipo}
               miRol={props.miRol}
               miNombre={props.miNombre}
               miembros={props.miembros}
               tamanoEquipo={props.tamanoEquipo}
+              onAbandonar={props.onAbandonar}
             />
           </div>
         </div>

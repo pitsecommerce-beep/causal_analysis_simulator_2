@@ -16,9 +16,9 @@ const NOMBRES_TIPO: Record<string, string> = {
 export function Bitacora({ entradas, onSeleccionar }: Props) {
   return (
     <div>
-      <h3 className="bitacora__titulo">Bitacora de consultas</h3>
+      <h3 className="bitacora__titulo">Bitácora de consultas</h3>
       {entradas.length === 0 ? (
-        <p className="bitacora__vacia">Aun no has ejecutado consultas.</p>
+        <p className="bitacora__vacia">Aún no has ejecutado consultas.</p>
       ) : (
         <table className="bitacora__tabla">
           <thead>
@@ -26,7 +26,7 @@ export function Bitacora({ entradas, onSeleccionar }: Props) {
               <th>#</th>
               <th>Hora</th>
               <th>Tipo</th>
-              <th>Hipotesis</th>
+              <th>Hipótesis</th>
               <th>Resultado</th>
             </tr>
           </thead>

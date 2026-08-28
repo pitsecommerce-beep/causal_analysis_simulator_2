@@ -38,7 +38,7 @@ export function PanelKPIs({ estado }: Props) {
           </div>
         </div>
         <div className="kpi">
-          <div className="kpi__etiqueta">Conversion</div>
+          <div className="kpi__etiqueta">Conversión</div>
           <div className="kpi__valor">
             {kpis.conversion.toFixed(1)}%
             <Delta actual={kpis.conversion} base={kpisBase.conversion} mejorSiMenor={false} />

@@ -3,10 +3,11 @@ import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { resolve } from 'path';
 import { existsSync } from 'fs';
+import * as XLSX from 'xlsx';
 import { cargarConfig } from './motor/dag.js';
 import { cargarTodosDatos } from './datos/cargador.js';
 import { conectarDB, ejecutarMigraciones, cerrarDB } from './db/conexion.js';
-import { configurarSockets } from './sockets/sala.js';
+import { configurarSockets, recuperarSesionesDB } from './sockets/sala.js';
 import { DISCURSO_DIRECTOR, DISCURSO_ADRIANA, TESTIMONIOS_RESPALDO, validarTestimoniosContraDatos } from './voz/guiones.js';
 import { sortearComentarios, validarTerminosProhibidos } from './voz/anthropic.js';
 
@@ -62,6 +63,63 @@ async function main(): Promise<void> {
     });
   });
 
+  app.get('/api/descargar/solicitudes', (_req, res) => {
+    const filas = datos.solicitudes.map(s => ({
+      'Application #': s.id,
+      'Customer #': s.clienteId,
+      'Age': s.edad,
+      'Marital Status': s.estadoCivil,
+      'Gender': s.genero,
+      'State': s.estado,
+      'Branch #': s.sucursal,
+      'Years as customer': s.aniosCliente,
+      'Credit Bureau Score': s.scoreBuro,
+      'ETFBank Score': s.scoreETF,
+      'Date of first data input': s.fechaPrimerCaptura,
+      'Date of last data input': s.fechaUltimaCaptura,
+      '# of tries': s.intentos,
+      'Date documents sent': s.fechaEnvioDocumentos,
+      'Date documents Received at CrOP': s.fechaRecepcionCrOP,
+      'Credit Bureau result': s.resultadoBuro,
+      'Credit Bureau run date': s.fechaBuro,
+      'ETFBank Score result': s.resultadoScoreETF,
+      'ETFB Score Date': s.fechaScoreETF,
+      'Date Plastic Sent': s.fechaPlastico,
+      'Last Status': s.ultimoEstatus,
+      'Credit Line Granted': s.lineaCredito,
+      'Comments': s.comentariosRaw,
+    }));
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(filas);
+    XLSX.utils.book_append_sheet(wb, ws, 'MX CAMPUS');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="R2_ETF_Bank_Data.xlsx"');
+    res.send(buf);
+  });
+
+  app.get('/api/descargar/comentarios', (_req, res) => {
+    const filas = datos.comentarios.map(c => ({
+      'ID': c.id,
+      'Solicitud #': c.solicitudId,
+      'Estado': c.estado,
+      'Sucursal #': c.sucursal,
+      'Intentos': c.intentos,
+      'Canal de captación': c.canalCaptacion,
+      'Fecha del comentario': c.fechaComentario,
+      'Categoría primaria': c.categoriaPrimaria,
+      'Categoría secundaria': c.categoriaSecundaria,
+      'Comentario del cliente': c.comentario,
+    }));
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(filas);
+    XLSX.utils.book_append_sheet(wb, ws, 'Comentarios');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="R2_ETF_Bank_Comentarios.xlsx"');
+    res.send(buf);
+  });
+
   const distCliente = resolve('dist/cliente');
   if (existsSync(distCliente)) {
     app.use(express.static(distCliente));
@@ -90,6 +148,11 @@ async function main(): Promise<void> {
   }
 
   configurarSockets(io, config, datos, dbConectada);
+
+  if (dbConectada) {
+    const n = await recuperarSesionesDB(io, config);
+    if (n > 0) console.log(`  ${n} sesion(es) recuperada(s) de Postgres`);
+  }
 
   const faltantes = verificarVariables();
   const modeloPensar = process.env.ANTHROPIC_MODEL_PENSAR || 'claude-sonnet-5';

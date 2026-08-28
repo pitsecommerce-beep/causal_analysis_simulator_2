@@ -7,14 +7,22 @@ import type {
   ResultadoConsulta,
 } from './tipos';
 import { media, correlacionPearson } from './estadistica';
+import { obtenerDerivado, CAMPOS_DERIVADOS } from './derivados-cliente';
 
 function obtenerValorCampo(s: SolicitudCliente, campo: string): string {
+  if (CAMPOS_DERIVADOS.has(campo)) {
+    const val = obtenerDerivado(s, campo);
+    return val == null ? '(vacío)' : String(val);
+  }
   const val = (s as Record<string, unknown>)[campo];
   return val == null ? '(vacío)' : String(val);
 }
 
 function obtenerValorNumerico(s: SolicitudCliente, campo: string): number | null {
-  if (campo === 'erroresTotales') return s.erroresCaptura + s.incompletos + s.ilegibles;
+  if (CAMPOS_DERIVADOS.has(campo)) {
+    const val = obtenerDerivado(s, campo);
+    return typeof val === 'number' ? val : null;
+  }
   const val = (s as Record<string, unknown>)[campo];
   return typeof val === 'number' ? val : null;
 }
@@ -76,7 +84,7 @@ export function ejecutarSerieTiempo(
   const porMes = new Map<string, number[]>();
 
   for (const s of datos) {
-    const mes = s.mes;
+    const mes = String(obtenerDerivado(s, 'mes') ?? '');
     if (!porMes.has(mes)) porMes.set(mes, []);
     const val = variable === 'count' ? 1 : (obtenerValorNumerico(s, variable) ?? 0);
     porMes.get(mes)!.push(val);

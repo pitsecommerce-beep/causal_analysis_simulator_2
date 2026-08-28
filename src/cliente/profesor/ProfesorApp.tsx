@@ -66,11 +66,11 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
       cargarEstado();
     }
     function onParticipante(data: { equipo: string; email: string }) {
-      setMensaje(`${data.email} se unio a ${data.equipo}`);
+      setMensaje(`${data.email} se unió a ${data.equipo}`);
       setTimeout(() => setMensaje(''), 3000);
     }
     function onEquipoDiag(data: { equipo: string; resultado: ResultadoPuntuacion }) {
-      setMensaje(`${data.equipo} diagnostico: ${data.resultado.total} pts — Final ${data.resultado.final}`);
+      setMensaje(`${data.equipo} diagnóstico: ${data.resultado.total} pts — Final ${data.resultado.final}`);
       setTimeout(() => setMensaje(''), 5000);
       cargarEstado();
     }
@@ -146,7 +146,7 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
       .filter(eq => eq.emails.length > 0);
 
     if (equiposPayload.length === 0) {
-      setMensaje('Agrega al menos un equipo con emails validos');
+      setMensaje('Agrega al menos un equipo con emails válidos');
       setTimeout(() => setMensaje(''), 3000);
       return;
     }
@@ -214,7 +214,7 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
         <div className="profesor__panel-equipos">
           <h2>Configurar equipos y participantes</h2>
           <p className="profesor__panel-desc">
-            Asigna correos a cada equipo. Los participantes ingresan su correo para unirse automaticamente al equipo asignado.
+            Asigna correos a cada equipo. Los participantes ingresan su correo para unirse automáticamente al equipo asignado.
           </p>
 
           {equiposConfig.map((eq, idx) => (
