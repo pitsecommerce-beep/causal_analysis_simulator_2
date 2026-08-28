@@ -29,11 +29,12 @@ interface Props {
   miNombre: string | null;
   miembros: MiembroEquipo[];
   tamanoEquipo: number;
+  onAbandonar?: () => void;
 }
 
 export function ConsolaApp({
   estadoInicial, relojInicial, catalogoInicial, solicitudes, comentariosClientes,
-  codigoSala, nombreEquipo, miRol, miNombre, miembros, tamanoEquipo,
+  codigoSala, nombreEquipo, miRol, miNombre, miembros, tamanoEquipo, onAbandonar,
 }: Props) {
   const [estado, setEstado] = useState<EstadoMotorCliente>(estadoInicial);
   const [reloj, setReloj] = useState<EstadoReloj>(relojInicial);
@@ -180,6 +181,18 @@ export function ConsolaApp({
           </span>
         )}
         <Reloj reloj={reloj} />
+        {onAbandonar && (
+          <button
+            className="consola__btn-abandonar"
+            onClick={() => {
+              if (confirm('Abandonar la sesion? Podras reconectarte con tu codigo personal.')) {
+                onAbandonar();
+              }
+            }}
+          >
+            Salir
+          </button>
+        )}
       </header>
 
       <aside className="consola__consultas">

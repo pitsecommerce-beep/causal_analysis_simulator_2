@@ -2096,6 +2096,42 @@ input, select, textarea, button {
   color: var(--ipd-color-gold-400);
 }
 
+/* — Exit / abandon button — */
+.juego__btn-abandonar {
+  height: 36px;
+  padding: 0 var(--ipd-space-4);
+  border-radius: var(--ipd-radius-pill);
+  border: var(--ipd-border-hairline) solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--ipd-text-secondary);
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-3xs);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, color 0.2s;
+}
+.juego__btn-abandonar:hover {
+  background: rgba(180, 40, 40, 0.5);
+  color: var(--ipd-text-on-brand);
+}
+
+.consola__btn-abandonar {
+  margin-left: auto;
+  padding: var(--ipd-space-1) var(--ipd-space-4);
+  border-radius: var(--ipd-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ipd-text-secondary);
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-3xs);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.consola__btn-abandonar:hover {
+  background: rgba(180, 40, 40, 0.5);
+  color: var(--ipd-text-on-brand);
+}
+
 /* — Phase transition overlay — */
 .transicion-fase {
   position: fixed;

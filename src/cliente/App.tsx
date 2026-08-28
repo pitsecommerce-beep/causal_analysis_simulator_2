@@ -64,6 +64,14 @@ export function App() {
   const [profesorData, setProfesorData] = useState<{ codigoSala: string; clave: string } | null>(null);
   const [errorReconexion, setErrorReconexion] = useState('');
 
+  function abandonarSesion() {
+    borrarSesion();
+    socket.disconnect();
+    setSesion(null);
+    setDatosRol(null);
+    setPantalla('unirse');
+  }
+
   useEffect(() => {
     if (!sesionGuardada || pantalla !== 'reconectando') return;
     if (!socket.connected) socket.connect();
@@ -248,6 +256,7 @@ export function App() {
           miNombre={datosRol.miNombre}
           miembros={datosRol.miembros}
           tamanoEquipo={sesion.tamanoEquipo}
+          onAbandonar={abandonarSesion}
         />
       </Suspense>
     );
@@ -267,6 +276,7 @@ export function App() {
         miNombre={datosRol?.miNombre ?? null}
         miembros={datosRol?.miembros ?? []}
         tamanoEquipo={sesion.tamanoEquipo}
+        onAbandonar={abandonarSesion}
       />
     </Suspense>
   );

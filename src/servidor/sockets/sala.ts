@@ -6,7 +6,7 @@ import { aplicarIntervencion, listarIntervencionesDisponibles } from '../motor/i
 import { calcularPuntuacion } from '../puntuacion/reglas.js';
 import {
   crearReloj, iniciarReloj, pausarReloj, extenderFase, detenerReloj,
-  obtenerEstadoReloj,
+  obtenerEstadoReloj, reconstruirRelojDesdeDB,
   type RelojSesion, type NombreFase,
 } from './reloj.js';
 import * as db from '../db/consultas.js';
@@ -503,6 +503,7 @@ export function configurarSockets(
         try {
           await db.guardarMiembroConEmail(equipo.dbId, info.email ?? '', participante, rol);
           await db.guardarCodigoPersonal(equipo.dbId, participante, codigoPersonal);
+          await db.actualizarConexionMiembro(equipo.dbId, participante, socket.id);
         } catch (_) { /* sin persistencia */ }
       }
 
@@ -555,6 +556,10 @@ export function configurarSockets(
         participante: nombreEncontrado,
         rol: rolEncontrado,
       };
+
+      if (dbDisponible && equipoEncontrado.dbId) {
+        db.actualizarConexionMiembro(equipoEncontrado.dbId, nombreEncontrado, socket.id).catch(() => {});
+      }
 
       socket.to(`equipo:${codigo}:${equipoEncontrado.nombre}`).emit('equipo:presencia', {
         participante: nombreEncontrado,
@@ -918,6 +923,9 @@ async function persistirReloj(sesion: SesionActiva): Promise<void> {
       reloj_pausado: sesion.reloj.pausado,
       segundo_actual: sesion.reloj.segundoActual,
       extensiones: sesion.reloj.extensiones,
+      reloj_iniciado_en: sesion.reloj.iniciadoEn?.toISOString() ?? null,
+      reloj_pausado_en: sesion.reloj.pausadoEn?.toISOString() ?? null,
+      tiempo_pausado_total_ms: sesion.reloj.tiempoPausadoTotalMs,
     });
   } catch (_) { /* silently continue */ }
 }
@@ -932,4 +940,74 @@ async function persistirEquipo(sesion: SesionActiva, equipo: EquipoActivo): Prom
 function rolesRequeridos(tamano: number): RolEquipo[] {
   if (tamano <= 3) return ['patrocinador', 'lider', 'analista'];
   return ['patrocinador', 'lider', 'analista', 'voz_cliente'];
+}
+
+export async function recuperarSesionesDB(
+  io: SocketServer,
+  config: ConfigSimulador,
+): Promise<number> {
+  if (!dbDisponible) return 0;
+  let recuperadas = 0;
+  try {
+    const sesionesDB = await db.obtenerSesionesActivas();
+    for (const sDB of sesionesDB) {
+      if (sesiones.has(sDB.codigo_sala)) continue;
+
+      const reloj = reconstruirRelojDesdeDB({
+        reloj_iniciado: sDB.reloj_iniciado,
+        reloj_pausado: sDB.reloj_pausado,
+        segundo_actual: sDB.segundo_actual,
+        fase_actual: sDB.fase_actual,
+        extensiones: sDB.extensiones ?? {},
+        reloj_iniciado_en: sDB.reloj_iniciado_en,
+        reloj_pausado_en: sDB.reloj_pausado_en,
+        tiempo_pausado_total_ms: sDB.tiempo_pausado_total_ms ?? 0,
+      });
+
+      const sesion: SesionActiva = {
+        dbId: sDB.id,
+        codigoSala: sDB.codigo_sala,
+        reloj,
+        equipos: new Map(),
+        asignaciones: [],
+      };
+
+      const equiposDB = await db.obtenerEquiposSesion(sDB.id);
+      for (const eDB of equiposDB) {
+        const miembros = await db.obtenerMiembros(eDB.id);
+        const equipo: EquipoActivo = {
+          dbId: eDB.id,
+          nombre: eDB.nombre,
+          estadoMotor: eDB.estado_motor,
+          miembros,
+          evidencias: [],
+          consultasRealizadas: new Set(),
+          resultado: null,
+          preguntasConsejo: null,
+          codigosPersonales: new Map(),
+        };
+        sesion.equipos.set(eDB.nombre, equipo);
+      }
+
+      const asignacionesDB = await db.obtenerAsignaciones(sDB.id);
+      sesion.asignaciones = asignacionesDB.map(a => ({
+        nombreEquipo: a.nombre_equipo,
+        email: a.email,
+      }));
+
+      sesiones.set(sDB.codigo_sala, sesion);
+
+      if (reloj.iniciado && reloj.faseActual !== 'finalizado') {
+        iniciarReloj(reloj, sDB.codigo_sala, io, config, (anterior, nueva) => {
+          manejarCambioFase(sesion, anterior, nueva, io, config);
+        });
+      }
+
+      recuperadas++;
+      console.log(`  Sesion recuperada: ${sDB.codigo_sala} (fase: ${reloj.faseActual}, segundo: ${reloj.segundoActual})`);
+    }
+  } catch (err) {
+    console.warn('  Error recuperando sesiones:', (err as Error).message);
+  }
+  return recuperadas;
 }

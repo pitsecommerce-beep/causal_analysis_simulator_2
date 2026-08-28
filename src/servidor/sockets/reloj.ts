@@ -21,6 +21,9 @@ export interface RelojSesion {
   faseActual: NombreFase;
   extensiones: Record<string, number>;
   intervalo: ReturnType<typeof setInterval> | null;
+  iniciadoEn: Date | null;
+  pausadoEn: Date | null;
+  tiempoPausadoTotalMs: number;
 }
 
 export function crearReloj(): RelojSesion {
@@ -31,6 +34,9 @@ export function crearReloj(): RelojSesion {
     faseActual: 'espera',
     extensiones: {},
     intervalo: null,
+    iniciadoEn: null,
+    pausadoEn: null,
+    tiempoPausadoTotalMs: 0,
   };
 }
 
@@ -72,12 +78,16 @@ export function iniciarReloj(
 
   reloj.iniciado = true;
   reloj.pausado = false;
-  reloj.faseActual = obtenerFaseActual(0, config.fases, reloj.extensiones);
+  if (!reloj.iniciadoEn) {
+    reloj.iniciadoEn = new Date();
+    reloj.tiempoPausadoTotalMs = 0;
+  }
+  reloj.faseActual = obtenerFaseActual(reloj.segundoActual / 60, config.fases, reloj.extensiones);
 
   reloj.intervalo = setInterval(() => {
     if (reloj.pausado) return;
 
-    reloj.segundoActual += 1;
+    reloj.segundoActual = recalcularSegundos(reloj);
     const minutoActual = reloj.segundoActual / 60;
     const nuevaFase = obtenerFaseActual(minutoActual, config.fases, reloj.extensiones);
 
@@ -101,8 +111,52 @@ export function iniciarReloj(
   }, 1000);
 }
 
+export function recalcularSegundos(reloj: RelojSesion): number {
+  if (!reloj.iniciadoEn) return reloj.segundoActual;
+  const ahora = reloj.pausado && reloj.pausadoEn ? reloj.pausadoEn.getTime() : Date.now();
+  const transcurrido = ahora - reloj.iniciadoEn.getTime() - reloj.tiempoPausadoTotalMs;
+  return Math.max(0, Math.floor(transcurrido / 1000));
+}
+
+export function reconstruirRelojDesdeDB(datos: {
+  reloj_iniciado: boolean;
+  reloj_pausado: boolean;
+  segundo_actual: number;
+  fase_actual: string;
+  extensiones: Record<string, number>;
+  reloj_iniciado_en: string | null;
+  reloj_pausado_en: string | null;
+  tiempo_pausado_total_ms: number;
+}): RelojSesion {
+  const reloj = crearReloj();
+  reloj.iniciado = datos.reloj_iniciado;
+  reloj.pausado = datos.reloj_pausado;
+  reloj.extensiones = datos.extensiones ?? {};
+  reloj.faseActual = (datos.fase_actual as NombreFase) ?? 'espera';
+
+  if (datos.reloj_iniciado_en) {
+    reloj.iniciadoEn = new Date(datos.reloj_iniciado_en);
+    reloj.tiempoPausadoTotalMs = datos.tiempo_pausado_total_ms ?? 0;
+    reloj.pausadoEn = datos.reloj_pausado_en ? new Date(datos.reloj_pausado_en) : null;
+    reloj.segundoActual = recalcularSegundos(reloj);
+  } else {
+    reloj.segundoActual = datos.segundo_actual ?? 0;
+  }
+
+  return reloj;
+}
+
 export function pausarReloj(reloj: RelojSesion): boolean {
-  reloj.pausado = !reloj.pausado;
+  if (!reloj.pausado) {
+    reloj.pausado = true;
+    reloj.pausadoEn = new Date();
+  } else {
+    if (reloj.pausadoEn) {
+      reloj.tiempoPausadoTotalMs += Date.now() - reloj.pausadoEn.getTime();
+    }
+    reloj.pausado = false;
+    reloj.pausadoEn = null;
+  }
   return reloj.pausado;
 }
 

@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 import { cargarConfig } from './motor/dag.js';
 import { cargarTodosDatos } from './datos/cargador.js';
 import { conectarDB, ejecutarMigraciones, cerrarDB } from './db/conexion.js';
-import { configurarSockets } from './sockets/sala.js';
+import { configurarSockets, recuperarSesionesDB } from './sockets/sala.js';
 import { DISCURSO_DIRECTOR, DISCURSO_ADRIANA, TESTIMONIOS_RESPALDO, validarTestimoniosContraDatos } from './voz/guiones.js';
 import { sortearComentarios, validarTerminosProhibidos } from './voz/anthropic.js';
 
@@ -148,6 +148,11 @@ async function main(): Promise<void> {
   }
 
   configurarSockets(io, config, datos, dbConectada);
+
+  if (dbConectada) {
+    const n = await recuperarSesionesDB(io, config);
+    if (n > 0) console.log(`  ${n} sesion(es) recuperada(s) de Postgres`);
+  }
 
   const faltantes = verificarVariables();
   const modeloPensar = process.env.ANTHROPIC_MODEL_PENSAR || 'claude-sonnet-5';

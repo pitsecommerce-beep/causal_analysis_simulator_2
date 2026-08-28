@@ -19,7 +19,8 @@
     "voz:probar": "npx tsx src/servidor/consola/probar-voz.ts",
     "tablero:demo": "npx tsx src/servidor/consola/tablero-demo.ts",
     "sprites:generar": "npx tsx herramientas/sprites/generar.ts",
-    "escena:demo": "npx vite --open /demo.html"
+    "escena:demo": "npx vite --open /demo.html",
+    "resiliencia:probar": "npx tsx src/servidor/consola/resiliencia.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

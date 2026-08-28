@@ -29,6 +29,7 @@ interface Props {
   miNombre: string;
   miembros: MiembroEquipo[];
   tamanoEquipo: number;
+  onAbandonar: () => void;
 }
 
 const POS = CAMARA.posiciones;
@@ -127,6 +128,17 @@ export function JuegoApp(props: Props) {
             >
               {ambienteActivo ? '\u{1F50A}' : '\u{1F507}'}
             </button>
+            <button
+              className="juego__btn-abandonar"
+              onClick={() => {
+                if (confirm('Abandonar la sesion? Podras reconectarte con tu codigo personal.')) {
+                  props.onAbandonar();
+                }
+              }}
+              title="Abandonar sesion"
+            >
+              Salir
+            </button>
           </div>
 
           <div className="juego__hud-companeros">
@@ -173,6 +185,7 @@ export function JuegoApp(props: Props) {
               miNombre={props.miNombre}
               miembros={props.miembros}
               tamanoEquipo={props.tamanoEquipo}
+              onAbandonar={props.onAbandonar}
             />
           </div>
         </div>
