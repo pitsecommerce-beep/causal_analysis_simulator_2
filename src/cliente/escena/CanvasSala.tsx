@@ -1,15 +1,9 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { CAMARA, PANORAMA_ANCHO, PANORAMA_ALTO } from './camara';
-import manifiesto from '../assets/sprites/manifiesto.json';
 
-const SPRITE_URLS = import.meta.glob('../assets/sprites/*.png', {
-  eager: true,
-  import: 'default',
-}) as Record<string, string>;
-
-function urlSprite(archivo: string): string {
-  return SPRITE_URLS[`../assets/sprites/${archivo}`] ?? '';
-}
+type SpriteLoader = typeof import('../assets/sprites/cargador');
+let _loader: SpriteLoader | null = null;
+const _loaderPromise = import('../assets/sprites/cargador').then(m => { _loader = m; return m; });
 
 function clamp(v: number, min: number, max: number): number {
   return v < min ? min : v > max ? max : v;
@@ -91,41 +85,47 @@ export function CanvasSala({
     }
   }, [anguloObjetivo, halfArc]);
 
-  // Load images
+  // Load images (waits for sprite loader chunk)
   useEffect(() => {
-    const cache = imagenesRef.current;
-    const needed = new Set<string>();
-    needed.add('panorama.png');
-
-    for (const sp of sprites) {
-      const entry = (manifiesto as Record<string, { archivo: string }>)[sp.clave];
-      if (entry) needed.add(entry.archivo);
-    }
-
     let montado = true;
-    let pendientes = 0;
 
-    for (const archivo of needed) {
-      if (cache.has(archivo)) continue;
-      pendientes++;
-      const url = urlSprite(archivo);
-      if (!url) { pendientes--; continue; }
-      const img = new Image();
-      img.src = url;
-      img.onload = () => {
-        if (!montado) return;
-        cache.set(archivo, img);
-        pendientes--;
-        if (pendientes <= 0) setCargado(true);
-      };
-      img.onerror = () => {
-        if (!montado) return;
-        pendientes--;
-        if (pendientes <= 0) setCargado(true);
-      };
-    }
+    _loaderPromise.then(loader => {
+      if (!montado) return;
 
-    if (pendientes === 0) setCargado(true);
+      const cache = imagenesRef.current;
+      const needed = new Set<string>();
+      needed.add('panorama.png');
+
+      for (const sp of sprites) {
+        const entry = loader.spriteManifiesto[sp.clave];
+        if (entry) needed.add(entry.archivo);
+      }
+
+      let pendientes = 0;
+
+      for (const archivo of needed) {
+        if (cache.has(archivo)) continue;
+        pendientes++;
+        const url = loader.urlSprite(archivo);
+        if (!url) { pendientes--; continue; }
+        const img = new Image();
+        img.src = url;
+        img.onload = () => {
+          if (!montado) return;
+          cache.set(archivo, img);
+          pendientes--;
+          if (pendientes <= 0) setCargado(true);
+        };
+        img.onerror = () => {
+          if (!montado) return;
+          pendientes--;
+          if (pendientes <= 0) setCargado(true);
+        };
+      }
+
+      if (pendientes === 0) setCargado(true);
+    });
+
     return () => { montado = false; };
   }, [sprites]);
 
@@ -314,8 +314,9 @@ export function CanvasSala({
         PANORAMA_ANCHO - srcW,
       );
 
+      const mf = _loader?.spriteManifiesto;
       for (const sp of currentSprites) {
-        const entry = (manifiesto as Record<string, { archivo: string }>)[sp.clave];
+        const entry = mf?.[sp.clave];
         if (!entry) continue;
         const img = cache.get(entry.archivo);
         if (!img) continue;

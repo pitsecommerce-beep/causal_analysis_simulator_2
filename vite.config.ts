@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist/cliente',
+    assetsInlineLimit: 0,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -13,6 +14,7 @@ export default defineConfig({
       },
       output: {
         manualChunks(id: string) {
+          if (id.includes('/assets/sprites/')) return 'sprites';
           if (id.includes('/escena/')) return 'escena';
           if (id.includes('/profesor/')) return 'profesor';
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'recharts';
