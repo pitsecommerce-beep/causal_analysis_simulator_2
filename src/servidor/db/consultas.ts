@@ -173,11 +173,20 @@ export async function guardarMiembros(
   miembros: MiembroEquipo[],
 ): Promise<void> {
   const pool = obtenerPool();
-  await pool.query('DELETE FROM miembros WHERE equipo_id = $1', [equipoId]);
+  const nombres = miembros.map(m => m.nombre);
+  if (nombres.length > 0) {
+    await pool.query(
+      'DELETE FROM miembros WHERE equipo_id = $1 AND nombre_participante != ALL($2::text[])',
+      [equipoId, nombres],
+    );
+  } else {
+    await pool.query('DELETE FROM miembros WHERE equipo_id = $1', [equipoId]);
+  }
   for (const m of miembros) {
     await pool.query(
       `INSERT INTO miembros (equipo_id, nombre_participante, rol)
-       VALUES ($1, $2, $3)`,
+       VALUES ($1, $2, $3)
+       ON CONFLICT (equipo_id, nombre_participante) DO UPDATE SET rol = $3`,
       [equipoId, m.nombre, m.rol],
     );
   }
@@ -264,6 +273,40 @@ export async function guardarMiembroConEmail(
      ON CONFLICT (equipo_id, nombre_participante) DO UPDATE SET rol = $3, email = $4`,
     [equipoId, nombre, rol, email.toLowerCase().trim()],
   );
+}
+
+export async function guardarCodigoPersonal(
+  equipoId: number,
+  nombreParticipante: string,
+  codigoPersonal: string,
+): Promise<void> {
+  const pool = obtenerPool();
+  await pool.query(
+    `UPDATE miembros SET codigo_personal = $1
+     WHERE equipo_id = $2 AND nombre_participante = $3`,
+    [codigoPersonal, equipoId, nombreParticipante],
+  );
+}
+
+export async function buscarPorCodigoPersonal(
+  sesionId: number,
+  codigoPersonal: string,
+): Promise<{ equipoNombre: string; equipoId: number; nombre: string; rol: RolEquipo } | null> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    `SELECT m.nombre_participante AS nombre, m.rol, e.nombre AS equipo_nombre, e.id AS equipo_id
+     FROM miembros m
+     JOIN equipos e ON e.id = m.equipo_id
+     WHERE e.sesion_id = $1 AND m.codigo_personal = $2`,
+    [sesionId, codigoPersonal],
+  );
+  if (rows.length === 0) return null;
+  return {
+    equipoNombre: rows[0].equipo_nombre,
+    equipoId: rows[0].equipo_id,
+    nombre: rows[0].nombre,
+    rol: rows[0].rol as RolEquipo,
+  };
 }
 
 export async function obtenerEquipoCompletoPorEmail(

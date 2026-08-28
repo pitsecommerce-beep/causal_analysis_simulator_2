@@ -29,7 +29,7 @@ interface Props {
   codigoSala: string;
   nombreEquipo: string;
   tamanoEquipo: number;
-  onTerminar: (miembros: MiembroEquipo[], miRol: RolEquipo, miNombre: string) => void;
+  onTerminar: (miembros: MiembroEquipo[], miRol: RolEquipo, miNombre: string, codigoPersonal: string) => void;
 }
 
 type PantallaEscena = 'cargando' | 'director' | 'adriana' | 'clientes' | 'mesa';

@@ -1,7 +1,35 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
 import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, RolEquipo, MiembroEquipo } from './lib/tipos';
 import { socket } from './lib/socket';
+
+const STORAGE_KEY = 'etfbank_sesion';
+
+interface SesionGuardada {
+  codigoSala: string;
+  codigoPersonal: string;
+  nombreEquipo: string;
+  miNombre: string;
+  miRol: RolEquipo;
+}
+
+function guardarSesion(datos: SesionGuardada): void {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(datos)); } catch (_) {}
+}
+
+function leerSesion(): SesionGuardada | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const datos = JSON.parse(raw);
+    if (datos?.codigoSala && datos?.codigoPersonal) return datos;
+  } catch (_) {}
+  return null;
+}
+
+function borrarSesion(): void {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+}
 
 const EscenaApp = lazy(() => import('./escena/EscenaApp').then(m => ({ default: m.EscenaApp })));
 const ConsolaApp = lazy(() => import('./consola/ConsolaApp').then(m => ({ default: m.ConsolaApp })));
@@ -22,15 +50,85 @@ interface DatosRol {
   miembros: MiembroEquipo[];
   miRol: RolEquipo;
   miNombre: string;
+  codigoPersonal?: string;
 }
 
-type Pantalla = 'unirse' | 'escena' | 'juego' | 'consola' | 'profesor';
+type Pantalla = 'unirse' | 'reconectando' | 'escena' | 'juego' | 'consola' | 'profesor';
 
 export function App() {
+  const sesionGuardada = leerSesion();
   const [sesion, setSesion] = useState<DatosSesion | null>(null);
-  const [pantalla, setPantalla] = useState<Pantalla>('unirse');
+  const [pantalla, setPantalla] = useState<Pantalla>(sesionGuardada ? 'reconectando' : 'unirse');
   const [datosRol, setDatosRol] = useState<DatosRol | null>(null);
   const [profesorData, setProfesorData] = useState<{ codigoSala: string; clave: string } | null>(null);
+  const [errorReconexion, setErrorReconexion] = useState('');
+
+  useEffect(() => {
+    if (!sesionGuardada || pantalla !== 'reconectando') return;
+    if (!socket.connected) socket.connect();
+
+    socket.emit('equipo:reconectar', {
+      codigoSala: sesionGuardada.codigoSala,
+      codigoPersonal: sesionGuardada.codigoPersonal,
+    }, (resp: any) => {
+      if (resp?.error) {
+        borrarSesion();
+        setErrorReconexion(resp.error);
+        setPantalla('unirse');
+        return;
+      }
+      setSesion({
+        estadoMotor: resp.estadoMotor,
+        reloj: resp.reloj,
+        catalogo: resp.intervencionesCatalogo,
+        solicitudes: resp.solicitudes ?? [],
+        codigoSala: sesionGuardada.codigoSala,
+        nombreEquipo: resp.nombreEquipo,
+        tamanoEquipo: resp.tamanoEquipo ?? 4,
+      });
+      setDatosRol({
+        miembros: resp.miembros,
+        miRol: resp.miRol,
+        miNombre: resp.miNombre,
+        codigoPersonal: resp.codigoPersonal,
+      });
+      setPantalla('juego');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function onReconectar(codigoSala: string, codigoPersonal: string) {
+    if (!socket.connected) socket.connect();
+    socket.emit('equipo:reconectar', { codigoSala, codigoPersonal }, (resp: any) => {
+      if (resp?.error) {
+        setErrorReconexion(resp.error);
+        return;
+      }
+      guardarSesion({
+        codigoSala,
+        codigoPersonal: resp.codigoPersonal,
+        nombreEquipo: resp.nombreEquipo,
+        miNombre: resp.miNombre,
+        miRol: resp.miRol,
+      });
+      setSesion({
+        estadoMotor: resp.estadoMotor,
+        reloj: resp.reloj,
+        catalogo: resp.intervencionesCatalogo,
+        solicitudes: resp.solicitudes ?? [],
+        codigoSala,
+        nombreEquipo: resp.nombreEquipo,
+        tamanoEquipo: resp.tamanoEquipo ?? 4,
+      });
+      setDatosRol({
+        miembros: resp.miembros,
+        miRol: resp.miRol,
+        miNombre: resp.miNombre,
+        codigoPersonal: resp.codigoPersonal,
+      });
+      setPantalla('juego');
+    });
+  }
 
   function onUnido(datos: DatosSesion) {
     setSesion(datos);
@@ -84,12 +182,25 @@ export function App() {
     );
   }
 
+  if (pantalla === 'reconectando') {
+    return (
+      <div className="escena">
+        <div className="escena__cargando">
+          <div className="escena__spinner" />
+          <span>Reconectando...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (pantalla === 'unirse' || !sesion) {
     return (
       <UnirseEquipo
         onUnido={onUnido}
         onProfesor={onProfesor}
         onProfesorUnirse={onProfesorUnirse}
+        onReconectar={onReconectar}
+        errorReconexion={errorReconexion}
       />
     );
   }
@@ -101,8 +212,17 @@ export function App() {
           codigoSala={sesion.codigoSala}
           nombreEquipo={sesion.nombreEquipo}
           tamanoEquipo={sesion.tamanoEquipo}
-          onTerminar={(miembros, miRol, miNombre) => {
-            setDatosRol({ miembros, miRol, miNombre });
+          onTerminar={(miembros, miRol, miNombre, codigoPersonal) => {
+            setDatosRol({ miembros, miRol, miNombre, codigoPersonal });
+            if (codigoPersonal) {
+              guardarSesion({
+                codigoSala: sesion.codigoSala,
+                codigoPersonal,
+                nombreEquipo: sesion.nombreEquipo,
+                miNombre,
+                miRol,
+              });
+            }
             setPantalla('juego');
           }}
         />

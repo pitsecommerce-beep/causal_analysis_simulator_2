@@ -6,7 +6,7 @@ import { NOMBRES_ROLES, DESC_ROLES } from '../lib/tipos';
 interface Props {
   nombreEquipo: string;
   tamanoEquipo: number;
-  onIniciar: (miembros: MiembroEquipo[], miRol: RolEquipo, miNombre: string) => void;
+  onIniciar: (miembros: MiembroEquipo[], miRol: RolEquipo, miNombre: string, codigoPersonal: string) => void;
 }
 
 const TODOS_ROLES: RolEquipo[] = ['patrocinador', 'lider', 'analista', 'voz_cliente'];
@@ -28,6 +28,7 @@ export function MesaRedonda({ nombreEquipo, tamanoEquipo, onIniciar }: Props) {
   const [error, setError] = useState('');
   const [registrado, setRegistrado] = useState(false);
   const [animando, setAnimando] = useState<string | null>(null);
+  const [codigoPersonal, setCodigoPersonal] = useState('');
 
   const roles = rolesDisponibles(tamanoEquipo);
   const liderEsVoz = tamanoEquipo <= 3;
@@ -63,13 +64,14 @@ export function MesaRedonda({ nombreEquipo, tamanoEquipo, onIniciar }: Props) {
       if (resp?.error) { setError(resp.error); return; }
       setRegistrado(true);
       if (resp?.miembros) setMiembros(resp.miembros);
+      if (resp?.codigoPersonal) setCodigoPersonal(resp.codigoPersonal);
     });
   }
 
   function confirmarEquipo() {
     socket.emit('equipo:asignar_roles', { miembros }, (resp: any) => {
       if (resp?.error) { setError(resp.error); return; }
-      onIniciar(resp.miembros, miRol as RolEquipo, miNombre.trim());
+      onIniciar(resp.miembros, miRol as RolEquipo, miNombre.trim(), codigoPersonal);
     });
   }
 
@@ -164,6 +166,14 @@ export function MesaRedonda({ nombreEquipo, tamanoEquipo, onIniciar }: Props) {
             <p className="roles__confirmado">
               {miNombre} — {miRol ? NOMBRES_ROLES[miRol] : ''}
             </p>
+
+            {codigoPersonal && (
+              <div className="roles__codigo-personal">
+                <span className="roles__codigo-label">Tu codigo de reconexion:</span>
+                <span className="roles__codigo-valor">{codigoPersonal}</span>
+                <span className="roles__codigo-nota">Apuntalo para reconectar si se cierra tu navegador.</span>
+              </div>
+            )}
 
             {error && <p className="roles__error">{error}</p>}
 

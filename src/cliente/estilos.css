@@ -105,6 +105,19 @@ input, select, textarea, button {
   margin-top: var(--ipd-space-3);
   text-align: center;
 }
+.unirse__link {
+  display: block;
+  width: 100%;
+  margin-top: var(--ipd-space-3);
+  background: none;
+  border: none;
+  color: var(--ipd-text-secondary);
+  font-size: var(--ipd-size-xs);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: var(--ipd-space-1) 0;
+}
+.unirse__link:hover { color: var(--ipd-text-primary); }
 
 /* — Consola principal — */
 .consola {
@@ -1183,6 +1196,34 @@ input, select, textarea, button {
   border-radius: var(--ipd-radius-sm);
   margin-bottom: var(--ipd-space-4);
   text-align: center;
+}
+.roles__codigo-personal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ipd-space-1);
+  background: var(--ipd-color-navy-900);
+  border: var(--ipd-border-hairline) solid var(--ipd-color-gold-600);
+  border-radius: var(--ipd-radius-sm);
+  padding: var(--ipd-space-3) var(--ipd-space-4);
+  margin-bottom: var(--ipd-space-4);
+}
+.roles__codigo-label {
+  font-size: 11px;
+  color: var(--ipd-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.roles__codigo-valor {
+  font-family: var(--ipd-font-mono);
+  font-size: 28px;
+  font-weight: var(--ipd-weight-bold);
+  color: var(--ipd-color-gold-300);
+  letter-spacing: 0.2em;
+}
+.roles__codigo-nota {
+  font-size: 11px;
+  color: var(--ipd-text-tertiary);
 }
 .roles__roster {
   margin-bottom: var(--ipd-space-4);

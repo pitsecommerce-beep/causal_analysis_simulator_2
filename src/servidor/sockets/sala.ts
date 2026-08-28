@@ -24,6 +24,7 @@ interface EquipoActivo {
   consultasRealizadas: Set<string>;
   resultado: import('../motor/tipos.js').ResultadoPuntuacion | null;
   preguntasConsejo: PreguntaConsejo[] | null;
+  codigosPersonales: Map<string, string>;
 }
 
 interface AsignacionMemoria {
@@ -42,12 +43,28 @@ interface SesionActiva {
 const sesiones = new Map<string, SesionActiva>();
 let dbDisponible = false;
 
+const CHARS_SIN_AMBIGUOS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
 function generarCodigoSala(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let codigo = '';
   for (let i = 0; i < 6; i++) {
-    codigo += chars[Math.floor(Math.random() * chars.length)];
+    codigo += CHARS_SIN_AMBIGUOS[Math.floor(Math.random() * CHARS_SIN_AMBIGUOS.length)];
   }
+  return codigo;
+}
+
+function generarCodigoPersonal(sesion: SesionActiva): string {
+  const usados = new Set<string>();
+  for (const eq of sesion.equipos.values()) {
+    for (const c of eq.codigosPersonales.values()) usados.add(c);
+  }
+  let codigo: string;
+  do {
+    codigo = '';
+    for (let i = 0; i < 6; i++) {
+      codigo += CHARS_SIN_AMBIGUOS[Math.floor(Math.random() * CHARS_SIN_AMBIGUOS.length)];
+    }
+  } while (usados.has(codigo));
   return codigo;
 }
 
@@ -283,7 +300,7 @@ export function configurarSockets(
           const estadoMotor = crearEstadoInicial(config);
           const equipo: EquipoActivo = {
             dbId: null, nombre, estadoMotor, miembros: [], evidencias: [],
-            consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null,
+            consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(),
           };
           if (dbDisponible && sesion.dbId) {
             try {
@@ -359,7 +376,7 @@ export function configurarSockets(
       let equipo = sesion.equipos.get(nombreEquipo);
       if (!equipo) {
         const estadoMotor = crearEstadoInicial(config);
-        equipo = { dbId: null, nombre: nombreEquipo, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null };
+        equipo = { dbId: null, nombre: nombreEquipo, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map() };
         if (dbDisponible && sesion.dbId) {
           try {
             const row = await db.crearEquipo(sesion.dbId, nombreEquipo, estadoMotor);
@@ -441,7 +458,7 @@ export function configurarSockets(
       ack?.({ ok: true, miembros: equipo.miembros });
     });
 
-    socket.on('equipo:elegir_rol', (payload, ack) => {
+    socket.on('equipo:elegir_rol', async (payload, ack) => {
       const info = (socket as any).__equipo;
       if (!info) return ack?.({ error: 'No estás en un equipo' });
 
@@ -465,13 +482,94 @@ export function configurarSockets(
         if (idx >= 0) equipo.miembros[idx].rol = rol;
       }
 
+      let codigoPersonal = equipo.codigosPersonales.get(participante);
+      if (!codigoPersonal) {
+        codigoPersonal = generarCodigoPersonal(sesion);
+        equipo.codigosPersonales.set(participante, codigoPersonal);
+      }
+
+      if (dbDisponible && equipo.dbId) {
+        try {
+          await db.guardarMiembroConEmail(equipo.dbId, info.email ?? '', participante, rol);
+          await db.guardarCodigoPersonal(equipo.dbId, participante, codigoPersonal);
+        } catch (_) { /* sin persistencia */ }
+      }
+
       io.to(`equipo:${info.codigoSala}:${info.nombre}`).emit('equipo:miembro_sentado', {
         nombre: participante,
         rol,
         miembros: equipo.miembros,
       });
 
-      ack?.({ ok: true, miembros: equipo.miembros });
+      ack?.({ ok: true, miembros: equipo.miembros, codigoPersonal });
+    });
+
+    socket.on('equipo:reconectar', (payload, ack) => {
+      const codigo = payload?.codigoSala?.toUpperCase();
+      const codigoPersonal = payload?.codigoPersonal?.toUpperCase();
+
+      if (!codigo || !codigoPersonal) {
+        return ack?.({ error: 'Código de sala y código personal requeridos' });
+      }
+
+      const sesion = sesiones.get(codigo);
+      if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
+
+      let equipoEncontrado: EquipoActivo | null = null;
+      let nombreEncontrado = '';
+      let rolEncontrado: RolEquipo | null = null;
+
+      for (const equipo of sesion.equipos.values()) {
+        for (const [nombre, cod] of equipo.codigosPersonales.entries()) {
+          if (cod === codigoPersonal) {
+            equipoEncontrado = equipo;
+            nombreEncontrado = nombre;
+            const miembro = equipo.miembros.find(m => m.nombre === nombre);
+            rolEncontrado = miembro?.rol ?? null;
+            break;
+          }
+        }
+        if (equipoEncontrado) break;
+      }
+
+      if (!equipoEncontrado || !rolEncontrado) {
+        return ack?.({ error: 'Código personal no encontrado en esta sesión' });
+      }
+
+      socket.join(`sala:${codigo}`);
+      socket.join(`equipo:${codigo}:${equipoEncontrado.nombre}`);
+      (socket as any).__equipo = {
+        codigoSala: codigo,
+        nombre: equipoEncontrado.nombre,
+        participante: nombreEncontrado,
+        rol: rolEncontrado,
+      };
+
+      socket.to(`equipo:${codigo}:${equipoEncontrado.nombre}`).emit('equipo:presencia', {
+        participante: nombreEncontrado,
+        estado: 'idle',
+      });
+
+      io.to(`profesor:${codigo}`).emit('sesion:participante_reconectado', {
+        equipo: equipoEncontrado.nombre,
+        participante: nombreEncontrado,
+      });
+
+      ack?.({
+        estadoMotor: equipoEncontrado.estadoMotor,
+        reloj: obtenerEstadoReloj(sesion.reloj, config),
+        intervencionesCatalogo: listarIntervencionesDisponibles(equipoEncontrado.estadoMotor, config),
+        solicitudes: prepararDatosCliente(datos.solicitudes),
+        tamanoEquipo: config.equipo.tamano,
+        nombreEquipo: equipoEncontrado.nombre,
+        miembros: equipoEncontrado.miembros,
+        evidencias: equipoEncontrado.evidencias,
+        resultado: equipoEncontrado.resultado,
+        preguntasConsejo: equipoEncontrado.preguntasConsejo,
+        miNombre: nombreEncontrado,
+        miRol: rolEncontrado,
+        codigoPersonal,
+      });
     });
 
     socket.on('equipo:intervenir', async (payload, ack) => {

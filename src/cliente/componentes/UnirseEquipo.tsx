@@ -14,14 +14,18 @@ interface Props {
   }) => void;
   onProfesor: (codigoSala: string, clave: string) => void;
   onProfesorUnirse: (codigoSala: string, clave: string) => void;
+  onReconectar: (codigoSala: string, codigoPersonal: string) => void;
+  errorReconexion?: string;
 }
 
-export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse }: Props) {
+export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconectar, errorReconexion }: Props) {
   const [modo, setModo] = useState<'equipo' | 'profesor'>('equipo');
   const [codigo, setCodigo] = useState('');
   const [email, setEmail] = useState('');
   const [clave, setClave] = useState('');
-  const [error, setError] = useState('');
+  const [codigoPersonal, setCodigoPersonal] = useState('');
+  const [mostrarReconexion, setMostrarReconexion] = useState(false);
+  const [error, setError] = useState(errorReconexion ?? '');
   const [cargando, setCargando] = useState(false);
 
   const handleUnirse = () => {
@@ -64,6 +68,20 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse }: Props) {
     setCargando(true);
     setError('');
     onProfesor('', clave.trim());
+  };
+
+  const handleReconectar = () => {
+    if (!codigo.trim() || !codigoPersonal.trim()) {
+      setError('Ingresa el codigo de sala y tu codigo personal.');
+      return;
+    }
+    if (codigoPersonal.trim().length !== 6) {
+      setError('El codigo personal debe tener 6 caracteres.');
+      return;
+    }
+    setCargando(true);
+    setError('');
+    onReconectar(codigo.toUpperCase(), codigoPersonal.toUpperCase());
   };
 
   const handleUnirseSesion = () => {
@@ -125,6 +143,35 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse }: Props) {
             <button className="unirse__boton" onClick={handleUnirse} disabled={cargando}>
               {cargando ? 'Conectando...' : 'Unirse a la sesion'}
             </button>
+
+            {!mostrarReconexion ? (
+              <button
+                className="unirse__link"
+                onClick={() => { setMostrarReconexion(true); setError(''); }}
+              >
+                Tengo un codigo de reconexion
+              </button>
+            ) : (
+              <>
+                <div className="unirse__separador">
+                  <span>Reconectar</span>
+                </div>
+                <div className="unirse__campo">
+                  <label>Codigo personal (6 caracteres)</label>
+                  <input
+                    className="mono"
+                    maxLength={6}
+                    value={codigoPersonal}
+                    onChange={e => setCodigoPersonal(e.target.value.toUpperCase())}
+                    placeholder="XYZ789"
+                    onKeyDown={e => e.key === 'Enter' && handleReconectar()}
+                  />
+                </div>
+                <button className="unirse__boton unirse__boton--secundario" onClick={handleReconectar} disabled={cargando}>
+                  {cargando ? 'Reconectando...' : 'Reconectar'}
+                </button>
+              </>
+            )}
           </>
         ) : (
           <>
