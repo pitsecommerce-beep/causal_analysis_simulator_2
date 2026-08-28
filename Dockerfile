@@ -13,7 +13,9 @@ COPY datos/ datos/
 RUN npx tsc \
  && npx vite build \
  && mkdir -p dist/src/servidor/db/migraciones \
- && cp src/servidor/db/migraciones/*.sql dist/src/servidor/db/migraciones/
+ && cp src/servidor/db/migraciones/*.sql dist/src/servidor/db/migraciones/ \
+ && mkdir -p dist/src/servidor/voz/guiones \
+ && cp src/servidor/voz/guiones/*.txt dist/src/servidor/voz/guiones/
 
 FROM node:20-slim
 
