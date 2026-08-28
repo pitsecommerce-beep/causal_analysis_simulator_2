@@ -9,7 +9,7 @@ interface Props {
 }
 
 const CATEGORIAS: { key: keyof ResultadoPuntuacion; label: string; max: number }[] = [
-  { key: 'diagnostico', label: 'Diagnostico', max: 350 },
+  { key: 'diagnostico', label: 'Diagnóstico', max: 350 },
   { key: 'rigor', label: 'Rigor', max: 200 },
   { key: 'impacto', label: 'Impacto', max: 300 },
   { key: 'velocidad', label: 'Velocidad', max: 100 },
@@ -47,7 +47,7 @@ export function TableroFinal({ resultado, preguntas, historialKPIs, nombreEquipo
       </header>
 
       <section className="tablero__desglose">
-        <h3>Desglose de puntuacion</h3>
+        <h3>Desglose de puntuación</h3>
         {CATEGORIAS.map(c => (
           <BarraPuntaje key={c.key} label={c.label} valor={resultado[c.key] as number} max={c.max} />
         ))}
@@ -67,7 +67,7 @@ export function TableroFinal({ resultado, preguntas, historialKPIs, nombreEquipo
                 <th>Trimestre</th>
                 <th>Captura (med.)</th>
                 <th>Quejas</th>
-                <th>Conversion</th>
+                <th>Conversión</th>
                 <th>Errores</th>
                 <th>Atorados</th>
               </tr>

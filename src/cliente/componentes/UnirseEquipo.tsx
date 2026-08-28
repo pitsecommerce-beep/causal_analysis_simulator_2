@@ -33,11 +33,11 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
 
   const handleUnirse = () => {
     if (!codigo.trim() || !email.trim()) {
-      setError('Ingresa el codigo de sala y tu correo electronico.');
+      setError('Ingresa el código de sala y tu correo electrónico.');
       return;
     }
     if (!email.includes('@')) {
-      setError('Ingresa un correo electronico valido.');
+      setError('Ingresa un correo electrónico válido.');
       return;
     }
     setCargando(true);
@@ -78,11 +78,11 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
 
   const handleReconectar = () => {
     if (!codigo.trim() || !codigoPersonal.trim()) {
-      setError('Ingresa el codigo de sala y tu codigo personal.');
+      setError('Ingresa el código de sala y tu código personal.');
       return;
     }
     if (codigoPersonal.trim().length !== 6) {
-      setError('El codigo personal debe tener 6 caracteres.');
+      setError('El código personal debe tener 6 caracteres.');
       return;
     }
     setCargando(true);
@@ -92,7 +92,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
 
   const handleUnirseSesion = () => {
     if (!codigo.trim() || !clave.trim()) {
-      setError('Ingresa el codigo de sala y la clave de profesor.');
+      setError('Ingresa el código de sala y la clave de profesor.');
       return;
     }
     setCargando(true);
@@ -104,7 +104,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
     <div className="unirse">
       <div className="unirse__tarjeta">
         <h1 className="unirse__titulo">ETF Bank</h1>
-        <p className="unirse__subtitulo">Simulador de Analisis Causal</p>
+        <p className="unirse__subtitulo">Simulador de Análisis Causal</p>
 
         <div className="unirse__tabs">
           <button
@@ -124,7 +124,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
         {modo === 'equipo' ? (
           <>
             <div className="unirse__campo">
-              <label>Codigo de sala</label>
+              <label>Código de sala</label>
               <input
                 className="mono"
                 maxLength={10}
@@ -136,7 +136,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
             </div>
 
             <div className="unirse__campo">
-              <label>Correo electronico</label>
+              <label>Correo electrónico</label>
               <input
                 type="email"
                 value={email}
@@ -147,7 +147,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
             </div>
 
             <button className="unirse__boton" onClick={handleUnirse} disabled={cargando}>
-              {cargando ? 'Conectando...' : 'Unirse a la sesion'}
+              {cargando ? 'Conectando...' : 'Unirse a la sesión'}
             </button>
 
             {!mostrarReconexion ? (
@@ -155,7 +155,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
                 className="unirse__link"
                 onClick={() => { setMostrarReconexion(true); setError(''); }}
               >
-                Tengo un codigo de reconexion
+                Tengo un código de reconexión
               </button>
             ) : (
               <>
@@ -163,7 +163,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
                   <span>Reconectar</span>
                 </div>
                 <div className="unirse__campo">
-                  <label>Codigo personal (6 caracteres)</label>
+                  <label>Código personal (6 caracteres)</label>
                   <input
                     className="mono"
                     maxLength={6}
@@ -193,15 +193,15 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
             </div>
 
             <button className="unirse__boton" onClick={handleCrearSesion} disabled={cargando}>
-              {cargando ? 'Creando...' : 'Crear nueva sesion'}
+              {cargando ? 'Creando...' : 'Crear nueva sesión'}
             </button>
 
             <div className="unirse__separador">
-              <span>o unirse a sesion existente</span>
+              <span>o unirse a sesión existente</span>
             </div>
 
             <div className="unirse__campo">
-              <label>Codigo de sala</label>
+              <label>Código de sala</label>
               <input
                 className="mono"
                 maxLength={10}
@@ -213,7 +213,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
             </div>
 
             <button className="unirse__boton unirse__boton--secundario" onClick={handleUnirseSesion} disabled={cargando}>
-              {cargando ? 'Conectando...' : 'Unirse a sesion existente'}
+              {cargando ? 'Conectando...' : 'Unirse a sesión existente'}
             </button>
           </>
         )}

@@ -213,7 +213,7 @@ export function ConsolaApp({
         <div className="consola__header-info">
           <span>Sala: {codigoSala}</span>
           <span>T{estado.trimestre}</span>
-          <span>Creditos: {estado.creditosIndagacion}/12</span>
+          <span>Créditos: {estado.creditosIndagacion}/12</span>
           <span>Presupuesto: ${estado.presupuesto}/100</span>
         </div>
         {miRol && miNombre && (
@@ -236,7 +236,7 @@ export function ConsolaApp({
           <button
             className="consola__btn-abandonar"
             onClick={() => {
-              if (confirm('Abandonar la sesion? Podras reconectarte con tu codigo personal.')) {
+              if (confirm('¿Abandonar la sesión? Podrás reconectarte con tu código personal.')) {
                 onAbandonar();
               }
             }}
@@ -321,7 +321,7 @@ export function ConsolaApp({
             titulo="Autorizar intervenciones"
             rolRequerido="patrocinador"
             miRol={miRol}
-            descripcion="Solo el Patrocinador puede aprobar propuestas de intervencion."
+            descripcion="Solo el Patrocinador puede aprobar propuestas de intervención."
           />
         )}
 
@@ -352,13 +352,13 @@ export function ConsolaApp({
         )}
         {!mostrarDiagnostico && esConsejoOFin && tieneRoles && (
           <SeccionBloqueada
-            titulo="Diagnostico final"
+            titulo="Diagnóstico final"
             rolRequerido="lider"
             miRol={miRol}
             onSolicitar={(msg) => {
               socket.emit('equipo:solicitar_accion', { para: 'lider', tipo: 'diagnostico', mensaje: msg }, (resp: any) => {
                 if (resp?.error) mostrarMensaje(resp.error);
-                else mostrarMensaje('Solicitud enviada al Lider.');
+                else mostrarMensaje('Solicitud enviada al Líder.');
               });
             }}
           />
@@ -433,7 +433,7 @@ function SeccionBloqueada({
           <input
             value={msgPedir}
             onChange={e => setMsgPedir(e.target.value)}
-            placeholder="Que necesitas?"
+            placeholder="¿Qué necesitas?"
             onKeyDown={e => {
               if (e.key === 'Enter' && msgPedir.trim()) {
                 onSolicitar(msgPedir.trim());

@@ -23,7 +23,7 @@ export function PanelSolicitudes({ solicitudes, miRol, miNombre, onMensaje }: Pr
 
   function enviar() {
     if (!para) {
-      onMensaje('Selecciona a quien va dirigida la solicitud.');
+      onMensaje('Selecciona a quién va dirigida la solicitud.');
       return;
     }
     if (!mensaje.trim()) {
@@ -88,7 +88,7 @@ export function PanelSolicitudes({ solicitudes, miRol, miNombre, onMensaje }: Pr
       )}
 
       <div className="panel-solicitudes__nueva">
-        <h4 className="panel-solicitudes__subtitulo">Pedir accion</h4>
+        <h4 className="panel-solicitudes__subtitulo">Pedir acción</h4>
         <div className="panel-solicitudes__campo">
           <select value={para} onChange={e => setPara(e.target.value as RolEquipo)}>
             <option value="">Seleccionar rol...</option>
@@ -102,14 +102,14 @@ export function PanelSolicitudes({ solicitudes, miRol, miNombre, onMensaje }: Pr
             <option value="general">General</option>
             <option value="consulta">Ejecutar consulta</option>
             <option value="testimonios">Buscar testimonios</option>
-            <option value="diagnostico">Completar diagnostico</option>
+            <option value="diagnostico">Completar diagnóstico</option>
           </select>
         </div>
         <div className="panel-solicitudes__campo">
           <textarea
             value={mensaje}
             onChange={e => setMensaje(e.target.value)}
-            placeholder="Que necesitas?"
+            placeholder="¿Qué necesitas?"
           />
         </div>
         <button className="panel-solicitudes__btn-enviar" onClick={enviar} disabled={!para || !mensaje.trim()}>

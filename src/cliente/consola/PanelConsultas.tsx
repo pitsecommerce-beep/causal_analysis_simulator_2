@@ -72,11 +72,11 @@ export function PanelConsultas({
       return;
     }
     if (!hipotesis.trim()) {
-      setError('Escribe la hipotesis antes de ejecutar.');
+      setError('Escribe la hipótesis antes de ejecutar.');
       return;
     }
     if (creditosRestantes < costo) {
-      setError('Creditos insuficientes.');
+      setError('Créditos insuficientes.');
       return;
     }
     setError('');
@@ -107,15 +107,15 @@ export function PanelConsultas({
         <>
           <h3 className="consultas__titulo">Consultas</h3>
           <div className="consultas__creditos">
-            Creditos: {creditosRestantes}/12 | Presupuesto: ${presupuesto}/100
+            Créditos: {creditosRestantes}/12 | Presupuesto: ${presupuesto}/100
           </div>
 
           <div className="tarjeta-consulta__campo">
-            <label>Hipotesis (obligatoria)</label>
+            <label>Hipótesis (obligatoria)</label>
             <textarea
               value={hipotesis}
               onChange={e => setHipotesis(e.target.value)}
-              placeholder="Que quieres probar con esta consulta?"
+              placeholder="¿Qué quieres probar con esta consulta?"
             />
           </div>
           {error && <p style={{ color: 'var(--ipd-feedback-danger-fg)', fontSize: 12, marginBottom: 8 }}>{error}</p>}
@@ -231,7 +231,7 @@ export function PanelConsultas({
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>Sucursales a capacitar</h3>
             <p style={{ fontSize: 13, marginBottom: 12, color: 'var(--ipd-text-secondary)' }}>
-              Ingresa los numeros de sucursal separados por coma.
+              Ingresa los números de sucursal separados por coma.
             </p>
             <input
               value={inputSucs}

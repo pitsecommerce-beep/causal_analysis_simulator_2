@@ -41,7 +41,7 @@ export function BannerConexion({ onSesionTomada }: { onSesionTomada?: () => void
   if (estado === 'tomada') {
     return (
       <div className="banner-conexion banner-conexion--tomada">
-        <span>Tu sesion fue abierta en otro dispositivo.</span>
+        <span>Tu sesión fue abierta en otro dispositivo.</span>
         <button
           className="banner-conexion__btn"
           onClick={() => window.location.reload()}
@@ -55,7 +55,7 @@ export function BannerConexion({ onSesionTomada }: { onSesionTomada?: () => void
   return (
     <div className="banner-conexion banner-conexion--reconectando">
       <div className="banner-conexion__spinner" />
-      <span>Conexion perdida. Reconectando{intentos > 1 ? ` (intento ${intentos})` : ''}...</span>
+      <span>Conexión perdida. Reconectando{intentos > 1 ? ` (intento ${intentos})` : ''}...</span>
     </div>
   );
 }

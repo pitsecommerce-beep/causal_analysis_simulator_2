@@ -28,7 +28,7 @@ export function PanelPropuestas({
 
   function enviarPropuesta(id: number, sucursales?: number[]) {
     if (!justificacion.trim()) {
-      onMensaje('Escribe una justificacion para la propuesta.');
+      onMensaje('Escribe una justificación para la propuesta.');
       return;
     }
     socket.emit('equipo:proponer_intervencion', {
@@ -57,13 +57,13 @@ export function PanelPropuestas({
         return;
       }
       setRespuesta('');
-      onMensaje(decision === 'aprobada' ? 'Intervencion aprobada y aplicada.' : 'Propuesta rechazada.');
+      onMensaje(decision === 'aprobada' ? 'Intervención aprobada y aplicada.' : 'Propuesta rechazada.');
     });
   }
 
   return (
     <div className="panel-propuestas">
-      <h3 className="panel-propuestas__titulo">Propuestas de intervencion</h3>
+      <h3 className="panel-propuestas__titulo">Propuestas de intervención</h3>
 
       {pendientes.length > 0 && (
         <div className="panel-propuestas__pendientes">
@@ -103,7 +103,7 @@ export function PanelPropuestas({
                 </div>
               )}
               {!esPatrocinador && (
-                <p className="propuesta__espera">Esperando decision del Patrocinador...</p>
+                <p className="propuesta__espera">Esperando decisión del Patrocinador...</p>
               )}
             </div>
           ))}
@@ -132,13 +132,13 @@ export function PanelPropuestas({
 
       {disponibles.length > 0 && (
         <div className="panel-propuestas__nueva">
-          <h4>Proponer intervencion</h4>
+          <h4>Proponer intervención</h4>
           <div className="panel-propuestas__campo">
-            <label>Justificacion (obligatoria)</label>
+            <label>Justificación (obligatoria)</label>
             <textarea
               value={justificacion}
               onChange={e => setJustificacion(e.target.value)}
-              placeholder="Por que propones esta intervencion?"
+              placeholder="¿Por qué propones esta intervención?"
             />
           </div>
           <div className="panel-propuestas__lista">
@@ -172,7 +172,7 @@ export function PanelPropuestas({
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>Sucursales a capacitar</h3>
             <p style={{ fontSize: 13, marginBottom: 12, color: 'var(--ipd-text-secondary)' }}>
-              Ingresa los numeros de sucursal separados por coma.
+              Ingresa los números de sucursal separados por coma.
             </p>
             <input
               value={inputSucs}

@@ -240,13 +240,13 @@ export interface DiagnosticoForm {
 }
 
 export const NOMBRES_FINALES: Record<string, string> = {
-  A: 'Reconversion',
+  A: 'Reconversión',
   B: 'Buen proyecto incompleto',
   C: 'Ataque al mediador',
-  D: 'La metrica traicionera',
+  D: 'La métrica traicionera',
   E: 'El incentivo perverso',
-  F: 'Dispersion',
-  G: 'Paralisis por analisis',
+  F: 'Dispersión',
+  G: 'Parálisis por análisis',
   H: 'Falso positivo',
 };
 
@@ -283,34 +283,34 @@ export interface ObjetivoFase {
 
 export const OBJETIVOS_FASE: Record<string, ObjetivoFase> = {
   trimestre_1: {
-    equipo: 'Formular y probar al menos dos hipotesis, y decidir la primera intervencion.',
+    equipo: 'Formular y probar al menos dos hipótesis, y decidir la primera intervención.',
     rol: {
-      analista: 'Ejecuta consultas para probar hipotesis.',
+      analista: 'Ejecuta consultas para probar hipótesis.',
       voz_cliente: 'Revisa testimonios y marca evidencia relevante.',
-      patrocinador: 'Espera propuestas de intervencion para autorizar.',
+      patrocinador: 'Espera propuestas de intervención para autorizar.',
       lider: 'Coordina al equipo y revisa hallazgos.',
     },
-    faltante: 'Sin propuesta de intervencion aprobada.',
+    faltante: 'Sin propuesta de intervención aprobada.',
   },
   trimestre_2: {
-    equipo: 'Revisar consecuencias de la intervencion y corregir el rumbo.',
+    equipo: 'Revisar consecuencias de la intervención y corregir el rumbo.',
     rol: {
-      analista: 'Verifica como cambiaron los KPIs tras la intervencion.',
-      voz_cliente: 'Busca cambios en la percepcion de clientes.',
-      patrocinador: 'Evalua si se necesita una nueva intervencion.',
-      lider: 'Revisa el avance del diagnostico.',
+      analista: 'Verifica cómo cambiaron los KPIs tras la intervención.',
+      voz_cliente: 'Busca cambios en la percepción de clientes.',
+      patrocinador: 'Evalúa si se necesita una nueva intervención.',
+      lider: 'Revisa el avance del diagnóstico.',
     },
     faltante: 'Revisen el impacto y decidan si intervienen de nuevo.',
   },
   trimestre_3: {
-    equipo: 'Cerrar el diagnostico y preparar la entrega al consejo.',
+    equipo: 'Cerrar el diagnóstico y preparar la entrega al consejo.',
     rol: {
       analista: 'Completa las consultas pendientes.',
       voz_cliente: 'Confirma la evidencia de comentarios.',
-      patrocinador: 'Autoriza la ultima intervencion si aplica.',
-      lider: 'Completa los campos del diagnostico final.',
+      patrocinador: 'Autoriza la última intervención si aplica.',
+      lider: 'Completa los campos del diagnóstico final.',
     },
-    faltante: 'Diagnostico incompleto.',
+    faltante: 'Diagnóstico incompleto.',
   },
 };
 

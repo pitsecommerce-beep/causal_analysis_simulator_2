@@ -17,9 +17,9 @@ export function PanelObjetivos({ fase, miRol, tieneProPendiente, tieneProAprobad
 
   let faltante = obj.faltante;
   if (fase === 'trimestre_1' && tieneProAprobada) {
-    faltante = 'Intervencion aprobada. Objetivo cumplido.';
+    faltante = 'Intervención aprobada. Objetivo cumplido.';
   } else if (fase === 'trimestre_1' && tieneProPendiente) {
-    faltante = 'Propuesta pendiente de aprobacion del Patrocinador.';
+    faltante = 'Propuesta pendiente de aprobación del Patrocinador.';
   }
 
   return (

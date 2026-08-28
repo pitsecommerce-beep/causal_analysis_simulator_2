@@ -131,11 +131,11 @@ export function JuegoApp(props: Props) {
             <button
               className="juego__btn-abandonar"
               onClick={() => {
-                if (confirm('Abandonar la sesion? Podras reconectarte con tu codigo personal.')) {
+                if (confirm('¿Abandonar la sesión? Podrás reconectarte con tu código personal.')) {
                   props.onAbandonar();
                 }
               }}
-              title="Abandonar sesion"
+              title="Abandonar sesión"
             >
               Salir
             </button>
