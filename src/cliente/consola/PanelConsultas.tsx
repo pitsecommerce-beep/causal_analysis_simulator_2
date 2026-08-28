@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { socket } from '../lib/socket';
 import { ejecutarConsulta } from '../lib/consultas-locales';
+import { EJEMPLO_FILA_CRUDA } from '../lib/derivados-cliente';
 import {
   CAMPOS_AGRUPACION, CAMPOS_MEDIDA, CAMPOS_NUMERICOS, CAMPOS_SERIE,
   type SolicitudCliente, type ResultadoConsulta, type EntradaBitacoraLocal,
@@ -118,6 +119,27 @@ export function PanelConsultas({
             />
           </div>
           {error && <p style={{ color: 'var(--ipd-feedback-danger-fg)', fontSize: 12, marginBottom: 8 }}>{error}</p>}
+
+          <div className="consultas__nota-derivados" style={{
+            background: 'var(--ipd-surface-secondary, rgba(255,255,255,0.05))',
+            border: '1px solid var(--ipd-border-subtle, rgba(255,255,255,0.1))',
+            borderRadius: 6, padding: '8px 12px', marginBottom: 12, fontSize: 12,
+            color: 'var(--ipd-text-secondary)',
+          }}>
+            <strong>Campos derivados:</strong> Los conteos de errores de captura, documentos incompletos
+            e ilegibles se calculan parseando el campo <em>Comments</em> de cada solicitud.
+            La ventana de captura se calcula como la diferencia en d&iacute;as entre la primera y
+            la &uacute;ltima captura.
+            <details style={{ marginTop: 4 }}>
+              <summary style={{ cursor: 'pointer' }}>Ver ejemplo de fila cruda</summary>
+              <code style={{ display: 'block', marginTop: 4, padding: 6, background: 'var(--ipd-surface-tertiary, rgba(0,0,0,0.2))', borderRadius: 4, wordBreak: 'break-word' }}>
+                {EJEMPLO_FILA_CRUDA}
+              </code>
+              <p style={{ marginTop: 4, fontStyle: 'italic' }}>
+                De esta cadena se extraen: 1 ilegible, 1 incompleto, 1 error de captura.
+              </p>
+            </details>
+          </div>
 
           <TarjetaConsulta nombre="Segmentar" costo={1} disabled={creditosRestantes < 1}
             onEjecutar={() => validarYEjecutar('segmentar', { agrupadoPor: segAgrupar, medida: segMedida }, 1)}>

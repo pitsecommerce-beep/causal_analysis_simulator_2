@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { socket } from '../lib/socket';
 import type {
   EstadoMotorCliente, EstadoReloj, IntervencionCatalogo,
-  SolicitudCliente, ResultadoConsulta, EntradaBitacoraLocal,
-  RolEquipo, MiembroEquipo, ResultadoPuntuacion, PreguntaConsejo,
+  SolicitudCliente, ComentarioClientePublico, ResultadoConsulta,
+  EntradaBitacoraLocal, RolEquipo, MiembroEquipo, ResultadoPuntuacion,
+  PreguntaConsejo,
 } from '../lib/tipos';
 import { NOMBRES_ROLES } from '../lib/tipos';
 import { usePresencia } from '../lib/presencia';
@@ -21,6 +22,7 @@ interface Props {
   relojInicial: EstadoReloj;
   catalogoInicial: IntervencionCatalogo[];
   solicitudes: SolicitudCliente[];
+  comentariosClientes: ComentarioClientePublico[];
   codigoSala: string;
   nombreEquipo: string;
   miRol: RolEquipo | null;
@@ -30,7 +32,7 @@ interface Props {
 }
 
 export function ConsolaApp({
-  estadoInicial, relojInicial, catalogoInicial, solicitudes,
+  estadoInicial, relojInicial, catalogoInicial, solicitudes, comentariosClientes,
   codigoSala, nombreEquipo, miRol, miNombre, miembros, tamanoEquipo,
 }: Props) {
   const [estado, setEstado] = useState<EstadoMotorCliente>(estadoInicial);
@@ -181,6 +183,24 @@ export function ConsolaApp({
       </header>
 
       <aside className="consola__consultas">
+        <div className="consola__descargas" style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <a href="/api/descargar/solicitudes" className="consola__btn-descarga" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
+            fontSize: 12, borderRadius: 4, background: 'var(--ipd-surface-secondary, rgba(255,255,255,0.08))',
+            color: 'var(--ipd-text-secondary)', textDecoration: 'none', border: '1px solid var(--ipd-border-subtle, rgba(255,255,255,0.1))',
+          }}>
+            Descargar base de datos (.xlsx)
+          </a>
+          {esVozCliente && (
+            <a href="/api/descargar/comentarios" className="consola__btn-descarga" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
+              fontSize: 12, borderRadius: 4, background: 'var(--ipd-surface-secondary, rgba(255,255,255,0.08))',
+              color: 'var(--ipd-text-secondary)', textDecoration: 'none', border: '1px solid var(--ipd-border-subtle, rgba(255,255,255,0.1))',
+            }}>
+              Descargar comentarios (.xlsx)
+            </a>
+          )}
+        </div>
         {tienePanelAcciones ? (
           <>
             {(mostrarConsultas || mostrarIntervenciones) && (
@@ -199,7 +219,7 @@ export function ConsolaApp({
               />
             )}
             {esVozCliente && (
-              <PanelComentarios solicitudes={solicitudes} />
+              <PanelComentarios comentariosClientes={comentariosClientes} />
             )}
             {mostrarDiagnostico && (
               <FormDiagnostico

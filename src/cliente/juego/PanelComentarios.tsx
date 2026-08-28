@@ -1,47 +1,31 @@
 import { useState, useMemo } from 'react';
 import { socket } from '../lib/socket';
-import type { SolicitudCliente } from '../lib/tipos';
-
-interface Comentario {
-  id: string;
-  texto: string;
-  sucursal: number;
-  estado: string;
-}
+import type { ComentarioClientePublico } from '../lib/tipos';
 
 interface Props {
-  solicitudes: SolicitudCliente[];
+  comentariosClientes: ComentarioClientePublico[];
 }
 
-export function PanelComentarios({ solicitudes }: Props) {
+export function PanelComentarios({ comentariosClientes }: Props) {
   const [filtro, setFiltro] = useState('');
   const [evidencias, setEvidencias] = useState<Set<string>>(new Set());
   const [hipotesis, setHipotesis] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [seleccion, setSeleccion] = useState<string | null>(null);
 
-  const comentarios = useMemo<Comentario[]>(() => {
-    return solicitudes
-      .filter(s => s.comentariosRaw && s.comentariosRaw.trim())
-      .map((s, i) => ({
-        id: `C-${String(i + 1).padStart(3, '0')}`,
-        texto: s.comentariosRaw.trim(),
-        sucursal: s.sucursal,
-        estado: s.estado,
-      }));
-  }, [solicitudes]);
-
   const filtrados = useMemo(() => {
-    if (!filtro) return comentarios;
+    if (!filtro) return comentariosClientes;
     const f = filtro.toLowerCase();
-    return comentarios.filter(
+    return comentariosClientes.filter(
       c =>
-        c.texto.toLowerCase().includes(f) ||
+        c.comentario.toLowerCase().includes(f) ||
         c.id.toLowerCase().includes(f) ||
         c.estado.toLowerCase().includes(f) ||
+        c.categoriaPrimaria.toLowerCase().includes(f) ||
+        (c.categoriaSecundaria ?? '').toLowerCase().includes(f) ||
         String(c.sucursal).includes(f),
     );
-  }, [comentarios, filtro]);
+  }, [comentariosClientes, filtro]);
 
   function marcar(id: string) {
     if (!hipotesis.trim()) {
@@ -69,13 +53,14 @@ export function PanelComentarios({ solicitudes }: Props) {
     <div className="comentarios">
       <h3 className="consultas__titulo">Comentarios de clientes</h3>
       <p className="comentarios__instrucciones">
-        Selecciona un comentario y marca como evidencia la hipótesis que respalda.
+        Estos son testimonios reales de clientes del banco. Selecciona uno y marca como
+        evidencia la hipótesis que respalda.
       </p>
       <input
         className="comentarios__filtro"
         value={filtro}
         onChange={e => setFiltro(e.target.value)}
-        placeholder="Buscar por texto, sucursal, estado..."
+        placeholder="Buscar por texto, categoría, sucursal, estado..."
       />
       <div className="comentarios__lista">
         {filtrados.map(c => (
@@ -87,13 +72,17 @@ export function PanelComentarios({ solicitudes }: Props) {
             <div className="comentarios__item-header">
               <span className="comentarios__item-id">{c.id}</span>
               <span className="comentarios__item-meta">
-                Suc {c.sucursal} · {c.estado}
+                Suc {c.sucursal} · {c.estado} · {c.intentos} intentos · {c.categoriaPrimaria}
               </span>
               {evidencias.has(c.id) && (
                 <span className="comentarios__item-badge">Evidencia</span>
               )}
             </div>
-            <p className="comentarios__item-texto">{c.texto}</p>
+            <p className="comentarios__item-texto">{c.comentario}</p>
+            <p className="comentarios__item-fecha" style={{ fontSize: 11, color: 'var(--ipd-text-tertiary)', marginTop: 2 }}>
+              {c.fecha} · Canal: {c.canal}
+              {c.categoriaSecundaria && ` · ${c.categoriaSecundaria}`}
+            </p>
             {seleccion === c.id && !evidencias.has(c.id) && (
               <div className="comentarios__marcar">
                 <textarea

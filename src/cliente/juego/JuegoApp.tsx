@@ -12,6 +12,7 @@ import type {
   EstadoReloj,
   IntervencionCatalogo,
   SolicitudCliente,
+  ComentarioClientePublico,
   RolEquipo,
   MiembroEquipo,
 } from '../lib/tipos';
@@ -21,6 +22,7 @@ interface Props {
   relojInicial: EstadoReloj;
   catalogoInicial: IntervencionCatalogo[];
   solicitudes: SolicitudCliente[];
+  comentariosClientes: ComentarioClientePublico[];
   codigoSala: string;
   nombreEquipo: string;
   miRol: RolEquipo;
@@ -164,6 +166,7 @@ export function JuegoApp(props: Props) {
               relojInicial={props.relojInicial}
               catalogoInicial={props.catalogoInicial}
               solicitudes={props.solicitudes}
+              comentariosClientes={props.comentariosClientes}
               codigoSala={props.codigoSala}
               nombreEquipo={props.nombreEquipo}
               miRol={props.miRol}

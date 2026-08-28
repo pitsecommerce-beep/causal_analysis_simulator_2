@@ -1,6 +1,6 @@
 import type { Server as SocketServer, Socket } from 'socket.io';
 import type { ConfigSimulador, EstadoMotor, RolEquipo, MiembroEquipo } from '../motor/tipos.js';
-import type { DatosCargados, Solicitud } from '../datos/tipos.js';
+import type { DatosCargados, Solicitud, ComentarioCliente } from '../datos/tipos.js';
 import { crearEstadoInicial, avanzarTrimestre } from '../motor/dag.js';
 import { aplicarIntervencion, listarIntervencionesDisponibles } from '../motor/intervenciones.js';
 import { calcularPuntuacion } from '../puntuacion/reglas.js';
@@ -99,7 +99,6 @@ function prepararDatosCliente(solicitudes: Solicitud[]): unknown[] {
     intentos: s.intentos,
     fechaPrimerCaptura: s.fechaPrimerCaptura.toISOString(),
     fechaUltimaCaptura: s.fechaUltimaCaptura.toISOString(),
-    ventanaCaptura: s.ventanaCaptura,
     fechaEnvioDocumentos: fechaISO(s.fechaEnvioDocumentos),
     fechaRecepcionCrOP: fechaISO(s.fechaRecepcionCrOP),
     resultadoBuro: s.resultadoBuro,
@@ -110,10 +109,21 @@ function prepararDatosCliente(solicitudes: Solicitud[]): unknown[] {
     ultimoEstatus: s.ultimoEstatus,
     lineaCredito: s.lineaCredito,
     comentariosRaw: s.comentariosRaw,
-    erroresCaptura: s.erroresCaptura,
-    incompletos: s.incompletos,
-    ilegibles: s.ilegibles,
-    mes: s.mes,
+  }));
+}
+
+function prepararComentariosClientes(comentarios: ComentarioCliente[]): unknown[] {
+  return comentarios.map(c => ({
+    id: c.id,
+    solicitudId: c.solicitudId,
+    estado: c.estado,
+    sucursal: c.sucursal,
+    intentos: c.intentos,
+    canal: c.canalCaptacion,
+    fecha: c.fechaComentario,
+    categoriaPrimaria: c.categoriaPrimaria,
+    categoriaSecundaria: c.categoriaSecundaria,
+    comentario: c.comentario,
   }));
 }
 
@@ -401,6 +411,7 @@ export function configurarSockets(
         reloj: obtenerEstadoReloj(sesion.reloj, config),
         intervencionesCatalogo: listarIntervencionesDisponibles(equipo.estadoMotor, config),
         solicitudes: prepararDatosCliente(datos.solicitudes),
+        comentariosClientes: prepararComentariosClientes(datos.comentarios),
         tamanoEquipo: config.equipo.tamano,
         nombreEquipo,
         miembros: equipo.miembros,
@@ -560,6 +571,7 @@ export function configurarSockets(
         reloj: obtenerEstadoReloj(sesion.reloj, config),
         intervencionesCatalogo: listarIntervencionesDisponibles(equipoEncontrado.estadoMotor, config),
         solicitudes: prepararDatosCliente(datos.solicitudes),
+        comentariosClientes: prepararComentariosClientes(datos.comentarios),
         tamanoEquipo: config.equipo.tamano,
         nombreEquipo: equipoEncontrado.nombre,
         miembros: equipoEncontrado.miembros,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { socket } from '../lib/socket';
-import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente } from '../lib/tipos';
+import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico } from '../lib/tipos';
 
 interface Props {
   onUnido: (datos: {
@@ -8,6 +8,7 @@ interface Props {
     reloj: EstadoReloj;
     catalogo: IntervencionCatalogo[];
     solicitudes: SolicitudCliente[];
+    comentariosClientes: ComentarioClientePublico[];
     codigoSala: string;
     nombreEquipo: string;
     tamanoEquipo: number;
@@ -53,6 +54,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
         reloj: resp.reloj,
         catalogo: resp.intervencionesCatalogo,
         solicitudes: resp.solicitudes ?? [],
+        comentariosClientes: resp.comentariosClientes ?? [],
         codigoSala: codigo.toUpperCase(),
         nombreEquipo: resp.nombreEquipo,
         tamanoEquipo: resp.tamanoEquipo ?? 4,

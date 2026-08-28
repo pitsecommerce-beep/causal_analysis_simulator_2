@@ -12,7 +12,6 @@ export interface SolicitudCliente {
   intentos: number;
   fechaPrimerCaptura: string;
   fechaUltimaCaptura: string;
-  ventanaCaptura: number;
   fechaEnvioDocumentos: string | null;
   fechaRecepcionCrOP: string | null;
   resultadoBuro: string | null;
@@ -23,10 +22,6 @@ export interface SolicitudCliente {
   ultimoEstatus: string;
   lineaCredito: number | null;
   comentariosRaw: string;
-  erroresCaptura: number;
-  incompletos: number;
-  ilegibles: number;
-  mes: string;
 }
 
 export interface KPIsCliente {
@@ -171,6 +166,19 @@ export const CAMPOS_SERIE: Record<string, string> = {
   intentos: 'Intentos',
   count: 'Total solicitudes',
 };
+
+export interface ComentarioClientePublico {
+  id: string;
+  solicitudId: number;
+  estado: string;
+  sucursal: number;
+  intentos: number;
+  canal: string;
+  fecha: string;
+  categoriaPrimaria: string;
+  categoriaSecundaria: string | null;
+  comentario: string;
+}
 
 export type RolEquipo = 'patrocinador' | 'lider' | 'analista' | 'voz_cliente';
 

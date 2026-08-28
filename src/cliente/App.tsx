@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
-import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, RolEquipo, MiembroEquipo } from './lib/tipos';
+import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico, RolEquipo, MiembroEquipo } from './lib/tipos';
 import { socket } from './lib/socket';
 
 const STORAGE_KEY = 'etfbank_sesion';
@@ -41,6 +41,7 @@ interface DatosSesion {
   reloj: EstadoReloj;
   catalogo: IntervencionCatalogo[];
   solicitudes: SolicitudCliente[];
+  comentariosClientes: ComentarioClientePublico[];
   codigoSala: string;
   nombreEquipo: string;
   tamanoEquipo: number;
@@ -82,6 +83,7 @@ export function App() {
         reloj: resp.reloj,
         catalogo: resp.intervencionesCatalogo,
         solicitudes: resp.solicitudes ?? [],
+        comentariosClientes: resp.comentariosClientes ?? [],
         codigoSala: sesionGuardada.codigoSala,
         nombreEquipo: resp.nombreEquipo,
         tamanoEquipo: resp.tamanoEquipo ?? 4,
@@ -116,6 +118,7 @@ export function App() {
         reloj: resp.reloj,
         catalogo: resp.intervencionesCatalogo,
         solicitudes: resp.solicitudes ?? [],
+        comentariosClientes: resp.comentariosClientes ?? [],
         codigoSala,
         nombreEquipo: resp.nombreEquipo,
         tamanoEquipo: resp.tamanoEquipo ?? 4,
@@ -238,6 +241,7 @@ export function App() {
           relojInicial={sesion.reloj}
           catalogoInicial={sesion.catalogo}
           solicitudes={sesion.solicitudes}
+          comentariosClientes={sesion.comentariosClientes}
           codigoSala={sesion.codigoSala}
           nombreEquipo={sesion.nombreEquipo}
           miRol={datosRol.miRol}
@@ -256,6 +260,7 @@ export function App() {
         relojInicial={sesion.reloj}
         catalogoInicial={sesion.catalogo}
         solicitudes={sesion.solicitudes}
+        comentariosClientes={sesion.comentariosClientes}
         codigoSala={sesion.codigoSala}
         nombreEquipo={sesion.nombreEquipo}
         miRol={datosRol?.miRol ?? null}
