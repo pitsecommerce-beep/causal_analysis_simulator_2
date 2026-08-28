@@ -1,10 +1,10 @@
-import { mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { cargarTodosDatos } from '../datos/cargador.js';
 import { sortearComentarios, nombreFicticio } from '../voz/anthropic.js';
 import { textoAAudio, vozCliente, vozDirector } from '../voz/deepgram.js';
 import { cargarConfig } from '../motor/dag.js';
-import type { TestimonioRespaldo } from '../voz/guiones.js';
+import { DISCURSO_DIRECTOR, DISCURSO_ADRIANA, type TestimonioRespaldo } from '../voz/guiones.js';
 
 async function main(): Promise<void> {
   const datos = cargarTodosDatos();
@@ -15,7 +15,7 @@ async function main(): Promise<void> {
   const indiceSolicitud = new Map(datos.solicitudes.map(s => [s.id, s]));
 
   console.log('╔══════════════════════════════════════════════════════════════╗');
-  console.log('║  GENERACIÓN DE RESPALDO — derivando desde datos reales     ║');
+  console.log('║  GENERACIÓN DE RESPALDO — texto fijo + datos reales        ║');
   console.log('╠══════════════════════════════════════════════════════════════╣');
 
   const testimonios: TestimonioRespaldo[] = [];
@@ -51,23 +51,15 @@ async function main(): Promise<void> {
   writeFileSync(resolve(outDir, 'testimonios.json'), JSON.stringify(testimonios, null, 2) + '\n');
   console.log('║  ✓ testimonios.json escrito');
 
-  const discursoPath = resolve(outDir, 'discurso-director.txt');
-  try {
-    readFileSync(discursoPath, 'utf-8');
-    console.log('║  ✓ discurso-director.txt ya existe');
-  } catch {
-    const { DISCURSO_DIRECTOR } = await import('../voz/guiones.js');
-    writeFileSync(discursoPath, DISCURSO_DIRECTOR);
-    console.log('║  ✓ discurso-director.txt escrito desde guiones.ts');
-  }
+  writeFileSync(resolve(outDir, 'discurso-director.txt'), DISCURSO_DIRECTOR);
+  console.log('║  ✓ discurso-director.txt escrito desde guion fijo');
 
   if (process.env.DEEPGRAM_API_KEY) {
     console.log('║');
     console.log('║  ── Generando audio MP3 con Deepgram ──');
 
-    const textoDirector = readFileSync(discursoPath, 'utf-8');
     const audioDir = await textoAAudio(
-      textoDirector,
+      DISCURSO_DIRECTOR,
       { voz: vozDirector(voz.voces) },
       voz.timeout_ms,
     );
@@ -76,6 +68,19 @@ async function main(): Promise<void> {
       console.log(`║  ✓ discurso-director.mp3 (${(audioDir.audio.length / 1024).toFixed(1)} KB)`);
     } else {
       console.log('║  ✗ discurso-director.mp3 no generado');
+    }
+
+    const vozAdriana = voz.voces.clienteF?.[0] ?? 'aura-2-carina-es';
+    const audioAdriana = await textoAAudio(
+      DISCURSO_ADRIANA,
+      { voz: vozAdriana },
+      voz.timeout_ms,
+    );
+    if (audioAdriana.audio.length > 0) {
+      writeFileSync(resolve(outDir, 'adriana.mp3'), audioAdriana.audio);
+      console.log(`║  ✓ adriana.mp3 (${(audioAdriana.audio.length / 1024).toFixed(1)} KB)`);
+    } else {
+      console.log('║  ✗ adriana.mp3 no generado');
     }
 
     for (let i = 0; i < testimonios.length; i++) {

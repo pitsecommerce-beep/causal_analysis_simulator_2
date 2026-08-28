@@ -1,30 +1,27 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { SalaJuntas } from './SalaJuntas';
-import { VozCliente } from './VozCliente';
+import { CanvasSala, type SpriteEscena } from './CanvasSala';
 import { MesaRedonda } from './MesaRedonda';
+import { CAMARA } from './camara';
 import { socket } from '../lib/socket';
 import type { RolEquipo, MiembroEquipo } from '../lib/tipos';
 
-interface PiezaDirector {
+interface PiezaPersonaje {
   nombre: string;
   texto: string;
-  fuenteTexto: 'ia' | 'respaldo';
+  fuenteTexto: 'fijo' | 'directo' | 'respaldo';
   tieneAudio: boolean;
 }
 
-interface PiezaCliente {
-  nombre: string;
+interface PiezaCliente extends PiezaPersonaje {
   genero: string;
   estado: string;
   sucursal: number;
   intentos: number;
-  texto: string;
-  fuenteTexto: 'ia' | 'respaldo';
-  tieneAudio: boolean;
 }
 
 interface DatosEscena {
-  director: PiezaDirector;
+  director: PiezaPersonaje;
+  adriana?: PiezaPersonaje;
   clientes: PiezaCliente[];
 }
 
@@ -32,12 +29,13 @@ interface Props {
   codigoSala: string;
   nombreEquipo: string;
   tamanoEquipo: number;
-  onTerminar: (miembros: MiembroEquipo[], miRol: RolEquipo, miNombre: string) => void;
+  onTerminar: (miembros: MiembroEquipo[], miRol: RolEquipo, miNombre: string, codigoPersonal: string) => void;
 }
 
-type PantallaEscena = 'cargando' | 'director' | 'clientes' | 'mesa';
+type PantallaEscena = 'cargando' | 'director' | 'adriana' | 'clientes' | 'mesa';
 
 const VEL_ESCRITURA = 28;
+const POS = CAMARA.posiciones;
 
 export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }: Props) {
   const [escena, setEscena] = useState<DatosEscena | null>(null);
@@ -47,9 +45,10 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
   const [escribiendo, setEscribiendo] = useState(false);
   const [audioBloqueado, setAudioBloqueado] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioPendienteRef = useRef<{ rol: 'director' | 'cliente'; indice?: number } | null>(null);
+  const audioPendienteRef = useRef<{ rol: 'director' | 'adriana' | 'cliente'; indice?: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Request scene data
   useEffect(() => {
     socket.emit('escena:solicitar', { codigoSala }, (resp: any) => {
       if (resp?.escena) {
@@ -108,7 +107,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     });
   }, [limpiarAudio]);
 
-  const pedirAudio = useCallback((rol: 'director' | 'cliente', indice?: number) => {
+  const pedirAudio = useCallback((rol: 'director' | 'adriana' | 'cliente', indice?: number) => {
     audioPendienteRef.current = { rol, indice };
     socket.emit('escena:audio', { codigoSala, rol, indice }, (resp: any) => {
       if (resp?.audio) {
@@ -129,12 +128,16 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     }
   }
 
+  // Start text + audio when phase changes
   useEffect(() => {
     if (!escena) return;
 
     if (pantalla === 'director') {
       escribirTexto(escena.director.texto);
       if (escena.director.tieneAudio) pedirAudio('director');
+    } else if (pantalla === 'adriana' && escena.adriana) {
+      escribirTexto(escena.adriana.texto);
+      if (escena.adriana.tieneAudio) pedirAudio('adriana');
     } else if (pantalla === 'clientes') {
       const c = escena.clientes[indiceCliente];
       if (c) {
@@ -148,6 +151,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     };
   }, [pantalla, indiceCliente, escena, escribirTexto, pedirAudio]);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       limpiarAudio();
@@ -159,6 +163,8 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     if (timerRef.current) clearInterval(timerRef.current);
     if (pantalla === 'director' && escena) {
       setSubtitulo(escena.director.texto);
+    } else if (pantalla === 'adriana' && escena?.adriana) {
+      setSubtitulo(escena.adriana.texto);
     } else if (pantalla === 'clientes' && escena) {
       setSubtitulo(escena.clientes[indiceCliente]?.texto ?? '');
     }
@@ -175,6 +181,15 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     setAudioBloqueado(false);
 
     if (pantalla === 'director') {
+      if (escena?.adriana) {
+        setPantalla('adriana');
+      } else if (escena && escena.clientes.length > 0) {
+        setIndiceCliente(0);
+        setPantalla('clientes');
+      } else {
+        setPantalla('mesa');
+      }
+    } else if (pantalla === 'adriana') {
       if (escena && escena.clientes.length > 0) {
         setIndiceCliente(0);
         setPantalla('clientes');
@@ -196,6 +211,13 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     setPantalla('mesa');
   }
 
+  // --- Build sprite list for Canvas ---
+  const { spritesCanvas, anguloObjetivo, nombreActivo } = buildSprites(
+    escena, pantalla, indiceCliente,
+  );
+
+  // --- Render ---
+
   if (pantalla === 'cargando') {
     return (
       <div className="escena">
@@ -215,100 +237,111 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     );
   }
 
-  if (pantalla === 'director' && escena) {
-    const personajes = [
-      { nombre: escena.director.nombre, genero: 'M', rol: 'director' as const, activo: true },
-      ...escena.clientes.map((c) => ({
-        nombre: c.nombre,
-        genero: c.genero,
-        rol: 'cliente' as const,
-        activo: false,
-      })),
-    ];
+  const esClienteUltimo = pantalla === 'clientes' && escena
+    ? indiceCliente >= escena.clientes.length - 1
+    : false;
 
-    return (
-      <div className="escena">
-        <SalaJuntas personajes={personajes} indiceActivo={0} />
-
-        <div className="escena__subtitulos">
-          <span className="escena__subtitulos-nombre">{escena.director.nombre}</span>
-          <p className="escena__subtitulos-texto">
-            {subtitulo}
-            {escribiendo && <span className="escena__subtitulos-cursor" />}
-          </p>
-        </div>
-
-        <div className="escena__controles">
-          {audioBloqueado && (
-            <button className="escena__boton escena__boton--audio" onClick={desbloquearAudio}>
-              Activar audio
-            </button>
-          )}
-          <button className="escena__boton" onClick={avanzar}>
-            {escribiendo ? 'Mostrar todo' : 'Siguiente'}
-          </button>
-          <button className="escena__boton escena__boton--skip" onClick={saltar}>
-            Saltar escena
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (pantalla === 'clientes' && escena) {
-    const cliente = escena.clientes[indiceCliente];
-    const esUltimo = indiceCliente >= escena.clientes.length - 1;
-
-    return (
-      <div className="escena">
-        <VozCliente
-          nombre={cliente.nombre}
-          genero={cliente.genero}
-          estado={cliente.estado}
-          sucursal={cliente.sucursal}
-          intentos={cliente.intentos}
-          indice={indiceCliente}
-          total={escena.clientes.length}
-        />
-
-        <div className="escena__subtitulos">
-          <span className="escena__subtitulos-nombre">{cliente.nombre}</span>
-          <p className="escena__subtitulos-texto">
-            {subtitulo}
-            {escribiendo && <span className="escena__subtitulos-cursor" />}
-          </p>
-        </div>
-
-        <div className="escena__controles">
-          {audioBloqueado && (
-            <button className="escena__boton escena__boton--audio" onClick={desbloquearAudio}>
-              Activar audio
-            </button>
-          )}
-          <button className="escena__boton" onClick={avanzar}>
-            {escribiendo ? 'Mostrar todo' : esUltimo ? 'Continuar' : 'Siguiente cliente'}
-          </button>
-          <button className="escena__boton escena__boton--skip" onClick={saltar}>
-            Saltar escena
-          </button>
-          <span className="escena__indicador">
-            {indiceCliente + 1} / {escena.clientes.length}
-          </span>
-        </div>
-      </div>
-    );
-  }
+  const textoBoton = escribiendo
+    ? 'Mostrar todo'
+    : pantalla === 'clientes'
+      ? esClienteUltimo ? 'Continuar' : 'Siguiente cliente'
+      : 'Siguiente';
 
   return (
-    <div className="escena">
-      <div className="escena__cargando">
-        <span>Escena no disponible</span>
-        <button className="escena__boton" onClick={() => onTerminar([], 'analista' as RolEquipo, '')}>
-          Continuar al simulador
-        </button>
+    <div className="escena escena--canvas">
+      <CanvasSala
+        sprites={spritesCanvas}
+        anguloObjetivo={anguloObjetivo}
+        rotacionHabilitada={true}
+      />
+
+      <div className="escena__overlay">
+        <div className="escena__subtitulos">
+          <span className="escena__subtitulos-nombre">{nombreActivo}</span>
+          <p className="escena__subtitulos-texto">
+            {subtitulo}
+            {escribiendo && <span className="escena__subtitulos-cursor" />}
+          </p>
+        </div>
+
+        <div className="escena__controles">
+          {audioBloqueado && (
+            <button className="escena__boton escena__boton--audio" onClick={desbloquearAudio}>
+              Activar audio
+            </button>
+          )}
+          <button className="escena__boton" onClick={avanzar}>
+            {textoBoton}
+          </button>
+          <button className="escena__boton escena__boton--skip" onClick={saltar}>
+            Saltar escena
+          </button>
+          {pantalla === 'clientes' && escena && (
+            <span className="escena__indicador">
+              {indiceCliente + 1} / {escena.clientes.length}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+function buildSprites(
+  escena: DatosEscena | null,
+  pantalla: PantallaEscena,
+  indiceCliente: number,
+): { spritesCanvas: SpriteEscena[]; anguloObjetivo: number; nombreActivo: string } {
+  if (!escena) return { spritesCanvas: [], anguloObjetivo: 0, nombreActivo: '' };
+
+  const list: SpriteEscena[] = [];
+  let anguloObjetivo = 0;
+  let nombreActivo = '';
+
+  const dirActivo = pantalla === 'director';
+  list.push({
+    clave: 'director',
+    grados: POS.director,
+    nombre: escena.director.nombre,
+    activo: dirActivo,
+  });
+  if (dirActivo) {
+    anguloObjetivo = POS.director;
+    nombreActivo = escena.director.nombre;
+  }
+
+  if (escena.adriana) {
+    const adriActivo = pantalla === 'adriana';
+    list.push({
+      clave: 'cliente-2',
+      grados: POS.adriana,
+      nombre: escena.adriana.nombre,
+      activo: adriActivo,
+    });
+    if (adriActivo) {
+      anguloObjetivo = POS.adriana;
+      nombreActivo = escena.adriana.nombre;
+    }
+  }
+
+  for (let i = 0; i < escena.clientes.length; i++) {
+    const c = escena.clientes[i];
+    const key = `cliente-${i}` as keyof typeof POS;
+    const grados = POS[key] ?? (i - 1.5) * 25;
+    const activo = pantalla === 'clientes' && i === indiceCliente;
+    list.push({
+      clave: `cliente-${i}`,
+      grados,
+      nombre: c.nombre,
+      activo,
+    });
+    if (activo) {
+      anguloObjetivo = grados;
+      nombreActivo = c.nombre;
+    }
+  }
+
+  return { spritesCanvas: list, anguloObjetivo, nombreActivo };
 }
 
 function base64ToBlob(base64: string, mime: string): Blob {

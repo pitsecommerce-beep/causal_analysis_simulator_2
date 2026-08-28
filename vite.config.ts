@@ -1,13 +1,20 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist/cliente',
+    assetsInlineLimit: 0,
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        demo: resolve(__dirname, 'demo.html'),
+      },
       output: {
         manualChunks(id: string) {
+          if (id.includes('/assets/sprites/')) return 'sprites';
           if (id.includes('/escena/')) return 'escena';
           if (id.includes('/profesor/')) return 'profesor';
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'recharts';

@@ -18,6 +18,7 @@ export interface ConfigSimulador {
     terminos_prohibidos: string[];
     voces: {
       director: string;
+      adriana?: string;
       clienteM: string[];
       clienteF: string[];
     };

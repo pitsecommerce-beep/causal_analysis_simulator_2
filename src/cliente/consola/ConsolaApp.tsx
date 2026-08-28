@@ -6,6 +6,7 @@ import type {
   RolEquipo, MiembroEquipo, ResultadoPuntuacion, PreguntaConsejo,
 } from '../lib/tipos';
 import { NOMBRES_ROLES } from '../lib/tipos';
+import { usePresencia } from '../lib/presencia';
 import { Reloj } from './Reloj';
 import { PanelKPIs } from './PanelKPIs';
 import { PanelConsultas } from './PanelConsultas';
@@ -13,6 +14,7 @@ import { GraficaResultado } from './GraficaResultado';
 import { Bitacora } from './Bitacora';
 import { FormDiagnostico } from './FormDiagnostico';
 import { TableroFinal } from './TableroFinal';
+import { PanelComentarios } from '../juego/PanelComentarios';
 
 interface Props {
   estadoInicial: EstadoMotorCliente;
@@ -53,6 +55,8 @@ export function ConsolaApp({
   const mostrarIntervenciones = !tieneRoles || esPatrocinador;
   const mostrarDiagnostico = (!tieneRoles || esLider) && esConsejoOFin;
   const tienePanelAcciones = mostrarConsultas || mostrarIntervenciones || esVozCliente || mostrarDiagnostico;
+
+  const { pares: presenciaPares, emitir: emitirPresencia } = usePresencia(miNombre);
 
   useEffect(() => {
     function onTick(data: EstadoReloj) {
@@ -111,7 +115,9 @@ export function ConsolaApp({
   }, []);
 
   const handleIntervencion = useCallback((id: number, sucursales?: number[]) => {
+    emitirPresencia('decidiendo');
     socket.emit('equipo:intervenir', { intervencionId: id, sucursales }, (resp: any) => {
+      emitirPresencia('idle');
       if (resp?.error) {
         setMensaje(resp.error);
         setTimeout(() => setMensaje(null), 3000);
@@ -122,7 +128,7 @@ export function ConsolaApp({
         setTimeout(() => setMensaje(null), 3000);
       }
     });
-  }, []);
+  }, [emitirPresencia]);
 
   const handleBitacora = useCallback((entrada: EntradaBitacoraLocal) => {
     setBitacora(prev => [...prev, entrada]);
@@ -177,20 +183,24 @@ export function ConsolaApp({
       <aside className="consola__consultas">
         {tienePanelAcciones ? (
           <>
-            <PanelConsultas
-              solicitudes={solicitudes}
-              creditosRestantes={estado.creditosIndagacion}
-              presupuesto={estado.presupuesto}
-              catalogo={catalogo}
-              onResultado={setResultado}
-              onBitacora={handleBitacora}
-              onIntervencion={handleIntervencion}
-              puedeConsultar={mostrarConsultas}
-              puedeIntervenir={mostrarIntervenciones}
-              esVozCliente={esVozCliente}
-              mostrarConsultas={mostrarConsultas}
-              mostrarIntervenciones={mostrarIntervenciones}
-            />
+            {(mostrarConsultas || mostrarIntervenciones) && (
+              <PanelConsultas
+                solicitudes={solicitudes}
+                creditosRestantes={estado.creditosIndagacion}
+                presupuesto={estado.presupuesto}
+                catalogo={catalogo}
+                onResultado={setResultado}
+                onBitacora={handleBitacora}
+                onIntervencion={handleIntervencion}
+                puedeConsultar={mostrarConsultas}
+                puedeIntervenir={mostrarIntervenciones}
+                mostrarConsultas={mostrarConsultas}
+                mostrarIntervenciones={mostrarIntervenciones}
+              />
+            )}
+            {esVozCliente && (
+              <PanelComentarios solicitudes={solicitudes} />
+            )}
             {mostrarDiagnostico && (
               <FormDiagnostico
                 onResultado={(r) => {

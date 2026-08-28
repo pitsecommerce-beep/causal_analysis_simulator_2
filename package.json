@@ -17,7 +17,9 @@
     "salud": "npx tsx src/servidor/consola/salud.ts",
     "voz:respaldo": "npx tsx src/servidor/consola/generar-respaldo.ts",
     "voz:probar": "npx tsx src/servidor/consola/probar-voz.ts",
-    "tablero:demo": "npx tsx src/servidor/consola/tablero-demo.ts"
+    "tablero:demo": "npx tsx src/servidor/consola/tablero-demo.ts",
+    "sprites:generar": "npx tsx herramientas/sprites/generar.ts",
+    "escena:demo": "npx vite --open /demo.html"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
@@ -37,9 +39,11 @@
     "@types/express": "^5.0.6",
     "@types/node": "^20.14.0",
     "@types/pg": "^8.23.1",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.0",
+    "pngjs": "^7.0.0",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0",
     "vite": "^8.2.2",

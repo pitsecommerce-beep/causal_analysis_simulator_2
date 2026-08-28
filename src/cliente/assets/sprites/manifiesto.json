@@ -1,0 +1,290 @@
+{
+  "companero-cf-idle": {
+    "archivo": "companero-cf-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cf-tecleando": {
+    "archivo": "companero-cf-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cf-consultando": {
+    "archivo": "companero-cf-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cf-decidiendo": {
+    "archivo": "companero-cf-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cf-esperando": {
+    "archivo": "companero-cf-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cf-desconectado": {
+    "archivo": "companero-cf-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cc-idle": {
+    "archivo": "companero-cc-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cc-tecleando": {
+    "archivo": "companero-cc-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cc-consultando": {
+    "archivo": "companero-cc-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cc-decidiendo": {
+    "archivo": "companero-cc-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cc-esperando": {
+    "archivo": "companero-cc-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-cc-desconectado": {
+    "archivo": "companero-cc-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mf-idle": {
+    "archivo": "companero-mf-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mf-tecleando": {
+    "archivo": "companero-mf-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mf-consultando": {
+    "archivo": "companero-mf-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mf-decidiendo": {
+    "archivo": "companero-mf-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mf-esperando": {
+    "archivo": "companero-mf-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mf-desconectado": {
+    "archivo": "companero-mf-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mc-idle": {
+    "archivo": "companero-mc-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mc-tecleando": {
+    "archivo": "companero-mc-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mc-consultando": {
+    "archivo": "companero-mc-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mc-decidiendo": {
+    "archivo": "companero-mc-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mc-esperando": {
+    "archivo": "companero-mc-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mc-desconectado": {
+    "archivo": "companero-mc-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "director": {
+    "archivo": "director.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "director"
+  },
+  "cliente-0": {
+    "archivo": "cliente-0.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "cliente"
+  },
+  "cliente-1": {
+    "archivo": "cliente-1.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "cliente"
+  },
+  "cliente-2": {
+    "archivo": "cliente-2.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "cliente"
+  },
+  "cliente-3": {
+    "archivo": "cliente-3.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "cliente"
+  },
+  "laptop-cerrada": {
+    "archivo": "laptop-cerrada.png",
+    "ancho": 64,
+    "alto": 32,
+    "anclaX": 32,
+    "anclaY": 16,
+    "categoria": "objeto"
+  },
+  "laptop-abierta": {
+    "archivo": "laptop-abierta.png",
+    "ancho": 64,
+    "alto": 48,
+    "anclaX": 32,
+    "anclaY": 24,
+    "categoria": "objeto"
+  },
+  "silla-vacia": {
+    "archivo": "silla-vacia.png",
+    "ancho": 48,
+    "alto": 64,
+    "anclaX": 24,
+    "anclaY": 32,
+    "categoria": "objeto"
+  },
+  "taza": {
+    "archivo": "taza.png",
+    "ancho": 24,
+    "alto": 32,
+    "anclaX": 12,
+    "anclaY": 16,
+    "categoria": "objeto"
+  },
+  "carpeta": {
+    "archivo": "carpeta.png",
+    "ancho": 40,
+    "alto": 24,
+    "anclaX": 20,
+    "anclaY": 12,
+    "categoria": "objeto"
+  },
+  "telefono": {
+    "archivo": "telefono.png",
+    "ancho": 16,
+    "alto": 32,
+    "anclaX": 8,
+    "anclaY": 16,
+    "categoria": "objeto"
+  },
+  "panorama": {
+    "archivo": "panorama.png",
+    "ancho": 3072,
+    "alto": 1024,
+    "anclaX": 0,
+    "anclaY": 0,
+    "categoria": "fondo"
+  }
+}
