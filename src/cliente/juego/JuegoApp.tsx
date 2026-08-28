@@ -2,7 +2,10 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { CanvasSala, type SpriteEscena } from '../escena/CanvasSala';
 import { ConsolaApp } from '../consola/ConsolaApp';
 import { ModalRol } from './ModalRol';
+import { TransicionFase } from './TransicionFase';
+import { useAmbiente } from './useAmbiente';
 import { CAMARA } from '../escena/camara';
+import { socket } from '../lib/socket';
 import { usePresencia, type EstadoPresencia } from '../lib/presencia';
 import type {
   EstadoMotorCliente,
@@ -33,8 +36,18 @@ export function JuegoApp(props: Props) {
   const [vista, setVista] = useState<'sala' | 'consola'>('sala');
   const [mostrarModal, setMostrarModal] = useState(true);
   const [animando, setAnimando] = useState(false);
+  const [transicion, setTransicion] = useState<string | null>(null);
 
   const { pares: presenciaPares } = usePresencia(props.miNombre);
+  const { activo: ambienteActivo, alternar: alternarAmbiente } = useAmbiente();
+
+  useEffect(() => {
+    function onFaseCambio(data: { faseNueva: string }) {
+      setTransicion(data.faseNueva);
+    }
+    socket.on('reloj:fase_cambio', onFaseCambio);
+    return () => { socket.off('reloj:fase_cambio', onFaseCambio); };
+  }, []);
 
   const companeros = useMemo(() => {
     return props.miembros
@@ -104,6 +117,16 @@ export function JuegoApp(props: Props) {
             Abrir laptop
           </button>
 
+          <div className="juego__hud-controles">
+            <button
+              className={`juego__btn-sonido ${ambienteActivo ? 'juego__btn-sonido--activo' : ''}`}
+              onClick={alternarAmbiente}
+              title={ambienteActivo ? 'Silenciar ambiente' : 'Activar ambiente'}
+            >
+              {ambienteActivo ? '\u{1F50A}' : '\u{1F507}'}
+            </button>
+          </div>
+
           <div className="juego__hud-companeros">
             {companeros.map(c => {
               const estado = presenciaPares.get(c.nombre) ?? 'idle';
@@ -151,6 +174,13 @@ export function JuegoApp(props: Props) {
           </div>
         </div>
       </div>
+
+      {transicion && (
+        <TransicionFase
+          faseNueva={transicion}
+          onTerminada={() => setTransicion(null)}
+        />
+      )}
 
       {mostrarModal && (
         <ModalRol
