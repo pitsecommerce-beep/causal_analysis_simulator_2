@@ -8,11 +8,12 @@ import {
   type ParlamentoCliente,
 } from './anthropic.js';
 import { textoAAudio, vozDirector, vozCliente, type ResultadoAudio } from './deepgram.js';
-import { DISCURSO_DIRECTOR, DISCURSO_ADRIANA, TESTIMONIOS_RESPALDO } from './guiones.js';
+import { DISCURSO_DIRECTOR, DISCURSO_ADRIANA } from './guiones.js';
 
 export interface PiezaEscena {
   rol: 'director' | 'cliente' | 'adriana';
   nombre: string;
+  apellido: string;
   estado: string;
   sucursal: number;
   genero: string;
@@ -97,6 +98,7 @@ export async function precalentarEscena(
     const director: PiezaEscena = {
       rol: 'director',
       nombre: 'Ramón Betancourt',
+      apellido: 'Betancourt',
       estado: '',
       sucursal: 0,
       genero: 'M',
@@ -121,6 +123,7 @@ export async function precalentarEscena(
       clientes.push({
         rol: 'cliente',
         nombre: p.nombre,
+        apellido: p.apellido,
         estado: p.estado,
         sucursal: p.sucursal,
         genero: p.genero,
@@ -143,6 +146,7 @@ export async function precalentarEscena(
     const adriana: PiezaEscena = {
       rol: 'adriana',
       nombre: 'Adriana Rueda',
+      apellido: 'Rueda',
       estado: '',
       sucursal: 0,
       genero: 'F',
@@ -160,7 +164,7 @@ export async function precalentarEscena(
     });
   } catch (err) {
     console.warn('⚠ Error precalentando escena:', (err as Error).message);
-    const escenaResp = construirEscenaRespaldo();
+    const escenaResp = construirEscenaRespaldo(datos);
     cache.set(codigoSala, {
       estado: 'error',
       escena: escenaResp,
@@ -187,13 +191,19 @@ async function generarAudioConRespaldo(
   }
 }
 
-function construirEscenaRespaldo(): EscenaCompleta {
+function construirEscenaRespaldo(datos: DatosCargados): EscenaCompleta {
   let audioDirector = Buffer.alloc(0);
   try {
     audioDirector = readFileSync(resolve('src/servidor/voz/respaldo/discurso-director.mp3'));
   } catch { /* no fallback audio */ }
 
-  const clientes: PiezaEscena[] = TESTIMONIOS_RESPALDO.map((t, i) => {
+  const parlamentos = generarParlamentosDirectos(
+    datos.comentarios,
+    datos.solicitudes,
+    datos.verdadOculta.semilla,
+  );
+
+  const clientes: PiezaEscena[] = parlamentos.map((p, i) => {
     let audio = Buffer.alloc(0);
     try {
       audio = readFileSync(resolve('src/servidor/voz/respaldo', `cliente-${i}.mp3`));
@@ -201,13 +211,14 @@ function construirEscenaRespaldo(): EscenaCompleta {
 
     return {
       rol: 'cliente' as const,
-      nombre: t.nombre,
-      estado: t.estado,
-      sucursal: t.sucursal,
-      genero: t.genero,
-      intentos: t.intentos,
-      texto: t.texto,
-      fuenteTexto: 'respaldo' as const,
+      nombre: p.nombre,
+      apellido: p.apellido,
+      estado: p.estado,
+      sucursal: p.sucursal,
+      genero: p.genero,
+      intentos: p.intentos,
+      texto: p.texto,
+      fuenteTexto: 'directo' as const,
       audio,
       fuenteAudio: 'respaldo' as const,
     };
@@ -222,6 +233,7 @@ function construirEscenaRespaldo(): EscenaCompleta {
     director: {
       rol: 'director',
       nombre: 'Ramón Betancourt',
+      apellido: 'Betancourt',
       estado: '',
       sucursal: 0,
       genero: 'M',
@@ -229,12 +241,13 @@ function construirEscenaRespaldo(): EscenaCompleta {
       texto: DISCURSO_DIRECTOR,
       fuenteTexto: 'fijo',
       audio: audioDirector,
-      fuenteAudio: audioDirector.length > 0 ? 'respaldo' : 'respaldo',
+      fuenteAudio: 'respaldo',
     },
     clientes,
     adriana: {
       rol: 'adriana',
       nombre: 'Adriana Rueda',
+      apellido: 'Rueda',
       estado: '',
       sucursal: 0,
       genero: 'F',
@@ -252,4 +265,3 @@ export function limpiarCache(codigoSala: string): void {
   cache.delete(codigoSala);
 }
 
-export { validarTerminosProhibidos };

@@ -4,16 +4,12 @@ import { cargarConfig } from '../motor/dag.js';
 import { cargarTodosDatos } from '../datos/cargador.js';
 import {
   validarTerminosProhibidos,
-  sortearComentarios,
-  nombreFicticio,
   generarParlamentosDirectos,
 } from '../voz/anthropic.js';
 import { textoAAudio, vozDirector, vozCliente } from '../voz/deepgram.js';
 import {
   DISCURSO_DIRECTOR,
   DISCURSO_ADRIANA,
-  TESTIMONIOS_RESPALDO,
-  validarTestimoniosContraDatos,
 } from '../voz/guiones.js';
 
 const modoRespaldo = process.argv.includes('--respaldo');
@@ -165,63 +161,41 @@ async function probarRespaldo(
   voz: NonNullable<ReturnType<typeof cargarConfig>['voz']>,
 ): Promise<void> {
   console.log('║');
-  console.log('║  ── Validación de testimonios contra datos reales ──');
+  console.log('║  ── Verificación de datos y audio de respaldo ──');
   console.log('║');
 
-  const errores = validarTestimoniosContraDatos(
-    TESTIMONIOS_RESPALDO,
+  const parlamentos = generarParlamentosDirectos(
     datos.comentarios,
     datos.solicitudes,
     datos.verdadOculta.semilla,
-    sortearComentarios,
   );
 
-  const seleccionados = sortearComentarios(datos.comentarios, datos.verdadOculta.semilla);
-  const indiceSol = new Map(datos.solicitudes.map(s => [s.id, s]));
-
-  for (let i = 0; i < TESTIMONIOS_RESPALDO.length; i++) {
-    const t = TESTIMONIOS_RESPALDO[i];
-    const real = seleccionados[i];
-    const sol = real ? indiceSol.get(real.solicitudId) : null;
-    const generoBase = sol ? sol.genero.toLowerCase() : '';
-    const generoEsperado = generoBase.includes('female') || generoBase.includes('femenin') ? 'F' : 'M';
-    const nombreEsperado = real ? nombreFicticio(real.id, generoEsperado, i) : '?';
-
-    console.log(`║  Testimonio ${i + 1}:`);
-    const campos = [
-      { campo: 'commentId', respaldo: t.commentId, real: real?.id ?? '?' },
-      { campo: 'solicitudId', respaldo: String(t.solicitudId), real: real ? String(real.solicitudId) : '?' },
-      { campo: 'estado', respaldo: t.estado, real: real?.estado ?? '?' },
-      { campo: 'sucursal', respaldo: String(t.sucursal), real: real ? String(real.sucursal) : '?' },
-      { campo: 'genero', respaldo: t.genero, real: generoEsperado },
-      { campo: 'nombre', respaldo: t.nombre, real: nombreEsperado },
-      { campo: 'texto(50)', respaldo: t.texto.slice(0, 50), real: real ? real.comentario.slice(0, 50) : '?' },
-    ];
-
-    for (const c of campos) {
-      const ok = c.respaldo === c.real;
-      const marca = ok ? '✓' : '✗';
-      console.log(`║    ${marca} ${c.campo.padEnd(14)} respaldo="${c.respaldo}" ${ok ? '' : `real="${c.real}"`}`);
-    }
-    console.log('║');
+  console.log('║  Parlamentos generados desde datos reales:');
+  for (let i = 0; i < parlamentos.length; i++) {
+    const p = parlamentos[i];
+    console.log(`║    ${i + 1}. ${p.nombre} (${p.genero}, suc ${p.sucursal}, ${p.estado})`);
+    console.log(`║       "${p.texto.slice(0, 70)}..."`);
   }
 
-  if (errores.length === 0) {
-    console.log('║  ✓ TODOS LOS CAMPOS COINCIDEN CON DATOS REALES');
-  } else {
-    console.log(`║  ✗ ${errores.length} DISCREPANCIA(S) ENCONTRADA(S)`);
-    console.log('║  Ejecuta "npm run voz:respaldo" para regenerar.');
-  }
+  const nombres = parlamentos.map(p => p.nombre.split(' ')[0]);
+  const apellidos = parlamentos.map(p => p.apellido);
+  const ids = parlamentos.map(p => p.commentId);
+  const nombresUnicos = new Set(nombres).size === nombres.length;
+  const apellidosUnicos = new Set(apellidos).size === apellidos.length;
+  const idsUnicos = new Set(ids).size === ids.length;
+  console.log('║');
+  console.log(`║  Nombres únicos:   ${nombresUnicos ? 'SÍ ✓' : 'NO ✗'}`);
+  console.log(`║  Apellidos únicos: ${apellidosUnicos ? 'SÍ ✓' : 'NO ✗'}`);
+  console.log(`║  IDs únicos:       ${idsUnicos ? 'SÍ ✓' : 'NO ✗'}`);
 
   console.log('║');
-  console.log('║  ── Verificación de archivos de respaldo ──');
+  console.log('║  ── Verificación de archivos de audio de respaldo ──');
   console.log('║');
 
   const archivos = [
     { nombre: 'discurso-director.txt', esAudio: false },
     { nombre: 'discurso-director.mp3', esAudio: true },
     { nombre: 'adriana.mp3', esAudio: true },
-    { nombre: 'testimonios.json', esAudio: false },
     { nombre: 'cliente-0.mp3', esAudio: true },
     { nombre: 'cliente-1.mp3', esAudio: true },
     { nombre: 'cliente-2.mp3', esAudio: true },
@@ -270,21 +244,21 @@ async function probarRespaldo(
   console.log(`║  Validación términos prohibidos: ${valido ? 'PASÓ' : 'FALLÓ'}`);
   console.log('║');
 
-  console.log('║  ── Textos de testimonios de respaldo ──');
-  for (let i = 0; i < TESTIMONIOS_RESPALDO.length; i++) {
-    const t = TESTIMONIOS_RESPALDO[i];
-    const valT = validarTerminosProhibidos(t.texto, voz.terminos_prohibidos);
-    console.log(`║  ${t.nombre} (${t.genero}, suc ${t.sucursal}, ${t.estado}): ${valT ? 'PASÓ' : 'FALLÓ'}`);
-    console.log(`║    "${t.texto.slice(0, 70)}..."`);
+  console.log('║  ── Textos de testimonios (desde datos reales) ──');
+  for (let i = 0; i < parlamentos.length; i++) {
+    const p = parlamentos[i];
+    const valT = validarTerminosProhibidos(p.texto, voz.terminos_prohibidos);
+    console.log(`║  ${p.nombre} (${p.genero}, suc ${p.sucursal}, ${p.estado}): ${valT ? 'PASÓ' : 'FALLÓ'}`);
+    console.log(`║    "${p.texto.slice(0, 70)}..."`);
   }
 
   console.log('║');
-  console.log(`║  Resultado: ${todoOk && errores.length === 0 ? 'RESPALDO VÁLIDO' : 'HAY PROBLEMAS — ver arriba'}`);
+  console.log(`║  Resultado: ${todoOk && nombresUnicos && apellidosUnicos && idsUnicos ? 'RESPALDO VÁLIDO' : 'HAY PROBLEMAS — ver arriba'}`);
   console.log('║');
 
   writeFileSync(resolve(outDir, 'director.txt'), DISCURSO_DIRECTOR);
-  for (let i = 0; i < TESTIMONIOS_RESPALDO.length; i++) {
-    writeFileSync(resolve(outDir, `cliente-${i}.txt`), TESTIMONIOS_RESPALDO[i].texto);
+  for (let i = 0; i < parlamentos.length; i++) {
+    writeFileSync(resolve(outDir, `cliente-${i}.txt`), parlamentos[i].texto);
   }
 }
 
