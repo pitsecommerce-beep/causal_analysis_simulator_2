@@ -617,7 +617,7 @@ input, select, textarea, button {
 .canvas-sala {
   position: absolute;
   inset: 0;
-  background: #000;
+  background: var(--ipd-color-neutral-900);
   z-index: 1;
 }
 .canvas-sala__lienzo {
@@ -1959,7 +1959,7 @@ input, select, textarea, button {
   height: 100vh;
   position: relative;
   overflow: hidden;
-  background: #000;
+  background: var(--ipd-color-neutral-900);
 }
 .juego__sala {
   position: absolute;
@@ -2986,39 +2986,39 @@ input, select, textarea, button {
 /* -- Bloc de notas (participant companion during Act 1) -- */
 
 .bloc-notas {
-  background: var(--ipd-bg-surface, #fff);
-  border: 1px solid var(--ipd-border-default);
-  border-radius: 8px;
-  padding: 16px;
+  background: var(--ipd-bg-page);
+  border: var(--ipd-border-hairline) solid var(--ipd-border-default);
+  border-radius: var(--ipd-radius-md);
+  padding: var(--ipd-space-4);
   width: 100%;
   max-width: 480px;
 }
 
 .bloc-notas__titulo {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--ipd-size-sm);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-text-secondary);
-  margin: 0 0 8px;
+  margin: 0 0 var(--ipd-space-2);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--ipd-tracking-wide);
 }
 
 .bloc-notas__area {
   width: 100%;
-  border: 1px solid var(--ipd-border-subtle, #e5e7eb);
-  border-radius: 4px;
-  padding: 12px;
+  border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
+  border-radius: var(--ipd-radius-sm);
+  padding: var(--ipd-space-3);
   font-family: var(--ipd-font-sans);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--ipd-size-sm);
+  line-height: var(--ipd-leading-normal);
   resize: vertical;
   min-height: 120px;
   color: var(--ipd-text-primary);
-  background: var(--ipd-bg-default, #fafafa);
+  background: var(--ipd-bg-subtle);
 }
 
 .bloc-notas__area:focus {
-  outline: 2px solid var(--ipd-color-gold-500);
+  outline: var(--ipd-border-thick) solid var(--ipd-color-gold-500);
   outline-offset: -1px;
   border-color: var(--ipd-color-gold-500);
 }
@@ -3399,7 +3399,7 @@ input, select, textarea, button {
 .admin {
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: var(--ipd-space-8) var(--ipd-space-6);
   font-family: var(--ipd-font-sans);
 }
 
@@ -3407,79 +3407,81 @@ input, select, textarea, button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: var(--ipd-space-8);
 }
 
 .admin__header h1 {
-  font-family: 'Source Serif 4', var(--ipd-font-serif, Georgia), serif;
-  font-size: 24px;
-  font-weight: 600;
+  font-family: var(--ipd-font-display);
+  font-size: var(--ipd-size-2xl);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-text-primary);
   margin: 0;
 }
 
 .admin__cargando {
   text-align: center;
-  padding: 80px 0;
+  padding: var(--ipd-space-20) 0;
   color: var(--ipd-text-secondary);
 }
 
 .admin__mensaje {
-  background: var(--ipd-bg-success, #dcfce7);
-  color: var(--ipd-color-success-700, #166534);
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
+  background: var(--ipd-feedback-success-bg);
+  color: var(--ipd-feedback-success-fg);
+  padding: var(--ipd-space-3) var(--ipd-space-4);
+  border-radius: var(--ipd-radius-md);
+  margin-bottom: var(--ipd-space-4);
 }
 
 .admin__error {
-  background: var(--ipd-bg-error, #fef2f2);
-  color: var(--ipd-color-error-700, #b91c1c);
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
+  background: var(--ipd-feedback-danger-bg);
+  color: var(--ipd-feedback-danger-fg);
+  padding: var(--ipd-space-3) var(--ipd-space-4);
+  border-radius: var(--ipd-radius-md);
+  margin-bottom: var(--ipd-space-4);
 }
 
 .admin__seccion {
-  margin-bottom: 40px;
+  margin-bottom: var(--ipd-space-10);
 }
 
 .admin__seccion h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 16px;
+  font-size: var(--ipd-size-lg);
+  font-weight: var(--ipd-weight-semibold);
+  margin: 0 0 var(--ipd-space-4);
   color: var(--ipd-text-primary);
 }
 
 .admin__form {
   display: flex;
-  gap: 12px;
+  gap: var(--ipd-space-3);
   flex-wrap: wrap;
   align-items: flex-end;
 }
 
 .admin__form input {
-  padding: 8px 12px;
-  border: 1px solid var(--ipd-border-default);
-  border-radius: 4px;
-  font-size: 14px;
+  padding: var(--ipd-space-2) var(--ipd-space-3);
+  border: var(--ipd-border-hairline) solid var(--ipd-border-default);
+  border-radius: var(--ipd-radius-sm);
+  font-size: var(--ipd-size-sm);
   flex: 1;
   min-width: 180px;
 }
 
 .admin__btn {
-  padding: 8px 16px;
-  border: 1px solid var(--ipd-border-default);
-  border-radius: 4px;
+  padding: var(--ipd-space-2) var(--ipd-space-4);
+  border: var(--ipd-border-hairline) solid var(--ipd-border-default);
+  border-radius: var(--ipd-radius-sm);
   background: var(--ipd-bg-brand);
-  color: #fff;
+  color: var(--ipd-text-on-brand);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--ipd-size-sm);
+  font-weight: var(--ipd-weight-semibold);
   white-space: nowrap;
+  transition: background var(--ipd-duration-fast) var(--ipd-ease-standard);
 }
 
-.admin__btn:hover { opacity: 0.9; }
-.admin__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.admin__btn:hover { background: var(--ipd-interactive-hover); }
+.admin__btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .admin__btn--cerrar {
   background: transparent;
@@ -3488,11 +3490,11 @@ input, select, textarea, button {
 }
 
 .admin__btn--desactivar {
-  background: var(--ipd-color-warning-600, #ca8a04);
+  background: var(--ipd-feedback-warning-fg);
 }
 
 .admin__btn--activar {
-  background: var(--ipd-color-success-600, #16a34a);
+  background: var(--ipd-feedback-success-fg);
 }
 
 .admin__vacio {
@@ -3507,22 +3509,22 @@ input, select, textarea, button {
 
 .admin__tabla th {
   text-align: left;
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: var(--ipd-space-2) var(--ipd-space-3);
+  font-size: var(--ipd-size-2xs);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--ipd-tracking-wide);
   color: var(--ipd-text-secondary);
-  border-bottom: 2px solid var(--ipd-border-default);
+  border-bottom: var(--ipd-border-thick) solid var(--ipd-border-default);
 }
 
 .admin__tabla td {
-  padding: 8px 12px;
-  font-size: 14px;
-  border-bottom: 1px solid var(--ipd-border-subtle, #f0f0f0);
+  padding: var(--ipd-space-2) var(--ipd-space-3);
+  font-size: var(--ipd-size-sm);
+  border-bottom: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
 }
 
 .admin__fila--inactivo {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 /* — Pizarron compartido del equipo — */
@@ -3630,18 +3632,18 @@ input, select, textarea, button {
 .reveal {
   position: absolute;
   inset: 0;
-  background: #0a0e1a;
+  background: var(--ipd-color-navy-950);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: var(--ipd-space-10);
   overflow: hidden;
-  color: #fff;
+  color: var(--ipd-color-neutral-0);
   animation: revealFadeIn 1s ease-out;
 }
 .reveal--oscuro {
-  background: #000;
+  background: var(--ipd-color-neutral-900);
 }
 @keyframes revealFadeIn {
   from { opacity: 0; }
@@ -3649,53 +3651,55 @@ input, select, textarea, button {
 }
 .reveal__saltar {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 10;
-  padding: 8px 20px;
+  top: var(--ipd-space-5);
+  right: var(--ipd-space-5);
+  z-index: var(--ipd-z-raised);
+  padding: var(--ipd-space-2) var(--ipd-space-5);
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-  font-size: 13px;
+  border: var(--ipd-border-hairline) solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--ipd-radius-sm);
+  font-size: var(--ipd-size-xs);
   cursor: pointer;
+  transition: background var(--ipd-duration-fast) var(--ipd-ease-standard);
 }
 .reveal__saltar:hover {
   background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: var(--ipd-color-neutral-0);
 }
 .reveal__titulo {
   opacity: 0;
   transform: translateY(-20px);
   transition: opacity 1.5s ease, transform 1.5s ease;
-  margin-bottom: 32px;
+  margin-bottom: var(--ipd-space-8);
 }
 .reveal__titulo--visible {
   opacity: 1;
   transform: translateY(0);
 }
 .reveal__titulo h1 {
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: var(--ipd-font-display);
+  font-size: var(--ipd-size-4xl);
+  font-weight: var(--ipd-weight-bold);
+  letter-spacing: var(--ipd-tracking-tight);
   text-align: center;
-  color: #d4af37;
+  color: var(--ipd-color-gold-500);
 }
 .reveal__grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--ipd-space-2);
   width: 100%;
   max-width: 800px;
 }
 .reveal__fila {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 20px;
+  gap: var(--ipd-space-4);
+  padding: var(--ipd-space-3) var(--ipd-space-5);
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  border: var(--ipd-border-hairline) solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--ipd-radius-md);
   opacity: 0;
   transform: translateX(-20px);
   transition: opacity 0.6s ease, transform 0.6s ease, background 0.5s ease, box-shadow 0.5s ease;
@@ -3723,28 +3727,29 @@ input, select, textarea, button {
   transform: none;
 }
 .reveal__pos {
-  font-size: 22px;
-  font-weight: 700;
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-xl);
+  font-weight: var(--ipd-weight-bold);
   min-width: 40px;
   text-align: center;
   font-variant-numeric: tabular-nums;
   color: rgba(255, 255, 255, 0.5);
 }
 .reveal__pos--top {
-  color: #d4af37;
+  color: var(--ipd-color-gold-500);
 }
 .reveal__nombre {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: var(--ipd-size-lg);
+  font-weight: var(--ipd-weight-semibold);
   flex: 1;
 }
 .reveal__final {
-  font-size: 13px;
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-weight: 600;
+  font-size: var(--ipd-size-xs);
+  padding: var(--ipd-space-1) var(--ipd-space-3);
+  border-radius: var(--ipd-radius-sm);
+  font-weight: var(--ipd-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--ipd-tracking-wide);
   animation: revealBadge 0.4s ease-out;
 }
 @keyframes revealBadge {
@@ -3760,12 +3765,13 @@ input, select, textarea, button {
 .reveal__final--g { background: rgba(220, 38, 38, 0.15); color: #ef4444; }
 .reveal__final--h { background: rgba(185, 28, 28, 0.15); color: #dc2626; }
 .reveal__pts {
-  font-size: 24px;
-  font-weight: 700;
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-2xl);
+  font-weight: var(--ipd-weight-bold);
   font-variant-numeric: tabular-nums;
   min-width: 100px;
   text-align: right;
-  color: #d4af37;
+  color: var(--ipd-color-gold-500);
   animation: revealCount 0.3s ease-out;
 }
 @keyframes revealCount {
@@ -3774,18 +3780,18 @@ input, select, textarea, button {
 }
 .reveal__desglose {
   display: flex;
-  gap: 12px;
-  font-size: 11px;
+  gap: var(--ipd-space-3);
+  font-size: var(--ipd-size-3xs);
   color: rgba(255, 255, 255, 0.45);
   font-variant-numeric: tabular-nums;
 }
 .reveal__pendiente {
-  font-size: 13px;
+  font-size: var(--ipd-size-xs);
   font-style: italic;
   color: rgba(255, 255, 255, 0.35);
 }
 .reveal__campeon {
-  margin-top: 32px;
+  margin-top: var(--ipd-space-8);
   text-align: center;
   animation: revealCampeon 1.2s ease-out;
 }
@@ -3798,33 +3804,35 @@ input, select, textarea, button {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 40px;
+  padding: var(--ipd-space-5) var(--ipd-space-10);
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.04));
-  border: 2px solid rgba(212, 175, 55, 0.3);
-  border-radius: 16px;
+  border: var(--ipd-border-thick) solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--ipd-radius-xl);
 }
 .reveal__campeon-label {
-  font-size: 12px;
+  font-size: var(--ipd-size-2xs);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--ipd-tracking-wider);
   color: rgba(212, 175, 55, 0.7);
-  margin-bottom: 4px;
+  margin-bottom: var(--ipd-space-1);
 }
 .reveal__campeon-nombre {
-  font-size: 32px;
-  font-weight: 700;
-  color: #d4af37;
+  font-family: var(--ipd-font-display);
+  font-size: var(--ipd-size-3xl);
+  font-weight: var(--ipd-weight-bold);
+  color: var(--ipd-color-gold-500);
 }
 .reveal__campeon-pts {
-  font-size: 18px;
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-lg);
   color: rgba(255, 255, 255, 0.6);
   font-variant-numeric: tabular-nums;
 }
 .reveal__completo-hint {
   position: absolute;
-  bottom: 60px;
-  font-size: 13px;
+  bottom: var(--ipd-space-16);
+  font-size: var(--ipd-size-xs);
   color: rgba(255, 255, 255, 0.3);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--ipd-tracking-wide);
 }

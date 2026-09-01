@@ -21,7 +21,8 @@
     "sprites:generar": "npx tsx herramientas/sprites/generar.ts",
     "escena:demo": "npx vite --open /demo.html",
     "resiliencia:probar": "npx tsx src/servidor/consola/resiliencia.ts",
-    "acentos:revisar": "bash herramientas/acentos-revisar.sh"
+    "acentos:revisar": "bash herramientas/acentos-revisar.sh",
+    "contraste:revisar": "npx tsx herramientas/contraste-revisar.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
