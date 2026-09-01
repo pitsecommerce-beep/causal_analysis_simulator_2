@@ -11,7 +11,7 @@ Verificar cada punto antes de iniciar una sesion con participantes.
   - [ ] `DATABASE_URL` — cadena de conexion PostgreSQL
   - [ ] `ANTHROPIC_API_KEY` — clave de Anthropic valida
   - [ ] `DEEPGRAM_API_KEY` — clave de Deepgram valida
-  - [ ] `CLAVE_PROFESOR` — clave de acceso al panel (compartir solo con co-facilitadores)
+  - [ ] `CLAVE_SUPERADMIN` — clave del superadmin (no compartir con profesores)
   - [ ] `ANTHROPIC_MODEL_PENSAR` — modelo configurado
   - [ ] `ANTHROPIC_MODEL_REDACTAR` — modelo configurado
 

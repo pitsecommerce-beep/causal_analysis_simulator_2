@@ -36,6 +36,7 @@ const EscenaApp = lazy(() => import('./escena/EscenaApp').then(m => ({ default: 
 const ConsolaApp = lazy(() => import('./consola/ConsolaApp').then(m => ({ default: m.ConsolaApp })));
 const JuegoApp = lazy(() => import('./juego/JuegoApp').then(m => ({ default: m.JuegoApp })));
 const ProfesorApp = lazy(() => import('./profesor/ProfesorApp').then(m => ({ default: m.ProfesorApp })));
+const AdminApp = lazy(() => import('./admin/AdminApp').then(m => ({ default: m.AdminApp })));
 
 interface DatosSesion {
   estadoMotor: EstadoMotorCliente;
@@ -57,25 +58,51 @@ interface DatosRol {
   codigoPersonal?: string;
 }
 
-type Pantalla = 'unirse' | 'reconectando' | 'escena' | 'juego' | 'consola' | 'profesor';
+type Pantalla = 'cargando' | 'unirse' | 'reconectando' | 'escena' | 'juego' | 'consola' | 'profesor' | 'admin';
 
 export function App() {
-  const sesionGuardada = leerSesion();
   const [sesion, setSesion] = useState<DatosSesion | null>(null);
-  const [pantalla, setPantalla] = useState<Pantalla>(sesionGuardada ? 'reconectando' : 'unirse');
+  const [pantalla, setPantalla] = useState<Pantalla>('cargando');
   const [datosRol, setDatosRol] = useState<DatosRol | null>(null);
-  const [profesorData, setProfesorData] = useState<{ codigoSala: string; clave: string } | null>(null);
+  const [profesorCodigoSala, setProfesorCodigoSala] = useState<string | null>(null);
   const [errorReconexion, setErrorReconexion] = useState('');
 
-  function abandonarSesion() {
-    borrarSesion();
-    socket.disconnect();
-    setSesion(null);
-    setDatosRol(null);
-    setPantalla('unirse');
-  }
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/admin') {
+      fetch('/api/auth/yo')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.tipo === 'superadmin') {
+            setPantalla('admin');
+          } else {
+            setPantalla('unirse');
+          }
+        })
+        .catch(() => setPantalla('unirse'));
+      return;
+    }
+
+    fetch('/api/auth/yo')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.tipo === 'superadmin') {
+          setPantalla('admin');
+        } else if (data?.tipo === 'profesor') {
+          setPantalla('profesor');
+        } else {
+          const sesionGuardada = leerSesion();
+          setPantalla(sesionGuardada ? 'reconectando' : 'unirse');
+        }
+      })
+      .catch(() => {
+        const sesionGuardada = leerSesion();
+        setPantalla(sesionGuardada ? 'reconectando' : 'unirse');
+      });
+  }, []);
 
   useEffect(() => {
+    const sesionGuardada = leerSesion();
     if (!sesionGuardada || pantalla !== 'reconectando') return;
     if (!socket.connected) socket.connect();
 
@@ -110,7 +137,20 @@ export function App() {
       setPantalla('juego');
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pantalla]);
+
+  function abandonarSesion() {
+    borrarSesion();
+    socket.disconnect();
+    setSesion(null);
+    setDatosRol(null);
+    setPantalla('unirse');
+  }
+
+  async function cerrarSesionAuth() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setPantalla('unirse');
+  }
 
   function onReconectar(codigoSala: string, codigoPersonal: string) {
     if (!socket.connected) socket.connect();
@@ -158,29 +198,20 @@ export function App() {
     }
   }
 
-  function onProfesor(codigoSala: string, clave: string) {
+  function onProfesorAuth() {
     socket.connect();
-    socket.emit('profesor:crear_sesion', { clave }, (resp: any) => {
+    socket.emit('profesor:crear_sesion', {}, (resp: any) => {
       if (resp?.error) {
         alert(resp.error);
         return;
       }
-      setProfesorData({ codigoSala: resp.codigoSala, clave });
+      setProfesorCodigoSala(resp.codigoSala);
       setPantalla('profesor');
     });
   }
 
-  function onProfesorUnirse(codigoSala: string, clave: string) {
-    socket.connect();
-    socket.emit('profesor:estado', { clave, codigoSala }, (resp: any) => {
-      if (resp?.error) {
-        alert(resp.error);
-        return;
-      }
-      socket.emit('profesor:crear_sesion', { clave }, () => {});
-      setProfesorData({ codigoSala, clave });
-      setPantalla('profesor');
-    });
+  function onAdminAuth() {
+    setPantalla('admin');
   }
 
   const cargando = (
@@ -192,12 +223,33 @@ export function App() {
     </div>
   );
 
-  if (pantalla === 'profesor' && profesorData) {
+  if (pantalla === 'cargando') {
+    return cargando;
+  }
+
+  if (pantalla === 'admin') {
     return (
       <Suspense fallback={cargando}>
-        <ProfesorApp codigoSala={profesorData.codigoSala} clave={profesorData.clave} />
+        <AdminApp onCerrarSesion={cerrarSesionAuth} />
       </Suspense>
     );
+  }
+
+  if (pantalla === 'profesor' && profesorCodigoSala) {
+    return (
+      <Suspense fallback={cargando}>
+        <ProfesorApp codigoSala={profesorCodigoSala} onCerrarSesion={cerrarSesionAuth} />
+      </Suspense>
+    );
+  }
+
+  if (pantalla === 'profesor') {
+    socket.connect();
+    socket.emit('profesor:crear_sesion', {}, (resp: any) => {
+      if (resp?.error) return;
+      setProfesorCodigoSala(resp.codigoSala);
+    });
+    return cargando;
   }
 
   if (pantalla === 'reconectando') {
@@ -215,8 +267,8 @@ export function App() {
     return (
       <UnirseEquipo
         onUnido={onUnido}
-        onProfesor={onProfesor}
-        onProfesorUnirse={onProfesorUnirse}
+        onProfesor={onProfesorAuth}
+        onAdmin={onAdminAuth}
         onReconectar={onReconectar}
         errorReconexion={errorReconexion}
       />

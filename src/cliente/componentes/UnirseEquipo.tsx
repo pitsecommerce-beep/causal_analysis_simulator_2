@@ -15,17 +15,19 @@ interface Props {
     propuestas: PropuestaIntervencion[];
     solicitudesAccion: SolicitudAccion[];
   }) => void;
-  onProfesor: (codigoSala: string, clave: string) => void;
-  onProfesorUnirse: (codigoSala: string, clave: string) => void;
+  onProfesor: () => void;
+  onAdmin: () => void;
   onReconectar: (codigoSala: string, codigoPersonal: string) => void;
   errorReconexion?: string;
 }
 
-export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconectar, errorReconexion }: Props) {
-  const [modo, setModo] = useState<'equipo' | 'profesor'>('equipo');
+export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, errorReconexion }: Props) {
+  const [modo, setModo] = useState<'equipo' | 'profesor' | 'admin'>('equipo');
   const [codigo, setCodigo] = useState('');
   const [email, setEmail] = useState('');
-  const [clave, setClave] = useState('');
+  const [emailProf, setEmailProf] = useState('');
+  const [contrasena, setContrasena] = useState('');
+  const [claveAdmin, setClaveAdmin] = useState('');
   const [codigoPersonal, setCodigoPersonal] = useState('');
   const [mostrarReconexion, setMostrarReconexion] = useState(false);
   const [error, setError] = useState(errorReconexion ?? '');
@@ -33,11 +35,11 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
 
   const handleUnirse = () => {
     if (!codigo.trim() || !email.trim()) {
-      setError('Ingresa el código de sala y tu correo electrónico.');
+      setError('Ingresa el codigo de sala y tu correo electronico.');
       return;
     }
     if (!email.includes('@')) {
-      setError('Ingresa un correo electrónico válido.');
+      setError('Ingresa un correo electronico valido.');
       return;
     }
     setCargando(true);
@@ -66,23 +68,65 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
     });
   };
 
-  const handleCrearSesion = () => {
-    if (!clave.trim()) {
-      setError('Ingresa la clave de profesor.');
+  const handleLoginProfesor = async () => {
+    if (!emailProf.trim() || !contrasena.trim()) {
+      setError('Ingresa tu correo y contrasena.');
       return;
     }
     setCargando(true);
     setError('');
-    onProfesor('', clave.trim());
+    try {
+      const resp = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo: emailProf.trim(), contrasena: contrasena }),
+      });
+      const data = await resp.json();
+      setCargando(false);
+      if (!resp.ok) {
+        setError(data.error || 'Error al iniciar sesion');
+        return;
+      }
+      onProfesor();
+    } catch {
+      setCargando(false);
+      setError('Error de conexion');
+    }
+  };
+
+  const handleLoginAdmin = async () => {
+    if (!claveAdmin.trim()) {
+      setError('Ingresa la clave de superadmin.');
+      return;
+    }
+    setCargando(true);
+    setError('');
+    try {
+      const resp = await fetch('/api/auth/superadmin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clave: claveAdmin.trim() }),
+      });
+      const data = await resp.json();
+      setCargando(false);
+      if (!resp.ok) {
+        setError(data.error || 'Clave incorrecta');
+        return;
+      }
+      onAdmin();
+    } catch {
+      setCargando(false);
+      setError('Error de conexion');
+    }
   };
 
   const handleReconectar = () => {
     if (!codigo.trim() || !codigoPersonal.trim()) {
-      setError('Ingresa el código de sala y tu código personal.');
+      setError('Ingresa el codigo de sala y tu codigo personal.');
       return;
     }
     if (codigoPersonal.trim().length !== 6) {
-      setError('El código personal debe tener 6 caracteres.');
+      setError('El codigo personal debe tener 6 caracteres.');
       return;
     }
     setCargando(true);
@@ -90,21 +134,11 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
     onReconectar(codigo.toUpperCase(), codigoPersonal.toUpperCase());
   };
 
-  const handleUnirseSesion = () => {
-    if (!codigo.trim() || !clave.trim()) {
-      setError('Ingresa el código de sala y la clave de profesor.');
-      return;
-    }
-    setCargando(true);
-    setError('');
-    onProfesorUnirse(codigo.toUpperCase(), clave.trim());
-  };
-
   return (
     <div className="unirse">
       <div className="unirse__tarjeta">
         <h1 className="unirse__titulo">ETF Bank</h1>
-        <p className="unirse__subtitulo">Simulador de Análisis Causal</p>
+        <p className="unirse__subtitulo">Simulador de Analisis Causal</p>
 
         <div className="unirse__tabs">
           <button
@@ -119,24 +153,30 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
           >
             Profesor
           </button>
+          <button
+            className={`unirse__tab ${modo === 'admin' ? 'unirse__tab--activo' : ''}`}
+            onClick={() => { setModo('admin'); setError(''); }}
+          >
+            Admin
+          </button>
         </div>
 
-        {modo === 'equipo' ? (
+        {modo === 'equipo' && (
           <>
             <div className="unirse__campo">
-              <label>Código de sala</label>
+              <label>Codigo de sala</label>
               <input
                 className="mono"
-                maxLength={10}
+                maxLength={6}
                 value={codigo}
                 onChange={e => setCodigo(e.target.value.toUpperCase())}
-                placeholder="IPADE-1234"
+                placeholder="ABC123"
                 onKeyDown={e => e.key === 'Enter' && handleUnirse()}
               />
             </div>
 
             <div className="unirse__campo">
-              <label>Correo electrónico</label>
+              <label>Correo electronico</label>
               <input
                 type="email"
                 value={email}
@@ -147,7 +187,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
             </div>
 
             <button className="unirse__boton" onClick={handleUnirse} disabled={cargando}>
-              {cargando ? 'Conectando...' : 'Unirse a la sesión'}
+              {cargando ? 'Conectando...' : 'Unirse a la sesion'}
             </button>
 
             {!mostrarReconexion ? (
@@ -155,7 +195,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
                 className="unirse__link"
                 onClick={() => { setMostrarReconexion(true); setError(''); }}
               >
-                Tengo un código de reconexión
+                Tengo un codigo de reconexion
               </button>
             ) : (
               <>
@@ -163,7 +203,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
                   <span>Reconectar</span>
                 </div>
                 <div className="unirse__campo">
-                  <label>Código personal (6 caracteres)</label>
+                  <label>Codigo personal (6 caracteres)</label>
                   <input
                     className="mono"
                     maxLength={6}
@@ -179,41 +219,53 @@ export function UnirseEquipo({ onUnido, onProfesor, onProfesorUnirse, onReconect
               </>
             )}
           </>
-        ) : (
+        )}
+
+        {modo === 'profesor' && (
           <>
             <div className="unirse__campo">
-              <label>Clave de profesor</label>
+              <label>Correo electronico</label>
               <input
-                type="password"
-                value={clave}
-                onChange={e => setClave(e.target.value)}
-                placeholder="Clave"
-                onKeyDown={e => e.key === 'Enter' && handleCrearSesion()}
+                type="email"
+                value={emailProf}
+                onChange={e => setEmailProf(e.target.value)}
+                placeholder="profesor@ipade.mx"
+                onKeyDown={e => e.key === 'Enter' && handleLoginProfesor()}
               />
-            </div>
-
-            <button className="unirse__boton" onClick={handleCrearSesion} disabled={cargando}>
-              {cargando ? 'Creando...' : 'Crear nueva sesión'}
-            </button>
-
-            <div className="unirse__separador">
-              <span>o unirse a sesión existente</span>
             </div>
 
             <div className="unirse__campo">
-              <label>Código de sala</label>
+              <label>Contrasena</label>
               <input
-                className="mono"
-                maxLength={10}
-                value={codigo}
-                onChange={e => setCodigo(e.target.value.toUpperCase())}
-                placeholder="IPADE-1234"
-                onKeyDown={e => e.key === 'Enter' && handleUnirseSesion()}
+                type="password"
+                value={contrasena}
+                onChange={e => setContrasena(e.target.value)}
+                placeholder="Contrasena"
+                onKeyDown={e => e.key === 'Enter' && handleLoginProfesor()}
               />
             </div>
 
-            <button className="unirse__boton unirse__boton--secundario" onClick={handleUnirseSesion} disabled={cargando}>
-              {cargando ? 'Conectando...' : 'Unirse a sesión existente'}
+            <button className="unirse__boton" onClick={handleLoginProfesor} disabled={cargando}>
+              {cargando ? 'Iniciando sesion...' : 'Iniciar sesion'}
+            </button>
+          </>
+        )}
+
+        {modo === 'admin' && (
+          <>
+            <div className="unirse__campo">
+              <label>Clave de superadmin</label>
+              <input
+                type="password"
+                value={claveAdmin}
+                onChange={e => setClaveAdmin(e.target.value)}
+                placeholder="Clave"
+                onKeyDown={e => e.key === 'Enter' && handleLoginAdmin()}
+              />
+            </div>
+
+            <button className="unirse__boton" onClick={handleLoginAdmin} disabled={cargando}>
+              {cargando ? 'Verificando...' : 'Entrar como admin'}
             </button>
           </>
         )}

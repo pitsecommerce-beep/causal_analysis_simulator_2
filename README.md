@@ -18,7 +18,7 @@ Copiar `.env.example` a `.env` y completar:
 | `DATABASE_URL` | Cadena de conexion PostgreSQL |
 | `ANTHROPIC_API_KEY` | Clave API de Anthropic |
 | `DEEPGRAM_API_KEY` | Clave API de Deepgram (TTS) |
-| `CLAVE_PROFESOR` | Clave de acceso al panel de profesor |
+| `CLAVE_SUPERADMIN` | Clave del superadmin para administrar profesores |
 | `ANTHROPIC_MODEL_PENSAR` | Modelo para razonamiento (default: `claude-sonnet-5`) |
 | `ANTHROPIC_MODEL_REDACTAR` | Modelo para redaccion (default: `claude-haiku-4-5`) |
 | `PORT` | Puerto del servidor (default: `3000`) |

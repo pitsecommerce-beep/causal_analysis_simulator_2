@@ -9,7 +9,7 @@ async function main(): Promise<void> {
     DATABASE_URL: 'Conexión a PostgreSQL (Supabase)',
     ANTHROPIC_API_KEY: 'API de Anthropic (voz del director)',
     DEEPGRAM_API_KEY: 'API de Deepgram (texto a voz)',
-    CLAVE_PROFESOR: 'Contraseña del panel de profesor',
+    CLAVE_SUPERADMIN: 'Clave del superadmin',
   };
 
   const opcionales: Record<string, [string, string]> = {

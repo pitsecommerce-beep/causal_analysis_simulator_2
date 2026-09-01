@@ -7,7 +7,7 @@ import { NOMBRES_FASES, NOMBRES_FINALES } from '../lib/tipos';
 
 interface Props {
   codigoSala: string;
-  clave: string;
+  onCerrarSesion?: () => void;
 }
 
 interface EquipoConfig {
@@ -21,7 +21,7 @@ function formatearTiempo(segundos: number): string {
   return `${String(min).padStart(2, '0')}:${String(seg).padStart(2, '0')}`;
 }
 
-export function ProfesorApp({ codigoSala, clave }: Props) {
+export function ProfesorApp({ codigoSala, onCerrarSesion }: Props) {
   const [reloj, setReloj] = useState<EstadoReloj | null>(null);
   const [equipos, setEquipos] = useState<EquipoTablero[]>([]);
   const [escenaEstado, setEscenaEstado] = useState('');
@@ -35,19 +35,19 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const cargarEstado = useCallback(() => {
-    socket.emit('profesor:tablero', { clave, codigoSala }, (resp: any) => {
+    socket.emit('profesor:tablero', { codigoSala }, (resp: any) => {
       if (resp?.error) return;
       setReloj(resp.reloj);
       setEquipos(resp.equipos);
       setEscenaEstado(resp.escena);
     });
-  }, [clave, codigoSala]);
+  }, [codigoSala]);
 
   useEffect(() => {
     cargarEstado();
     pollingRef.current = setInterval(cargarEstado, 5000);
 
-    socket.emit('profesor:obtener_asignaciones', { clave, codigoSala }, (resp: any) => {
+    socket.emit('profesor:obtener_asignaciones', { codigoSala }, (resp: any) => {
       if (resp?.equipos && resp.equipos.length > 0) {
         setEquiposConfig(resp.equipos.map((eq: any) => ({
           nombre: eq.nombre,
@@ -93,29 +93,29 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
       socket.off('sesion:equipo_diagnostico', onEquipoDiag);
       socket.off('sesion:equipo_intervencion', onEquipoInterv);
     };
-  }, [cargarEstado, clave, codigoSala]);
+  }, [cargarEstado, codigoSala]);
 
   function iniciarReloj() {
-    socket.emit('profesor:iniciar_reloj', { clave, codigoSala }, (resp: any) => {
+    socket.emit('profesor:iniciar_reloj', { codigoSala }, (resp: any) => {
       if (resp?.error) { setMensaje(resp.error); setTimeout(() => setMensaje(''), 3000); }
       else cargarEstado();
     });
   }
 
   function pausarReloj() {
-    socket.emit('profesor:pausar_reloj', { clave, codigoSala }, (resp: any) => {
+    socket.emit('profesor:pausar_reloj', { codigoSala }, (resp: any) => {
       if (resp?.error) { setMensaje(resp.error); setTimeout(() => setMensaje(''), 3000); }
     });
   }
 
   function extenderFase(minutos: number) {
-    socket.emit('profesor:extender_fase', { clave, codigoSala, minutos }, () => {
+    socket.emit('profesor:extender_fase', { codigoSala, minutos }, () => {
       cargarEstado();
     });
   }
 
   function revelarDAG() {
-    socket.emit('profesor:revelar_dag', { clave, codigoSala }, (resp: any) => {
+    socket.emit('profesor:revelar_dag', { codigoSala }, (resp: any) => {
       if (resp?.error) { setMensaje(resp.error); setTimeout(() => setMensaje(''), 3000); }
       else { setMensaje('DAG revelado a todos los equipos'); setTimeout(() => setMensaje(''), 3000); }
     });
@@ -152,7 +152,7 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
     }
 
     setGuardando(true);
-    socket.emit('profesor:configurar_equipos', { clave, codigoSala, equipos: equiposPayload }, (resp: any) => {
+    socket.emit('profesor:configurar_equipos', { codigoSala, equipos: equiposPayload }, (resp: any) => {
       setGuardando(false);
       if (resp?.error) {
         setMensaje(resp.error);
@@ -187,6 +187,11 @@ export function ProfesorApp({ codigoSala, clave }: Props) {
           </div>
         )}
         {mensaje && <span className="profesor__mensaje">{mensaje}</span>}
+        {onCerrarSesion && (
+          <button className="profesor__btn profesor__btn--cerrar" onClick={onCerrarSesion}>
+            Cerrar sesion
+          </button>
+        )}
       </header>
 
       <div className="profesor__controles">
