@@ -1,6 +1,3 @@
-// Room object sprites: laptop, chair, cup, folder, phone
-// Smaller sprites at various sizes, scaled 4x
-
 const ESCALA = 4;
 
 function fila(s: string, S: Record<string, string>): string[] {
@@ -18,36 +15,58 @@ interface SpriteObjeto {
 export function generarObjetos(): SpriteObjeto[] {
   const sprites: SpriteObjeto[] = [];
 
-  // Laptop closed (16×8 mini → 64×32)
+  // Laptop closed — with pear logo on lid (16×8 mini → 64×32)
   {
     const S: Record<string, string> = {
       '.': '__', F: 'D2', E: 'D3', L: 'M2', H: 'N5',
+      P: 'PR', V: 'PL',
     };
     const mapa = [
       fila('..FFFFFFFFFFFF..', S),
       fila('.FFFFFFFFFFFFFF.', S),
-      fila('FFFFFFFFFFFFFFFF', S),
-      fila('EEEEEEEEEEEEEEEE', S),
+      fila('FFFFFFVPFFFFFFFF', S),
+      fila('FFFFFPPPPFFFFFFF', S),
+      fila('FFFFFFPPFFFFFFFF', S),
       fila('EEEEEEEEEEEEEEEE', S),
       fila('..LLLLLLLLLLLL..', S),
-      fila('................', S),
       fila('................', S),
     ];
     sprites.push({ nombre: 'laptop-cerrada', mapa, escala: ESCALA, anchoMini: 16, altoMini: 8 });
   }
 
-  // Laptop open (16×12 mini → 64×48)
+  // Laptop half-open — transitional frame (16×10 mini → 64×40)
+  {
+    const S: Record<string, string> = {
+      '.': '__', F: 'D2', E: 'D3', L: 'M2', K: 'M1',
+      B: 'N6', S: 'N3', P: 'PR', V: 'PL',
+    };
+    const mapa = [
+      fila('..FFFFFFFFFFFF..', S),
+      fila('.FFFFFFFVPFFFFF.', S),
+      fila('FFFFFFFPPPPFFFFF', S),
+      fila('FFFFFFFFPPFFFFFF', S),
+      fila('FFFFFFFFFFFFFFFF', S),
+      fila('EEEEEEEEEEEEEEEE', S),
+      fila('EEEEEEEEEEEEEEEE', S),
+      fila('EKKKKKKKKKKKKKKE', S),
+      fila('EKKKKKKKKKKKKKKE', S),
+      fila('EEEEEEEEEEEEEEEE', S),
+    ];
+    sprites.push({ nombre: 'laptop-media', mapa, escala: ESCALA, anchoMini: 16, altoMini: 10 });
+  }
+
+  // Laptop open — screen glow + pear logo visible on back of lid (16×12 mini → 64×48)
   {
     const S: Record<string, string> = {
       '.': '__', F: 'D2', E: 'D3', S: 'N3', B: 'N6',
-      L: 'M2', K: 'M1', W: 'WH',
+      L: 'M2', K: 'M1', W: 'WH', P: 'PR', V: 'PL',
     };
     const mapa = [
       fila('.FFFFFFFFFFFFFF.', S),
       fila('FBBBBBBBBBBBBBBF', S),
-      fila('FBBBBBBBBBBBBBBF', S),
-      fila('FBBSSSSSSSSSSBBF', S),
-      fila('FBBSSSSSSSSSSBBF', S),
+      fila('FBBBBVPBBBBBBBBF', S),
+      fila('FBBSSPPPPSSSSBBF', S),
+      fila('FBBSSSSPPSSSSBBF', S),
       fila('FBBSSSSSSSSSSBBF', S),
       fila('FBBBBBBBBBBBBBBF', S),
       fila('FFFFFFFFFFFFFFFF', S),
@@ -135,6 +154,32 @@ export function generarObjetos(): SpriteObjeto[] {
       fila('FFFF', S),
     ];
     sprites.push({ nombre: 'telefono', mapa, escala: ESCALA, anchoMini: 4, altoMini: 8 });
+  }
+
+  // Whiteboard (24×16 mini → 96×64)
+  {
+    const S: Record<string, string> = {
+      '.': '__', F: 'M1', W: 'WH', L: 'L1', B: 'N5', G: 'N6',
+    };
+    const mapa = [
+      fila('FFFFFFFFFFFFFFFFFFFFFFFF', S),
+      fila('FWWWWWWWWWWWWWWWWWWWWWWF', S),
+      fila('FWWWWWWWWWWWWWWWWWWWWWWF', S),
+      fila('FWWBBBBBWWWWWWWWWWWWWWWF', S),
+      fila('FWWWWWWWWWWWWWWWWWWWWWWF', S),
+      fila('FWWWBBBBBBBWWWWWWWWWWWWF', S),
+      fila('FWWWWWWWWWWWWWWWWWWWWWWF', S),
+      fila('FWWWWWWWWWWWWWWWWWWWWWWF', S),
+      fila('FWWBBBWWWWWWWBBBWWWWWWWF', S),
+      fila('FWWWWWWWWWWWWWWWWWWWWWWF', S),
+      fila('FWWWWWWWWWWWWWWWWWWWWWWF', S),
+      fila('FWWWWBBBBBBBBBWWWWWWWWWF', S),
+      fila('FWWWWWWWWWWWWWWWWWWWWWWF', S),
+      fila('FFFFFFFFFFFFFFFFFFFFFFFF', S),
+      fila('..........FF............', S),
+      fila('..........FF............', S),
+    ];
+    sprites.push({ nombre: 'pizarron', mapa, escala: ESCALA, anchoMini: 24, altoMini: 16 });
   }
 
   return sprites;

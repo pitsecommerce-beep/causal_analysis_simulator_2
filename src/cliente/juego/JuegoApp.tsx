@@ -34,7 +34,9 @@ interface Props {
 }
 
 const POS = CAMARA.posiciones;
-const VARIANTES = ['cf', 'cc', 'mf', 'mc'] as const;
+const VARIANTES_F = ['fcf', 'fcc', 'fmf', 'fmc'] as const;
+const VARIANTES_M = ['mcf', 'mcc', 'mmf', 'mmc'] as const;
+const VARIANTES_TODAS = [...VARIANTES_F, ...VARIANTES_M] as const;
 
 export function JuegoApp(props: Props) {
   const [vista, setVista] = useState<'sala' | 'consola'>('sala');
@@ -58,7 +60,7 @@ export function JuegoApp(props: Props) {
       .filter(m => m.nombre !== props.miNombre)
       .map((m, i) => ({
         nombre: m.nombre,
-        variante: VARIANTES[i % VARIANTES.length],
+        variante: VARIANTES_TODAS[i % VARIANTES_TODAS.length],
         posKey: `companero-${i}` as keyof typeof POS,
       }));
   }, [props.miembros, props.miNombre]);

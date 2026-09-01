@@ -38,15 +38,34 @@ export const PALETA: Record<string, RGBA> = {
   D3: [0x20, 0x25, 0x2C, 255],  // neutral-800
   BK: [0x10, 0x14, 0x1A, 255],  // neutral-900
 
-  // Skin tones (corporate, understated)
+  // Skin tones (corporate, understated) — 3 base tones
   S1: [0xE8, 0xC8, 0xA0, 255],  // light skin
   S2: [0xC4, 0x9A, 0x6C, 255],  // medium skin
-  S3: [0xD6, 0xB0, 0x86, 255],  // light-medium skin shadow
+  S3: [0xD6, 0xB0, 0x86, 255],  // light skin shadow
   S4: [0x9E, 0x76, 0x50, 255],  // medium skin shadow
+  S5: [0x8A, 0x5C, 0x3A, 255],  // dark skin
+  S6: [0x6E, 0x44, 0x2A, 255],  // dark skin shadow
+
+  // Hair tones
+  H1: [0x5A, 0x3A, 0x1E, 255],  // brown hair
+  H2: [0x2A, 0x1A, 0x0E, 255],  // dark brown hair
+
+  // Scene-specific — wood
+  W1: [0x8B, 0x6B, 0x47, 255],  // wood light
+  W2: [0x6B, 0x4E, 0x32, 255],  // wood mid
+  W3: [0x4A, 0x35, 0x22, 255],  // wood dark
+
+  // Scene-specific — glass / afternoon light
+  GL: [0xAA, 0xCC, 0xE8, 255],  // glass highlight
+  AF: [0xFF, 0xE8, 0xC0, 255],  // afternoon glow
+
+  // Pear logo
+  PR: [0xC8, 0xD8, 0xC0, 255],  // pear body (muted green-cream)
+  PL: [0x5A, 0x7A, 0x3A, 255],  // pear leaf
 
   // Status accents
   OK: [0x1E, 0x7A, 0x46, 255],  // success
-  WR: [0xA9, 0x62, 0x06, 255],  // warning
+  WR: [0x8B, 0x51, 0x06, 255],  // warning (matches tokens.css)
   ER: [0xB3, 0x26, 0x1E, 255],  // danger
 };
 
