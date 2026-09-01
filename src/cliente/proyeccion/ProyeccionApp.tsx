@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { socket } from '../lib/socket';
-import type { EstadoReloj, EquipoTablero, ResultadoPuntuacion } from '../lib/tipos';
-import { NOMBRES_FASES, NOMBRES_FINALES } from '../lib/tipos';
+import type { EstadoReloj, EquipoTablero } from '../lib/tipos';
+import { NOMBRES_FASES } from '../lib/tipos';
+import { PodioReveal } from './PodioReveal';
 
 interface Props {
   codigoSala: string;
@@ -338,17 +339,28 @@ export function ProyeccionApp({ codigoSala, onCerrarSesion }: Props) {
       {/* Trimestres - live scoreboard */}
       {faseProyeccion === 'trimestres' && (
         <div className="proy__marcador">
+          <div className="proy__marcador-header">
+            <span className="proy__marcador-hcol" />
+            <span className="proy__marcador-hcol">Equipo</span>
+            <span className="proy__marcador-hcol">T</span>
+            <span className="proy__marcador-hcol">Captura</span>
+            <span className="proy__marcador-hcol">Quejas</span>
+            <span className="proy__marcador-hcol">Conv.</span>
+            <span className="proy__marcador-hcol">Errores</span>
+            <span className="proy__marcador-hcol">Interv.</span>
+            <span className="proy__marcador-hcol">Pres.</span>
+          </div>
           <div className="proy__marcador-grid">
             {equiposOrdenados.map((eq, idx) => (
               <div key={eq.nombre} className="proy__marcador-fila">
                 <span className="proy__marcador-pos">{idx + 1}</span>
                 <span className="proy__marcador-nombre">{eq.nombre}</span>
                 <span className="proy__marcador-trim">T{eq.trimestre}</span>
-                <div className="proy__marcador-kpis">
-                  <span title="Ventana de captura">{eq.kpis.ventanaCapturaMediana.toFixed(1)}d</span>
-                  <span title="Quejas">{eq.kpis.quejas}q</span>
-                  <span title="Conversion">{eq.kpis.conversion.toFixed(0)}%</span>
-                </div>
+                <span className="proy__marcador-kpi">{eq.kpis.ventanaCapturaMediana.toFixed(1)}d</span>
+                <span className="proy__marcador-kpi">{eq.kpis.quejas}</span>
+                <span className="proy__marcador-kpi">{eq.kpis.conversion.toFixed(0)}%</span>
+                <span className="proy__marcador-kpi">{eq.kpis.erroresTotales}</span>
+                <span className="proy__marcador-kpi">{eq.intervenciones.length}</span>
                 <span className="proy__marcador-pres">${eq.presupuesto}</span>
               </div>
             ))}
@@ -356,34 +368,9 @@ export function ProyeccionApp({ codigoSala, onCerrarSesion }: Props) {
         </div>
       )}
 
-      {/* Consejo + Podio */}
+      {/* Consejo + Podio — animated reveal */}
       {(faseProyeccion === 'consejo' || faseProyeccion === 'finalizado') && (
-        <div className="proy__podio">
-          <h2 className="proy__podio-titulo">
-            {faseProyeccion === 'consejo' ? 'El Consejo' : 'Resultados Finales'}
-          </h2>
-          <div className="proy__podio-grid">
-            {equiposOrdenados.map((eq, idx) => (
-              <div
-                key={eq.nombre}
-                className={`proy__podio-equipo ${eq.resultado ? 'proy__podio-equipo--terminado' : ''} ${idx < 3 && eq.resultado ? 'proy__podio-equipo--top' : ''}`}
-              >
-                <span className="proy__podio-pos">
-                  {eq.resultado ? `#${idx + 1}` : '-'}
-                </span>
-                <span className="proy__podio-nombre">{eq.nombre}</span>
-                {eq.resultado && (
-                  <>
-                    <span className="proy__podio-pts">{eq.resultado.total} pts</span>
-                    <span className={`proy__podio-final proy__podio-final--${eq.resultado.final.toLowerCase()}`}>
-                      {NOMBRES_FINALES[eq.resultado.final]}
-                    </span>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <PodioReveal equipos={equipos} />
       )}
 
       {/* Persistent clock bar */}
