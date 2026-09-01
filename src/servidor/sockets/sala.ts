@@ -237,6 +237,61 @@ export function configurarSockets(
       ack?.({ ok: true, codigoSala: sesion.codigoSala });
     });
 
+    socket.on('proyeccion:unirse', (payload, ack) => {
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesion no encontrada' });
+      socket.join(`sala:${sesion.codigoSala}`);
+
+      const equipos = Array.from(sesion.equipos.values()).map(e => ({
+        nombre: e.nombre,
+        trimestre: e.estadoMotor.trimestre,
+        presupuesto: e.estadoMotor.presupuesto,
+        creditos: e.estadoMotor.creditosIndagacion,
+        intervenciones: e.estadoMotor.intervenciones.map(i => i.nombre),
+        kpis: e.estadoMotor.kpis,
+        resultado: e.resultado,
+        miembros: e.miembros,
+      }));
+
+      ack?.({
+        reloj: obtenerEstadoReloj(sesion.reloj, config),
+        equipos,
+        escena: estadoEscena(sesion.codigoSala),
+        totalParticipantes: Array.from(sesion.equipos.values())
+          .reduce((sum, eq) => sum + eq.miembros.length, 0),
+      });
+    });
+
+    socket.on('proyeccion:tablero', (payload, ack) => {
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesion no encontrada' });
+
+      const equipos = Array.from(sesion.equipos.values()).map(e => ({
+        nombre: e.nombre,
+        trimestre: e.estadoMotor.trimestre,
+        presupuesto: e.estadoMotor.presupuesto,
+        creditos: e.estadoMotor.creditosIndagacion,
+        intervenciones: e.estadoMotor.intervenciones.map(i => i.nombre),
+        kpis: e.estadoMotor.kpis,
+        resultado: e.resultado,
+        miembros: e.miembros,
+      }));
+
+      ack?.({
+        reloj: obtenerEstadoReloj(sesion.reloj, config),
+        equipos,
+        escena: estadoEscena(sesion.codigoSala),
+        totalParticipantes: Array.from(sesion.equipos.values())
+          .reduce((sum, eq) => sum + eq.miembros.length, 0),
+      });
+    });
+
     socket.on('profesor:iniciar_reloj', (payload, ack) => {
       if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
         return ack?.({ error: 'No autorizado' });

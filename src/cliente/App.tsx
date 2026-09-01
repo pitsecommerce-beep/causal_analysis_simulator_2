@@ -37,6 +37,7 @@ const ConsolaApp = lazy(() => import('./consola/ConsolaApp').then(m => ({ defaul
 const JuegoApp = lazy(() => import('./juego/JuegoApp').then(m => ({ default: m.JuegoApp })));
 const ProfesorApp = lazy(() => import('./profesor/ProfesorApp').then(m => ({ default: m.ProfesorApp })));
 const AdminApp = lazy(() => import('./admin/AdminApp').then(m => ({ default: m.AdminApp })));
+const ProyeccionApp = lazy(() => import('./proyeccion/ProyeccionApp').then(m => ({ default: m.ProyeccionApp })));
 
 interface DatosSesion {
   estadoMotor: EstadoMotorCliente;
@@ -58,7 +59,7 @@ interface DatosRol {
   codigoPersonal?: string;
 }
 
-type Pantalla = 'cargando' | 'unirse' | 'reconectando' | 'escena' | 'juego' | 'consola' | 'profesor' | 'admin';
+type Pantalla = 'cargando' | 'unirse' | 'reconectando' | 'escena' | 'juego' | 'consola' | 'profesor' | 'admin' | 'proyeccion';
 
 export function App() {
   const [sesion, setSesion] = useState<DatosSesion | null>(null);
@@ -69,6 +70,25 @@ export function App() {
 
   useEffect(() => {
     const path = window.location.pathname;
+
+    if (path === '/proyeccion') {
+      const params = new URLSearchParams(window.location.search);
+      const sala = params.get('sala');
+      fetch('/api/auth/yo')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.tipo === 'superadmin' || data?.tipo === 'profesor') {
+            if (sala) setProfesorCodigoSala(sala);
+            socket.connect();
+            setPantalla('proyeccion');
+          } else {
+            setPantalla('unirse');
+          }
+        })
+        .catch(() => setPantalla('unirse'));
+      return;
+    }
+
     if (path === '/admin') {
       fetch('/api/auth/yo')
         .then(r => r.ok ? r.json() : null)
@@ -233,6 +253,23 @@ export function App() {
         <AdminApp onCerrarSesion={cerrarSesionAuth} />
       </Suspense>
     );
+  }
+
+  if (pantalla === 'proyeccion' && profesorCodigoSala) {
+    return (
+      <Suspense fallback={cargando}>
+        <ProyeccionApp codigoSala={profesorCodigoSala} onCerrarSesion={cerrarSesionAuth} />
+      </Suspense>
+    );
+  }
+
+  if (pantalla === 'proyeccion') {
+    socket.connect();
+    socket.emit('profesor:crear_sesion', {}, (resp: any) => {
+      if (resp?.error) return;
+      setProfesorCodigoSala(resp.codigoSala);
+    });
+    return cargando;
   }
 
   if (pantalla === 'profesor' && profesorCodigoSala) {

@@ -210,6 +210,14 @@ export function ProfesorApp({ codigoSala, onCerrarSesion }: Props) {
         <button className="profesor__btn profesor__btn--revelar" onClick={revelarDAG} disabled={!esConsejo}>
           Revelar DAG
         </button>
+        <a
+          className="profesor__btn profesor__btn--proyectar"
+          href={`/proyeccion?sala=${codigoSala}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Proyectar
+        </a>
         <span className="profesor__info-voz">
           Voz: {escenaEstado || 'desconocido'}
         </span>
