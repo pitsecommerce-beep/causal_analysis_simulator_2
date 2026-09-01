@@ -3,6 +3,7 @@ import { CanvasSala, type SpriteEscena } from '../escena/CanvasSala';
 import { ConsolaApp } from '../consola/ConsolaApp';
 import { ModalRol } from './ModalRol';
 import { TransicionFase } from './TransicionFase';
+import { PizarronEquipo } from './PizarronEquipo';
 import { useAmbiente } from './useAmbiente';
 import { CAMARA } from '../escena/camara';
 import { socket } from '../lib/socket';
@@ -155,6 +156,12 @@ export function JuegoApp(props: Props) {
             })}
           </div>
         </div>
+
+        <PizarronEquipo
+          estadoInicial={props.estadoInicial}
+          miRol={props.miRol}
+          miembros={props.miembros}
+        />
       </div>
 
       <div
