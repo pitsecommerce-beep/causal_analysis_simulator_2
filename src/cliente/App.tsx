@@ -8,7 +8,8 @@ const STORAGE_KEY = 'etfbank_sesion';
 
 interface SesionGuardada {
   codigoSala: string;
-  codigoPersonal: string;
+  email: string;
+  codigoPersonal?: string;
   nombreEquipo: string;
   miNombre: string;
   miRol: RolEquipo;
@@ -23,7 +24,7 @@ function leerSesion(): SesionGuardada | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const datos = JSON.parse(raw);
-    if (datos?.codigoSala && datos?.codigoPersonal) return datos;
+    if (datos?.codigoSala && (datos?.email || datos?.codigoPersonal)) return datos;
   } catch (_) {}
   return null;
 }
@@ -67,6 +68,7 @@ export function App() {
   const [datosRol, setDatosRol] = useState<DatosRol | null>(null);
   const [profesorCodigoSala, setProfesorCodigoSala] = useState<string | null>(null);
   const [errorReconexion, setErrorReconexion] = useState('');
+  const [emailParticipante, setEmailParticipante] = useState('');
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -126,16 +128,25 @@ export function App() {
     if (!sesionGuardada || pantalla !== 'reconectando') return;
     if (!socket.connected) socket.connect();
 
-    socket.emit('equipo:reconectar', {
-      codigoSala: sesionGuardada.codigoSala,
-      codigoPersonal: sesionGuardada.codigoPersonal,
-    }, (resp: any) => {
+    const evento = sesionGuardada.email ? 'equipo:reconectar_email' : 'equipo:reconectar';
+    const payload = sesionGuardada.email
+      ? { codigoSala: sesionGuardada.codigoSala, email: sesionGuardada.email }
+      : { codigoSala: sesionGuardada.codigoSala, codigoPersonal: sesionGuardada.codigoPersonal };
+
+    socket.emit(evento, payload, (resp: any) => {
       if (resp?.error) {
         borrarSesion();
         setErrorReconexion(resp.error);
         setPantalla('unirse');
         return;
       }
+      guardarSesion({
+        codigoSala: sesionGuardada.codigoSala,
+        email: sesionGuardada.email ?? resp.email ?? '',
+        nombreEquipo: resp.nombreEquipo,
+        miNombre: resp.miNombre,
+        miRol: resp.miRol,
+      });
       setSesion({
         estadoMotor: resp.estadoMotor,
         reloj: resp.reloj,
@@ -172,16 +183,16 @@ export function App() {
     setPantalla('unirse');
   }
 
-  function onReconectar(codigoSala: string, codigoPersonal: string) {
+  function onReconectar(codigoSala: string, email: string) {
     if (!socket.connected) socket.connect();
-    socket.emit('equipo:reconectar', { codigoSala, codigoPersonal }, (resp: any) => {
+    socket.emit('equipo:reconectar_email', { codigoSala, email: email.toLowerCase().trim() }, (resp: any) => {
       if (resp?.error) {
         setErrorReconexion(resp.error);
         return;
       }
       guardarSesion({
         codigoSala,
-        codigoPersonal: resp.codigoPersonal,
+        email: email.toLowerCase().trim(),
         nombreEquipo: resp.nombreEquipo,
         miNombre: resp.miNombre,
         miRol: resp.miRol,
@@ -208,8 +219,9 @@ export function App() {
     });
   }
 
-  function onUnido(datos: DatosSesion) {
+  function onUnido(datos: DatosSesion & { email?: string }) {
     setSesion(datos);
+    if (datos.email) setEmailParticipante(datos.email);
     const faseActual = datos.reloj.fase;
     if (faseActual === 'sala_juntas' || faseActual === 'voz_cliente' || faseActual === 'espera') {
       setPantalla('escena');
@@ -321,10 +333,10 @@ export function App() {
           tamanoEquipo={sesion.tamanoEquipo}
           onTerminar={(miembros, miRol, miNombre, codigoPersonal) => {
             setDatosRol({ miembros, miRol, miNombre, codigoPersonal });
-            if (codigoPersonal) {
+            if (emailParticipante) {
               guardarSesion({
                 codigoSala: sesion.codigoSala,
-                codigoPersonal,
+                email: emailParticipante,
                 nombreEquipo: sesion.nombreEquipo,
                 miNombre,
                 miRol,

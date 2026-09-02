@@ -118,6 +118,12 @@ input, select, textarea, button {
   padding: var(--ipd-space-1) 0;
 }
 .unirse__link:hover { color: var(--ipd-text-primary); }
+.unirse__ayuda {
+  font-size: var(--ipd-size-xs);
+  color: var(--ipd-text-secondary);
+  text-align: center;
+  margin: var(--ipd-space-2) 0;
+}
 
 /* — Consola principal — */
 .consola {
