@@ -1,0 +1,79 @@
+/* ==========================================================================
+   IPADE Business School · Design System
+   paleta-escena.css — 32-color pixel art palette for the boardroom scene
+   --------------------------------------------------------------------------
+   Derived from the navy + gold brand palette in tokens.css.
+   Each ramp has 5 tones: highlight, light, mid, dark, deepest.
+   Used by the sprite generator (herramientas/sprites/paleta.ts) and by
+   any canvas-adjacent CSS that needs to match the scene.
+   ========================================================================== */
+
+:root {
+  /* ── Skin tones ── */
+  /* Ramp 1: light complexion */
+  --ipd-scene-skin-1-hi:  #F0D8B8;
+  --ipd-scene-skin-1-lt:  #E8C8A0;
+  --ipd-scene-skin-1-md:  #D6B086;
+  --ipd-scene-skin-1-dk:  #B89060;
+  --ipd-scene-skin-1-dp:  #9A7048;
+
+  /* Ramp 2: medium complexion */
+  --ipd-scene-skin-2-hi:  #D8AE88;
+  --ipd-scene-skin-2-lt:  #C49A6C;
+  --ipd-scene-skin-2-md:  #9E7650;
+  --ipd-scene-skin-2-dk:  #8A5C3A;
+  --ipd-scene-skin-2-dp:  #6E442A;
+
+  /* Ramp 3: dark complexion */
+  --ipd-scene-skin-3-hi:  #A07050;
+  --ipd-scene-skin-3-lt:  #8A5C3A;
+  --ipd-scene-skin-3-md:  #6E442A;
+  --ipd-scene-skin-3-dk:  #54321E;
+  --ipd-scene-skin-3-dp:  #3E2414;
+
+  /* ── Formal clothing (navy-derived) ── */
+  --ipd-scene-ropa-hi:  #14487A;
+  --ipd-scene-ropa-lt:  #00305B;
+  --ipd-scene-ropa-md:  #00284E;
+  --ipd-scene-ropa-dk:  #001F3D;
+  --ipd-scene-ropa-dp:  #00152B;
+
+  /* ── Wood (table, baseboard) ── */
+  --ipd-scene-madera-hi:  #A88460;
+  --ipd-scene-madera-lt:  #8B6B47;
+  --ipd-scene-madera-md:  #6B4E32;
+  --ipd-scene-madera-dk:  #4A3522;
+  --ipd-scene-madera-dp:  #332414;
+
+  /* ── Wall (warm neutral) ── */
+  --ipd-scene-pared-hi:  #F0F0E8;
+  --ipd-scene-pared-lt:  #E0DDD0;
+  --ipd-scene-pared-md:  #C8C4B8;
+  --ipd-scene-pared-dk:  #A8A498;
+  --ipd-scene-pared-dp:  #888478;
+
+  /* ── Glass / afternoon light ── */
+  --ipd-scene-cristal-hi:  #CCE4F8;
+  --ipd-scene-cristal-lt:  #AACCE8;
+  --ipd-scene-cristal-md:  #88B0D0;
+  --ipd-scene-cristal-dk:  #6894B8;
+  --ipd-scene-cristal-dp:  #4878A0;
+
+  --ipd-scene-luz-hi:  #FFF0D0;
+  --ipd-scene-luz-lt:  #FFE8C0;
+  --ipd-scene-luz-md:  #FFE0A8;
+  --ipd-scene-luz-dk:  #EED090;
+  --ipd-scene-luz-dp:  #D8C080;
+
+  /* ── Gold accents (from brand gold) ── */
+  --ipd-scene-oro-hi:  #F3EDDC;
+  --ipd-scene-oro-lt:  #D9BF86;
+  --ipd-scene-oro-md:  #B08D3F;
+  --ipd-scene-oro-dk:  #8A6A24;
+  --ipd-scene-oro-dp:  #6B5219;
+
+  /* ── Hair ── */
+  --ipd-scene-pelo-castano: #5A3A1E;
+  --ipd-scene-pelo-oscuro:  #2A1A0E;
+  --ipd-scene-pelo-negro:   #10141A;
+}

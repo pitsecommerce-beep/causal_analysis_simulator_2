@@ -12,6 +12,7 @@ import {
 import * as db from '../db/consultas.js';
 import { precalentarEscena, estadoEscena, obtenerEscena, limpiarCache } from '../voz/escena.js';
 import { generarPreguntasConsejo, type PreguntaConsejo } from '../voz/anthropic.js';
+import { verificarAuth, parsearCookies, NOMBRE_COOKIE, type InfoAuth } from '../auth.js';
 
 const ROLES_VALIDOS: RolEquipo[] = ['patrocinador', 'lider', 'analista', 'voz_cliente'];
 
@@ -74,8 +75,11 @@ let dbDisponible = false;
 const CHARS_SIN_AMBIGUOS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function generarCodigoSala(): string {
-  const numero = Math.floor(Math.random() * 9000 + 1000);
-  return `IPADE-${numero}`;
+  let codigo = '';
+  for (let i = 0; i < 6; i++) {
+    codigo += CHARS_SIN_AMBIGUOS[Math.floor(Math.random() * CHARS_SIN_AMBIGUOS.length)];
+  }
+  return codigo;
 }
 
 function generarCodigoPersonal(sesion: SesionActiva): string {
@@ -93,10 +97,12 @@ function generarCodigoPersonal(sesion: SesionActiva): string {
   return codigo;
 }
 
-function validarClaveProfesor(clave: string): boolean {
-  const claveReal = process.env.CLAVE_PROFESOR;
-  if (!claveReal) return false;
-  return clave === claveReal;
+function obtenerAuthSocket(socket: Socket): InfoAuth | null {
+  return (socket as any).__auth ?? null;
+}
+
+function esProfesorOAdmin(auth: InfoAuth | null): boolean {
+  return auth !== null && (auth.tipo === 'profesor' || auth.tipo === 'superadmin');
 }
 
 const FASES_TRIMESTRE: Record<string, number> = {
@@ -180,10 +186,18 @@ export function configurarSockets(
     equipo.socketsActivos.set(participante, nuevoSocket.id);
   }
 
-  io.on('connection', (socket: Socket) => {
-    socket.on('profesor:crear_sesion', async (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+  io.on('connection', async (socket: Socket) => {
+    const cookies = parsearCookies(socket.handshake.headers.cookie);
+    const authToken = cookies[NOMBRE_COOKIE];
+    if (authToken) {
+      const auth = await verificarAuth(authToken, dbDisponible);
+      if (auth) (socket as any).__auth = auth;
+    }
+
+    socket.on('profesor:crear_sesion', async (_payload, ack) => {
+      const auth = obtenerAuthSocket(socket);
+      if (!esProfesorOAdmin(auth)) {
+        return ack?.({ error: 'No autorizado — inicia sesion primero' });
       }
       const codigo = generarCodigoSala();
       const sesion: SesionActiva = {
@@ -195,7 +209,7 @@ export function configurarSockets(
       };
       if (dbDisponible) {
         try {
-          const row = await db.crearSesion(codigo);
+          const row = await db.crearSesion(codigo, undefined, auth?.profesorId);
           sesion.dbId = row.id;
         } catch (_) { /* sin persistencia */ }
       }
@@ -212,9 +226,75 @@ export function configurarSockets(
       ack?.({ codigoSala: codigo });
     });
 
+    socket.on('profesor:unirse_sala', (payload, ack) => {
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesion no encontrada' });
+      socket.join(`sala:${sesion.codigoSala}`);
+      socket.join(`profesor:${sesion.codigoSala}`);
+      ack?.({ ok: true, codigoSala: sesion.codigoSala });
+    });
+
+    socket.on('proyeccion:unirse', (payload, ack) => {
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesion no encontrada' });
+      socket.join(`sala:${sesion.codigoSala}`);
+
+      const equipos = Array.from(sesion.equipos.values()).map(e => ({
+        nombre: e.nombre,
+        trimestre: e.estadoMotor.trimestre,
+        presupuesto: e.estadoMotor.presupuesto,
+        creditos: e.estadoMotor.creditosIndagacion,
+        intervenciones: e.estadoMotor.intervenciones.map(i => i.nombre),
+        kpis: e.estadoMotor.kpis,
+        resultado: e.resultado,
+        miembros: e.miembros,
+      }));
+
+      ack?.({
+        reloj: obtenerEstadoReloj(sesion.reloj, config),
+        equipos,
+        escena: estadoEscena(sesion.codigoSala),
+        totalParticipantes: Array.from(sesion.equipos.values())
+          .reduce((sum, eq) => sum + eq.miembros.length, 0),
+      });
+    });
+
+    socket.on('proyeccion:tablero', (payload, ack) => {
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
+      }
+      const sesion = sesiones.get(payload?.codigoSala);
+      if (!sesion) return ack?.({ error: 'Sesion no encontrada' });
+
+      const equipos = Array.from(sesion.equipos.values()).map(e => ({
+        nombre: e.nombre,
+        trimestre: e.estadoMotor.trimestre,
+        presupuesto: e.estadoMotor.presupuesto,
+        creditos: e.estadoMotor.creditosIndagacion,
+        intervenciones: e.estadoMotor.intervenciones.map(i => i.nombre),
+        kpis: e.estadoMotor.kpis,
+        resultado: e.resultado,
+        miembros: e.miembros,
+      }));
+
+      ack?.({
+        reloj: obtenerEstadoReloj(sesion.reloj, config),
+        equipos,
+        escena: estadoEscena(sesion.codigoSala),
+        totalParticipantes: Array.from(sesion.equipos.values())
+          .reduce((sum, eq) => sum + eq.miembros.length, 0),
+      });
+    });
+
     socket.on('profesor:iniciar_reloj', (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
       }
       const sesion = sesiones.get(payload?.codigoSala);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
@@ -228,8 +308,8 @@ export function configurarSockets(
     });
 
     socket.on('profesor:pausar_reloj', (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
       }
       const sesion = sesiones.get(payload?.codigoSala);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
@@ -241,8 +321,8 @@ export function configurarSockets(
     });
 
     socket.on('profesor:extender_fase', (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
       }
       const sesion = sesiones.get(payload?.codigoSala);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
@@ -255,8 +335,8 @@ export function configurarSockets(
     });
 
     socket.on('profesor:estado', (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
       }
       const sesion = sesiones.get(payload?.codigoSala);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
@@ -278,8 +358,8 @@ export function configurarSockets(
     });
 
     socket.on('profesor:tablero', (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
       }
       const sesion = sesiones.get(payload?.codigoSala);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
@@ -304,8 +384,8 @@ export function configurarSockets(
     });
 
     socket.on('profesor:revelar_dag', (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
       }
       const sesion = sesiones.get(payload?.codigoSala);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
@@ -321,8 +401,8 @@ export function configurarSockets(
     });
 
     socket.on('profesor:configurar_equipos', async (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
       }
       const sesion = sesiones.get(payload?.codigoSala);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
@@ -387,8 +467,8 @@ export function configurarSockets(
     });
 
     socket.on('profesor:obtener_asignaciones', (payload, ack) => {
-      if (!validarClaveProfesor(payload?.clave)) {
-        return ack?.({ error: 'Clave de profesor incorrecta' });
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
       }
       const sesion = sesiones.get(payload?.codigoSala);
       if (!sesion) return ack?.({ error: 'Sesión no encontrada' });

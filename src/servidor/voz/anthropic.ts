@@ -12,7 +12,9 @@ function obtenerCliente(): Anthropic | null {
 }
 
 export interface ParlamentoCliente {
+  commentId: string;
   nombre: string;
+  apellido: string;
   estado: string;
   sucursal: number;
   genero: string;
@@ -83,13 +85,66 @@ export function sortearComentarios(comentarios: ComentarioCliente[], semilla: nu
   return seleccion;
 }
 
-const NOMBRES_F = ['María', 'Guadalupe', 'Ana', 'Patricia', 'Laura', 'Carmen', 'Rosa', 'Claudia'];
-const NOMBRES_M = ['Carlos', 'Jorge', 'Miguel', 'Roberto', 'Fernando', 'Pedro', 'Luis', 'Antonio'];
+const NOMBRES_F = [
+  'María', 'Guadalupe', 'Ana', 'Patricia', 'Laura', 'Carmen', 'Rosa', 'Claudia',
+  'Sofía', 'Valentina', 'Daniela', 'Fernanda', 'Alejandra', 'Gabriela', 'Mariana', 'Lucía',
+  'Regina', 'Jimena', 'Camila', 'Renata', 'Isabella', 'Andrea', 'Natalia', 'Paulina',
+];
+const NOMBRES_M = [
+  'Carlos', 'Jorge', 'Miguel', 'Roberto', 'Fernando', 'Pedro', 'Luis', 'Antonio',
+  'Andrés', 'Diego', 'Santiago', 'Sebastián', 'Emilio', 'Alejandro', 'Ricardo', 'Javier',
+  'Eduardo', 'Héctor', 'Rodrigo', 'Tomás', 'Arturo', 'Martín', 'Rafael', 'Iván',
+];
+const APELLIDOS = [
+  'Villalobos', 'Mendoza', 'Castillo', 'Herrera', 'Ríos', 'Paredes', 'Salazar', 'Navarro',
+  'Delgado', 'Guzmán', 'Estrada', 'Coronado', 'Fuentes', 'Aguilar', 'Cervantes', 'Montes',
+  'Tapia', 'Rangel', 'Sandoval', 'Ibarra', 'Valdez', 'Carrillo', 'Maldonado', 'Reyes',
+];
 
-export function nombreFicticio(commentId: string, genero: string, indice: number): string {
-  const numerico = parseInt(commentId.replace(/\D/g, ''), 10) || indice;
-  const nombres = genero === 'F' ? NOMBRES_F : NOMBRES_M;
-  return nombres[numerico % nombres.length];
+export interface IdentidadAsignada {
+  nombre: string;
+  apellido: string;
+}
+
+export function asignarNombres(generos: string[], semilla: number): IdentidadAsignada[] {
+  let rng = semilla;
+  function siguiente(): number {
+    rng = (rng * 1664525 + 1013904223) & 0x7fffffff;
+    return rng;
+  }
+
+  const nombresUsados = new Set<string>();
+  const apellidosUsados = new Set<string>();
+  const resultado: IdentidadAsignada[] = [];
+
+  for (let i = 0; i < generos.length; i++) {
+    const lista = generos[i] === 'F' ? NOMBRES_F : NOMBRES_M;
+    const inicio = siguiente() % lista.length;
+    let nombre = lista[inicio];
+    for (let j = 0; j < lista.length; j++) {
+      const candidato = lista[(inicio + j) % lista.length];
+      if (!nombresUsados.has(candidato)) {
+        nombre = candidato;
+        break;
+      }
+    }
+    nombresUsados.add(nombre);
+
+    const inicioAp = siguiente() % APELLIDOS.length;
+    let apellido = APELLIDOS[inicioAp];
+    for (let j = 0; j < APELLIDOS.length; j++) {
+      const candidato = APELLIDOS[(inicioAp + j) % APELLIDOS.length];
+      if (!apellidosUsados.has(candidato)) {
+        apellido = candidato;
+        break;
+      }
+    }
+    apellidosUsados.add(apellido);
+
+    resultado.push({ nombre, apellido });
+  }
+
+  return resultado;
 }
 
 function generoDesdeBase(sol: Solicitud | undefined): string {
@@ -107,20 +162,25 @@ export function generarParlamentosDirectos(
   const seleccionados = sortearComentarios(comentarios, semilla);
   const indiceSolicitud = new Map(solicitudes.map(s => [s.id, s]));
 
-  return seleccionados.map((com, i) => {
+  const generos = seleccionados.map(com => {
     const sol = indiceSolicitud.get(com.solicitudId);
-    const genero = generoDesdeBase(sol);
-    return {
-      nombre: nombreFicticio(com.id, genero, i),
-      estado: com.estado,
-      sucursal: com.sucursal,
-      genero,
-      intentos: com.intentos,
-      texto: com.comentario,
-      fuente: 'directo' as const,
-      tiempoMs: 0,
-    };
+    return generoDesdeBase(sol);
   });
+
+  const identidades = asignarNombres(generos, semilla);
+
+  return seleccionados.map((com, i) => ({
+    commentId: com.id,
+    nombre: `${identidades[i].nombre} ${identidades[i].apellido}`,
+    apellido: identidades[i].apellido,
+    estado: com.estado,
+    sucursal: com.sucursal,
+    genero: generos[i],
+    intentos: com.intentos,
+    texto: com.comentario,
+    fuente: 'directo' as const,
+    tiempoMs: 0,
+  }));
 }
 
 export interface PreguntaConsejo {

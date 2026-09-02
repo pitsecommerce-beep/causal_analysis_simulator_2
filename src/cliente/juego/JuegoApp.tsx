@@ -3,7 +3,9 @@ import { CanvasSala, type SpriteEscena } from '../escena/CanvasSala';
 import { ConsolaApp } from '../consola/ConsolaApp';
 import { ModalRol } from './ModalRol';
 import { TransicionFase } from './TransicionFase';
+import { PizarronEquipo } from './PizarronEquipo';
 import { useAmbiente } from './useAmbiente';
+import { useSonidos } from './useSonidos';
 import { CAMARA } from '../escena/camara';
 import { socket } from '../lib/socket';
 import { usePresencia, type EstadoPresencia } from '../lib/presencia';
@@ -33,7 +35,9 @@ interface Props {
 }
 
 const POS = CAMARA.posiciones;
-const VARIANTES = ['cf', 'cc', 'mf', 'mc'] as const;
+const VARIANTES_F = ['fcf', 'fcc', 'fmf', 'fmc'] as const;
+const VARIANTES_M = ['mcf', 'mcc', 'mmf', 'mmc'] as const;
+const VARIANTES_TODAS = [...VARIANTES_F, ...VARIANTES_M] as const;
 
 export function JuegoApp(props: Props) {
   const [vista, setVista] = useState<'sala' | 'consola'>('sala');
@@ -43,21 +47,23 @@ export function JuegoApp(props: Props) {
 
   const { pares: presenciaPares } = usePresencia(props.miNombre);
   const { activo: ambienteActivo, alternar: alternarAmbiente } = useAmbiente();
+  const { reproducir } = useSonidos();
 
   useEffect(() => {
     function onFaseCambio(data: { faseNueva: string }) {
       setTransicion(data.faseNueva);
+      reproducir('fase-cambio');
     }
     socket.on('reloj:fase_cambio', onFaseCambio);
     return () => { socket.off('reloj:fase_cambio', onFaseCambio); };
-  }, []);
+  }, [reproducir]);
 
   const companeros = useMemo(() => {
     return props.miembros
       .filter(m => m.nombre !== props.miNombre)
       .map((m, i) => ({
         nombre: m.nombre,
-        variante: VARIANTES[i % VARIANTES.length],
+        variante: VARIANTES_TODAS[i % VARIANTES_TODAS.length],
         posKey: `companero-${i}` as keyof typeof POS,
       }));
   }, [props.miembros, props.miNombre]);
@@ -75,20 +81,22 @@ export function JuegoApp(props: Props) {
   }, [companeros, presenciaPares]);
 
   const abrirConsola = useCallback(() => {
+    reproducir('laptop-abrir');
     setAnimando(true);
     setTimeout(() => {
       setVista('consola');
       setAnimando(false);
     }, 400);
-  }, []);
+  }, [reproducir]);
 
   const volverSala = useCallback(() => {
+    reproducir('laptop-cerrar');
     setAnimando(true);
     setTimeout(() => {
       setVista('sala');
       setAnimando(false);
     }, 300);
-  }, []);
+  }, [reproducir]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -155,6 +163,12 @@ export function JuegoApp(props: Props) {
             })}
           </div>
         </div>
+
+        <PizarronEquipo
+          estadoInicial={props.estadoInicial}
+          miRol={props.miRol}
+          miembros={props.miembros}
+        />
       </div>
 
       <div

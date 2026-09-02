@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { CanvasSala, type SpriteEscena } from './CanvasSala';
 import { MesaRedonda } from './MesaRedonda';
+import { BlocNotas } from './BlocNotas';
 import { CAMARA } from './camara';
 import { socket } from '../lib/socket';
 import type { RolEquipo, MiembroEquipo } from '../lib/tipos';
@@ -282,6 +283,8 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
             </span>
           )}
         </div>
+
+        <BlocNotas codigoSala={codigoSala} nombreEquipo={nombreEquipo} />
       </div>
     </div>
   );

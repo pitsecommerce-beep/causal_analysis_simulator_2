@@ -20,6 +20,9 @@ export interface SesionDB {
   reloj_iniciado_en: string | null;
   reloj_pausado_en: string | null;
   tiempo_pausado_total_ms: number;
+  profesor_id: number | null;
+  estado: string;
+  creada_en: string;
 }
 
 export interface EquipoDB {
@@ -39,13 +42,13 @@ export interface EntradaBitacora {
   creada_en: string;
 }
 
-export async function crearSesion(codigoSala: string, semilla: number = 20260825): Promise<SesionDB> {
+export async function crearSesion(codigoSala: string, semilla: number = 20260825, profesorId?: number | null): Promise<SesionDB> {
   const pool = obtenerPool();
   const { rows } = await pool.query(
-    `INSERT INTO sesiones (codigo_sala, semilla)
-     VALUES ($1, $2)
+    `INSERT INTO sesiones (codigo_sala, semilla, profesor_id)
+     VALUES ($1, $2, $3)
      RETURNING *`,
-    [codigoSala, semilla],
+    [codigoSala, semilla, profesorId ?? null],
   );
   return rows[0];
 }
@@ -345,6 +348,95 @@ export async function buscarPorCodigoPersonal(
     rol: rows[0].rol as RolEquipo,
   };
 }
+
+// --- Professor CRUD ---
+
+export interface ProfesorDB {
+  id: number;
+  correo: string;
+  hash_contrasena: string;
+  nombre: string;
+  activo: boolean;
+  debe_cambiar_contrasena: boolean;
+  creado_en: string;
+  ultimo_acceso: string | null;
+}
+
+export async function crearProfesor(
+  correo: string,
+  hashContrasena: string,
+  nombre: string,
+): Promise<ProfesorDB> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    `INSERT INTO profesores (correo, hash_contrasena, nombre)
+     VALUES ($1, $2, $3)
+     RETURNING *`,
+    [correo.toLowerCase().trim(), hashContrasena, nombre.trim()],
+  );
+  return rows[0];
+}
+
+export async function obtenerProfesorPorCorreo(correo: string): Promise<ProfesorDB | null> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    'SELECT * FROM profesores WHERE correo = $1',
+    [correo.toLowerCase().trim()],
+  );
+  return rows[0] ?? null;
+}
+
+export async function obtenerProfesorPorId(id: number): Promise<ProfesorDB | null> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    'SELECT * FROM profesores WHERE id = $1',
+    [id],
+  );
+  return rows[0] ?? null;
+}
+
+export async function listarProfesores(): Promise<Omit<ProfesorDB, 'hash_contrasena'>[]> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    'SELECT id, correo, nombre, activo, debe_cambiar_contrasena, creado_en, ultimo_acceso FROM profesores ORDER BY nombre',
+  );
+  return rows;
+}
+
+export async function actualizarProfesor(
+  id: number,
+  datos: { nombre?: string; activo?: boolean; hashContrasena?: string; debe_cambiar_contrasena?: boolean },
+): Promise<void> {
+  const pool = obtenerPool();
+  const campos: string[] = [];
+  const valores: unknown[] = [];
+  let idx = 1;
+
+  if (datos.nombre !== undefined) { campos.push(`nombre = $${idx++}`); valores.push(datos.nombre); }
+  if (datos.activo !== undefined) { campos.push(`activo = $${idx++}`); valores.push(datos.activo); }
+  if (datos.hashContrasena !== undefined) { campos.push(`hash_contrasena = $${idx++}`); valores.push(datos.hashContrasena); }
+  if (datos.debe_cambiar_contrasena !== undefined) { campos.push(`debe_cambiar_contrasena = $${idx++}`); valores.push(datos.debe_cambiar_contrasena); }
+
+  if (campos.length === 0) return;
+  valores.push(id);
+  await pool.query(`UPDATE profesores SET ${campos.join(', ')} WHERE id = $${idx}`, valores);
+}
+
+export async function actualizarUltimoAcceso(profesorId: number): Promise<void> {
+  const pool = obtenerPool();
+  await pool.query('UPDATE profesores SET ultimo_acceso = NOW() WHERE id = $1', [profesorId]);
+}
+
+export async function obtenerSesionesProfesor(profesorId: number): Promise<SesionDB[]> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    `SELECT * FROM sesiones WHERE profesor_id = $1 AND estado != 'archivada' ORDER BY creada_en DESC`,
+    [profesorId],
+  );
+  return rows;
+}
+
+// --- end professor CRUD ---
 
 export async function obtenerEquipoCompletoPorEmail(
   sesionId: number,

@@ -19,6 +19,7 @@ import { PanelComentarios } from '../juego/PanelComentarios';
 import { PanelObjetivos } from './PanelObjetivos';
 import { PanelPropuestas } from './PanelPropuestas';
 import { PanelSolicitudes } from './PanelSolicitudes';
+import { IndicadoresListo } from './IndicadoresListo';
 
 interface Props {
   estadoInicial: EstadoMotorCliente;
@@ -54,6 +55,8 @@ export function ConsolaApp({
   const [dagRevelado, setDagRevelado] = useState(false);
   const [propuestas, setPropuestas] = useState<PropuestaIntervencion[]>(propuestasIniciales ?? []);
   const [solicitudesAccion, setSolicitudesAccion] = useState<SolicitudAccion[]>(solicitudesAccionIniciales ?? []);
+  const [evidenciasCount, setEvidenciasCount] = useState(0);
+  const [diagnosticoEnviado, setDiagnosticoEnviado] = useState(false);
 
   const tieneRoles = roster.length > 0;
   const esAnalista = miRol === 'analista';
@@ -65,7 +68,7 @@ export function ConsolaApp({
 
   const mostrarConsultas = !tieneRoles || esAnalista;
   const mostrarIntervenciones = !tieneRoles || esPatrocinador;
-  const mostrarDiagnostico = (!tieneRoles || esLider) && esConsejoOFin;
+  const mostrarDiagnostico = (!tieneRoles || esLider) && (esTrimestre || esConsejoOFin);
 
   const tieneProPendiente = propuestas.some(p => p.estado === 'pendiente');
   const tieneProAprobada = propuestas.some(p => p.estado === 'aprobada');
@@ -326,7 +329,7 @@ export function ConsolaApp({
         )}
 
         {esVozCliente ? (
-          <PanelComentarios comentariosClientes={comentariosClientes} />
+          <PanelComentarios comentariosClientes={comentariosClientes} onEvidenciaCount={setEvidenciasCount} />
         ) : tieneRoles ? (
           <SeccionBloqueada
             titulo="Comentarios de clientes"
@@ -345,12 +348,13 @@ export function ConsolaApp({
           <FormDiagnostico
             onResultado={(r) => {
               setPuntuacion(r);
+              setDiagnosticoEnviado(true);
               setEstado(prev => ({ ...prev, trimestre: 3 }));
             }}
             onPreguntas={setPreguntas}
           />
         )}
-        {!mostrarDiagnostico && esConsejoOFin && tieneRoles && (
+        {!mostrarDiagnostico && (esTrimestre || esConsejoOFin) && tieneRoles && (
           <SeccionBloqueada
             titulo="Diagnóstico final"
             rolRequerido="lider"
@@ -390,6 +394,16 @@ export function ConsolaApp({
               </div>
             ))}
           </div>
+        )}
+        {esTrimestre && (
+          <IndicadoresListo
+            consultasRealizadas={bitacora.length}
+            evidenciasRegistradas={evidenciasCount}
+            propuestas={propuestas}
+            diagnosticoEnviado={diagnosticoEnviado}
+            miRol={miRol}
+            tieneRoles={tieneRoles}
+          />
         )}
       </aside>
 

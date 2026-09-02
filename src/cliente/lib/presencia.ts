@@ -7,7 +7,9 @@ export type EstadoPresencia =
   | 'consultando'
   | 'decidiendo'
   | 'esperando'
-  | 'desconectado';
+  | 'desconectado'
+  | 'publicando'
+  | 'proponiendo';
 
 export interface PresenciaPar {
   participante: string;

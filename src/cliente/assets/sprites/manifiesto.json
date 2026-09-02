@@ -1,190 +1,510 @@
 {
-  "companero-cf-idle": {
-    "archivo": "companero-cf-idle.png",
+  "companero-fcf-idle": {
+    "archivo": "companero-fcf-idle.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cf-tecleando": {
-    "archivo": "companero-cf-tecleando.png",
+  "companero-fcf-tecleando": {
+    "archivo": "companero-fcf-tecleando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cf-consultando": {
-    "archivo": "companero-cf-consultando.png",
+  "companero-fcf-consultando": {
+    "archivo": "companero-fcf-consultando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cf-decidiendo": {
-    "archivo": "companero-cf-decidiendo.png",
+  "companero-fcf-decidiendo": {
+    "archivo": "companero-fcf-decidiendo.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cf-esperando": {
-    "archivo": "companero-cf-esperando.png",
+  "companero-fcf-esperando": {
+    "archivo": "companero-fcf-esperando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cf-desconectado": {
-    "archivo": "companero-cf-desconectado.png",
+  "companero-fcf-desconectado": {
+    "archivo": "companero-fcf-desconectado.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cc-idle": {
-    "archivo": "companero-cc-idle.png",
+  "companero-fcf-publicando": {
+    "archivo": "companero-fcf-publicando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cc-tecleando": {
-    "archivo": "companero-cc-tecleando.png",
+  "companero-fcf-proponiendo": {
+    "archivo": "companero-fcf-proponiendo.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cc-consultando": {
-    "archivo": "companero-cc-consultando.png",
+  "companero-fcc-idle": {
+    "archivo": "companero-fcc-idle.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cc-decidiendo": {
-    "archivo": "companero-cc-decidiendo.png",
+  "companero-fcc-tecleando": {
+    "archivo": "companero-fcc-tecleando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cc-esperando": {
-    "archivo": "companero-cc-esperando.png",
+  "companero-fcc-consultando": {
+    "archivo": "companero-fcc-consultando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-cc-desconectado": {
-    "archivo": "companero-cc-desconectado.png",
+  "companero-fcc-decidiendo": {
+    "archivo": "companero-fcc-decidiendo.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mf-idle": {
-    "archivo": "companero-mf-idle.png",
+  "companero-fcc-esperando": {
+    "archivo": "companero-fcc-esperando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mf-tecleando": {
-    "archivo": "companero-mf-tecleando.png",
+  "companero-fcc-desconectado": {
+    "archivo": "companero-fcc-desconectado.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mf-consultando": {
-    "archivo": "companero-mf-consultando.png",
+  "companero-fcc-publicando": {
+    "archivo": "companero-fcc-publicando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mf-decidiendo": {
-    "archivo": "companero-mf-decidiendo.png",
+  "companero-fcc-proponiendo": {
+    "archivo": "companero-fcc-proponiendo.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mf-esperando": {
-    "archivo": "companero-mf-esperando.png",
+  "companero-fmf-idle": {
+    "archivo": "companero-fmf-idle.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mf-desconectado": {
-    "archivo": "companero-mf-desconectado.png",
+  "companero-fmf-tecleando": {
+    "archivo": "companero-fmf-tecleando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mc-idle": {
-    "archivo": "companero-mc-idle.png",
+  "companero-fmf-consultando": {
+    "archivo": "companero-fmf-consultando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mc-tecleando": {
-    "archivo": "companero-mc-tecleando.png",
+  "companero-fmf-decidiendo": {
+    "archivo": "companero-fmf-decidiendo.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mc-consultando": {
-    "archivo": "companero-mc-consultando.png",
+  "companero-fmf-esperando": {
+    "archivo": "companero-fmf-esperando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mc-decidiendo": {
-    "archivo": "companero-mc-decidiendo.png",
+  "companero-fmf-desconectado": {
+    "archivo": "companero-fmf-desconectado.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mc-esperando": {
-    "archivo": "companero-mc-esperando.png",
+  "companero-fmf-publicando": {
+    "archivo": "companero-fmf-publicando.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
     "anclaY": 160,
     "categoria": "companero"
   },
-  "companero-mc-desconectado": {
-    "archivo": "companero-mc-desconectado.png",
+  "companero-fmf-proponiendo": {
+    "archivo": "companero-fmf-proponiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-fmc-idle": {
+    "archivo": "companero-fmc-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-fmc-tecleando": {
+    "archivo": "companero-fmc-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-fmc-consultando": {
+    "archivo": "companero-fmc-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-fmc-decidiendo": {
+    "archivo": "companero-fmc-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-fmc-esperando": {
+    "archivo": "companero-fmc-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-fmc-desconectado": {
+    "archivo": "companero-fmc-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-fmc-publicando": {
+    "archivo": "companero-fmc-publicando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-fmc-proponiendo": {
+    "archivo": "companero-fmc-proponiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcf-idle": {
+    "archivo": "companero-mcf-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcf-tecleando": {
+    "archivo": "companero-mcf-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcf-consultando": {
+    "archivo": "companero-mcf-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcf-decidiendo": {
+    "archivo": "companero-mcf-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcf-esperando": {
+    "archivo": "companero-mcf-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcf-desconectado": {
+    "archivo": "companero-mcf-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcf-publicando": {
+    "archivo": "companero-mcf-publicando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcf-proponiendo": {
+    "archivo": "companero-mcf-proponiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcc-idle": {
+    "archivo": "companero-mcc-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcc-tecleando": {
+    "archivo": "companero-mcc-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcc-consultando": {
+    "archivo": "companero-mcc-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcc-decidiendo": {
+    "archivo": "companero-mcc-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcc-esperando": {
+    "archivo": "companero-mcc-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcc-desconectado": {
+    "archivo": "companero-mcc-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcc-publicando": {
+    "archivo": "companero-mcc-publicando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mcc-proponiendo": {
+    "archivo": "companero-mcc-proponiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmf-idle": {
+    "archivo": "companero-mmf-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmf-tecleando": {
+    "archivo": "companero-mmf-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmf-consultando": {
+    "archivo": "companero-mmf-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmf-decidiendo": {
+    "archivo": "companero-mmf-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmf-esperando": {
+    "archivo": "companero-mmf-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmf-desconectado": {
+    "archivo": "companero-mmf-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmf-publicando": {
+    "archivo": "companero-mmf-publicando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmf-proponiendo": {
+    "archivo": "companero-mmf-proponiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmc-idle": {
+    "archivo": "companero-mmc-idle.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmc-tecleando": {
+    "archivo": "companero-mmc-tecleando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmc-consultando": {
+    "archivo": "companero-mmc-consultando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmc-decidiendo": {
+    "archivo": "companero-mmc-decidiendo.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmc-esperando": {
+    "archivo": "companero-mmc-esperando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmc-desconectado": {
+    "archivo": "companero-mmc-desconectado.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmc-publicando": {
+    "archivo": "companero-mmc-publicando.png",
+    "ancho": 96,
+    "alto": 160,
+    "anclaX": 48,
+    "anclaY": 160,
+    "categoria": "companero"
+  },
+  "companero-mmc-proponiendo": {
+    "archivo": "companero-mmc-proponiendo.png",
     "ancho": 96,
     "alto": 160,
     "anclaX": 48,
@@ -239,6 +559,14 @@
     "anclaY": 16,
     "categoria": "objeto"
   },
+  "laptop-media": {
+    "archivo": "laptop-media.png",
+    "ancho": 64,
+    "alto": 40,
+    "anclaX": 32,
+    "anclaY": 20,
+    "categoria": "objeto"
+  },
   "laptop-abierta": {
     "archivo": "laptop-abierta.png",
     "ancho": 64,
@@ -277,6 +605,14 @@
     "alto": 32,
     "anclaX": 8,
     "anclaY": 16,
+    "categoria": "objeto"
+  },
+  "pizarron": {
+    "archivo": "pizarron.png",
+    "ancho": 96,
+    "alto": 64,
+    "anclaX": 48,
+    "anclaY": 32,
     "categoria": "objeto"
   },
   "panorama": {

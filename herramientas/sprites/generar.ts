@@ -63,7 +63,7 @@ function main(): void {
   console.log('║  GENERADOR DE SPRITES — pixel art programático             ║');
   console.log('╠══════════════════════════════════════════════════════════════╣');
 
-  // 1. Companions (4 variants × 6 states = 24 sprites)
+  // 1. Companions (8 variants × 8 states = 64 sprites)
   const companeros = generarTodosCompaneros();
   console.log(`║  Compañeros: ${companeros.length} sprites`);
   for (const sp of companeros) {

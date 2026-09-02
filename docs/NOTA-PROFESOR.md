@@ -89,9 +89,9 @@ Costo total: $35/100. Deja presupuesto para la intervencion 2 (lectura optica) s
 ## Uso del panel de profesor
 
 1. Ingrese a la aplicacion y seleccione la pestana "Profesor"
-2. Ingrese la clave de profesor (configurada en `CLAVE_PROFESOR`)
-3. Para crear nueva sesion: click "Crear nueva sesion"
-4. Para unirse a sesion existente: ingrese el codigo de sala y click "Unirse"
+2. Ingrese su correo y contrasena (creados por el superadmin)
+3. El sistema crea automaticamente una sesion al iniciar sesion
+4. Use el panel para gestionar equipos, reloj y participantes
 
 ### Controles del reloj
 - **Iniciar reloj**: Comienza el conteo de los 50 minutos
