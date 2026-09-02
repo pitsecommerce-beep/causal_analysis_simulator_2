@@ -722,6 +722,103 @@ export function configurarSockets(
       });
     });
 
+    socket.on('equipo:reconectar_email', async (payload, ack) => {
+      const codigo = payload?.codigoSala?.toUpperCase();
+      const email = payload?.email?.toLowerCase()?.trim();
+
+      if (!codigo || !email) {
+        return ack?.({ error: 'Código de sala y correo electrónico requeridos' });
+      }
+
+      const sesion = sesiones.get(codigo);
+      if (!sesion) return ack?.({ error: 'Sesión no encontrada' });
+
+      let equipoEncontrado: EquipoActivo | null = null;
+      let nombreEncontrado = '';
+      let rolEncontrado: RolEquipo | null = null;
+      let codigoPersonal: string | undefined;
+
+      if (dbDisponible && sesion.dbId) {
+        const resultado = await db.buscarMiembroPorEmail(sesion.dbId, email);
+        if (resultado) {
+          equipoEncontrado = sesion.equipos.get(resultado.equipoNombre) ?? null;
+          nombreEncontrado = resultado.nombre;
+          rolEncontrado = resultado.rol as RolEquipo;
+          codigoPersonal = resultado.codigoPersonal ?? undefined;
+        }
+      }
+
+      if (!equipoEncontrado) {
+        for (const equipo of sesion.equipos.values()) {
+          for (const miembro of equipo.miembros) {
+            const asig = sesion.asignaciones.find(
+              a => a.email === email && a.nombreEquipo === equipo.nombre,
+            );
+            if (asig && miembro.nombre) {
+              const socketInfo = equipo.socketsActivos.get(miembro.nombre);
+              if (socketInfo || equipo.codigosPersonales.has(miembro.nombre)) {
+                equipoEncontrado = equipo;
+                nombreEncontrado = miembro.nombre;
+                rolEncontrado = miembro.rol;
+                codigoPersonal = equipo.codigosPersonales.get(miembro.nombre);
+                break;
+              }
+            }
+          }
+          if (equipoEncontrado) break;
+        }
+      }
+
+      if (!equipoEncontrado || !rolEncontrado) {
+        return ack?.({ error: 'No se encontró un participante con ese correo en esta sesión' });
+      }
+
+      tomarSocketActivo(equipoEncontrado, nombreEncontrado, socket, codigo);
+
+      socket.join(`sala:${codigo}`);
+      socket.join(`equipo:${codigo}:${equipoEncontrado.nombre}`);
+      (socket as any).__equipo = {
+        codigoSala: codigo,
+        nombre: equipoEncontrado.nombre,
+        participante: nombreEncontrado,
+        rol: rolEncontrado,
+        email,
+      };
+
+      if (dbDisponible && equipoEncontrado.dbId) {
+        db.actualizarConexionMiembro(equipoEncontrado.dbId, nombreEncontrado, socket.id).catch(() => {});
+      }
+
+      socket.to(`equipo:${codigo}:${equipoEncontrado.nombre}`).emit('equipo:presencia', {
+        participante: nombreEncontrado,
+        estado: 'idle',
+      });
+
+      io.to(`profesor:${codigo}`).emit('sesion:participante_reconectado', {
+        equipo: equipoEncontrado.nombre,
+        participante: nombreEncontrado,
+      });
+
+      ack?.({
+        estadoMotor: equipoEncontrado.estadoMotor,
+        reloj: obtenerEstadoReloj(sesion.reloj, config),
+        intervencionesCatalogo: listarIntervencionesDisponibles(equipoEncontrado.estadoMotor, config),
+        solicitudes: prepararDatosCliente(datos.solicitudes),
+        comentariosClientes: prepararComentariosClientes(datos.comentarios),
+        tamanoEquipo: config.equipo.tamano,
+        nombreEquipo: equipoEncontrado.nombre,
+        miembros: equipoEncontrado.miembros,
+        evidencias: equipoEncontrado.evidencias,
+        resultado: equipoEncontrado.resultado,
+        preguntasConsejo: equipoEncontrado.preguntasConsejo,
+        miNombre: nombreEncontrado,
+        miRol: rolEncontrado,
+        codigoPersonal,
+        propuestas: equipoEncontrado.propuestas,
+        solicitudesAccion: equipoEncontrado.solicitudesAccion,
+      });
+    });
+
     socket.on('equipo:intervenir', async (payload, ack) => {
       const info = (socket as any).__equipo;
       if (!info) return ack?.({ error: 'No estás en un equipo' });
@@ -1299,6 +1396,12 @@ export async function recuperarSesionesDB(
           preguntasConsejo: null,
           codigosPersonales: new Map(), socketsActivos: new Map(), propuestas: [], solicitudesAccion: [],
         };
+
+        try {
+          const codigos = await db.cargarCodigosPersonalesEquipo(eDB.id);
+          for (const c of codigos) equipo.codigosPersonales.set(c.nombre, c.codigo);
+        } catch (_) { /* continue without codes */ }
+
         sesion.equipos.set(eDB.nombre, equipo);
       }
 

@@ -14,10 +14,11 @@ interface Props {
     tamanoEquipo: number;
     propuestas: PropuestaIntervencion[];
     solicitudesAccion: SolicitudAccion[];
+    email?: string;
   }) => void;
   onProfesor: () => void;
   onAdmin: () => void;
-  onReconectar: (codigoSala: string, codigoPersonal: string) => void;
+  onReconectar: (codigoSala: string, email: string) => void;
   errorReconexion?: string;
 }
 
@@ -28,7 +29,6 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
   const [emailProf, setEmailProf] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [claveAdmin, setClaveAdmin] = useState('');
-  const [codigoPersonal, setCodigoPersonal] = useState('');
   const [mostrarReconexion, setMostrarReconexion] = useState(false);
   const [error, setError] = useState(errorReconexion ?? '');
   const [cargando, setCargando] = useState(false);
@@ -64,6 +64,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
         tamanoEquipo: resp.tamanoEquipo ?? 4,
         propuestas: resp.propuestas ?? [],
         solicitudesAccion: resp.solicitudesAccion ?? [],
+        email: email.trim().toLowerCase(),
       });
     });
   };
@@ -121,17 +122,17 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
   };
 
   const handleReconectar = () => {
-    if (!codigo.trim() || !codigoPersonal.trim()) {
-      setError('Ingresa el codigo de sala y tu codigo personal.');
+    if (!codigo.trim() || !email.trim()) {
+      setError('Ingresa el codigo de sala y tu correo electronico.');
       return;
     }
-    if (codigoPersonal.trim().length !== 6) {
-      setError('El codigo personal debe tener 6 caracteres.');
+    if (!email.includes('@')) {
+      setError('Ingresa un correo electronico valido.');
       return;
     }
     setCargando(true);
     setError('');
-    onReconectar(codigo.toUpperCase(), codigoPersonal.toUpperCase());
+    onReconectar(codigo.toUpperCase(), email.trim().toLowerCase());
   };
 
   return (
@@ -195,26 +196,18 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
                 className="unirse__link"
                 onClick={() => { setMostrarReconexion(true); setError(''); }}
               >
-                Tengo un codigo de reconexion
+                Ya estuve en esta sesion
               </button>
             ) : (
               <>
                 <div className="unirse__separador">
                   <span>Reconectar</span>
                 </div>
-                <div className="unirse__campo">
-                  <label>Codigo personal (6 caracteres)</label>
-                  <input
-                    className="mono"
-                    maxLength={6}
-                    value={codigoPersonal}
-                    onChange={e => setCodigoPersonal(e.target.value.toUpperCase())}
-                    placeholder="XYZ789"
-                    onKeyDown={e => e.key === 'Enter' && handleReconectar()}
-                  />
-                </div>
+                <p className="unirse__ayuda">
+                  Usa el mismo correo con el que te registraste para regresar a tu equipo.
+                </p>
                 <button className="unirse__boton unirse__boton--secundario" onClick={handleReconectar} disabled={cargando}>
-                  {cargando ? 'Reconectando...' : 'Reconectar'}
+                  {cargando ? 'Reconectando...' : 'Regresar a mi equipo'}
                 </button>
               </>
             )}

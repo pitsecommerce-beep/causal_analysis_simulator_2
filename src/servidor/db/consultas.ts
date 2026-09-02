@@ -349,6 +349,41 @@ export async function buscarPorCodigoPersonal(
   };
 }
 
+export async function buscarMiembroPorEmail(
+  sesionId: number,
+  email: string,
+): Promise<{ equipoNombre: string; equipoId: number; nombre: string; rol: RolEquipo; codigoPersonal: string | null } | null> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    `SELECT m.nombre_participante AS nombre, m.rol, m.codigo_personal,
+            e.nombre AS equipo_nombre, e.id AS equipo_id
+     FROM miembros m
+     JOIN equipos e ON e.id = m.equipo_id
+     WHERE e.sesion_id = $1 AND LOWER(m.email) = $2`,
+    [sesionId, email.toLowerCase().trim()],
+  );
+  if (rows.length === 0) return null;
+  return {
+    equipoNombre: rows[0].equipo_nombre,
+    equipoId: rows[0].equipo_id,
+    nombre: rows[0].nombre,
+    rol: rows[0].rol as RolEquipo,
+    codigoPersonal: rows[0].codigo_personal ?? null,
+  };
+}
+
+export async function cargarCodigosPersonalesEquipo(
+  equipoId: number,
+): Promise<Array<{ nombre: string; codigo: string }>> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    `SELECT nombre_participante AS nombre, codigo_personal AS codigo
+     FROM miembros WHERE equipo_id = $1 AND codigo_personal IS NOT NULL`,
+    [equipoId],
+  );
+  return rows;
+}
+
 // --- Professor CRUD ---
 
 export interface ProfesorDB {
