@@ -191,6 +191,28 @@
   /* Objetivos táctiles */
   --ipd-target-min: 44px;
   --ipd-target-comfortable: 48px;
+
+  /* Colores de equipo — 18 colores distinguibles entre sí, contra navy
+     y contra fondo claro. Cada equipo lleva además inicial o símbolo
+     porque el color solo no basta (daltonismo). */
+  --ipd-equipo-1:  #D04040;  /* rojo coral */
+  --ipd-equipo-2:  #267A4A;  /* verde bosque */
+  --ipd-equipo-3:  #3A78C0;  /* azul medio */
+  --ipd-equipo-4:  #9A7020;  /* ámbar oscuro */
+  --ipd-equipo-5:  #7C4AD8;  /* violeta */
+  --ipd-equipo-6:  #0E8A7E;  /* turquesa oscuro */
+  --ipd-equipo-7:  #C43A80;  /* rosa intenso */
+  --ipd-equipo-8:  #558A10;  /* verde oliva */
+  --ipd-equipo-9:  #C45A10;  /* naranja quemado */
+  --ipd-equipo-10: #6A6CD8;  /* índigo */
+  --ipd-equipo-11: #0690A8;  /* cian oscuro */
+  --ipd-equipo-12: #A838C0;  /* magenta oscuro */
+  --ipd-equipo-13: #6A8A18;  /* oliva-amarillo */
+  --ipd-equipo-14: #C04060;  /* salmón profundo */
+  --ipd-equipo-15: #2878B8;  /* azul acero */
+  --ipd-equipo-16: #8A50D0;  /* lavanda oscura */
+  --ipd-equipo-17: #1A8A5A;  /* esmeralda oscuro */
+  --ipd-equipo-18: #A08018;  /* dorado oscuro */
 }
 
 /* ---------- 2. SEMÁNTICOS · tema claro (default) ------------------------- */

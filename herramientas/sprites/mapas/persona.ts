@@ -51,8 +51,8 @@ function generarMapaBase(genero: Genero, comp: Complexion, traje: Traje): string
       fila('....HHPPPPPPPPHHH.......', S),  // 5
       fila('....HHPSSPPPSSPHH.......', S),  // 6  eyes
       fila('....HHPPPPPPPPHHH.......', S),  // 7
-      fila('....HH.PPPPPP.HH.......', S),  // 8  neck + hair falls
-      fila('....HH.PPPPPP.HH.......', S),  // 9
+      fila('....HH.PPPPPP.HH........', S),  // 8  neck + hair falls
+      fila('....HH.PPPPPP.HH........', S),  // 9
       fila('...HHRRRRRRRRRRRRHH.....', S),  // 10 shoulders + hair
       fila('...HHRRRRRRRRRRRRHH.....', S),  // 11
       fila('....RRRRDDRRRRDRRR......', S),  // 12 lapels

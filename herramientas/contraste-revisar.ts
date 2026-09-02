@@ -123,6 +123,13 @@ const PARES_UI: Par[] = [
   ['--ipd-border-brand', '--ipd-bg-page', 'borde marca / fondo página', 3.0],
 ];
 
+// Team colors: must be readable on white (console) and on navy-900 (projection)
+const EQUIPOS: Array<[string, number]> = Array.from({ length: 18 }, (_, i) => [
+  `--ipd-equipo-${i + 1}`, i + 1,
+]);
+const FONDO_BLANCO = '#FFFFFF';
+const FONDO_NAVY = '#001F3D';
+
 function main() {
   if (!fs.existsSync(TOKENS_PATH)) {
     console.error(`No se encontró ${TOKENS_PATH}`);
@@ -171,6 +178,41 @@ function main() {
     }
   }
 
+  // Team colors check (3:1 against both backgrounds for UI legibility)
+  console.log('\nColores de equipo');
+  console.log('---------------------------------------------');
+
+  for (const [token, num] of EQUIPOS) {
+    const val = tokens.get(token);
+    if (!val) {
+      console.log(`  ?  equipo ${num}: token no encontrado (${token})`);
+      warnings++;
+      continue;
+    }
+    const hex = resolve(tokens, val);
+    if (!hex) {
+      console.log(`  ?  equipo ${num}: no se pudo resolver`);
+      warnings++;
+      continue;
+    }
+
+    const rBlanco = contrastRatio(hex, FONDO_BLANCO);
+    const rNavy = contrastRatio(hex, FONDO_NAVY);
+    const okB = rBlanco >= 3.0;
+    const okN = rNavy >= 3.0;
+
+    if (okB && okN) {
+      console.log(`  ✓  equipo ${String(num).padStart(2)}: ${rBlanco.toFixed(2)}:1 blanco, ${rNavy.toFixed(2)}:1 navy`);
+      passed++;
+    } else {
+      const fallos = [];
+      if (!okB) fallos.push(`blanco ${rBlanco.toFixed(2)}:1`);
+      if (!okN) fallos.push(`navy ${rNavy.toFixed(2)}:1`);
+      console.log(`  ✗  equipo ${String(num).padStart(2)}: ${fallos.join(', ')}  ← FALLA`);
+      failures++;
+    }
+  }
+
   console.log('\n---------------------------------------------');
   console.log(`Resultado: ${passed} pasaron, ${failures} fallaron, ${warnings} no resueltos`);
 
@@ -178,7 +220,7 @@ function main() {
     console.log('\n✗ Hay pares que no cumplen WCAG AA.');
     process.exit(1);
   } else {
-    console.log('\n✓ Todos los pares semánticos cumplen WCAG AA.');
+    console.log('\n✓ Todos los pares semánticos y colores de equipo cumplen WCAG AA.');
     process.exit(0);
   }
 }

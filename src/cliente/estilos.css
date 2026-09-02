@@ -2652,7 +2652,9 @@ input, select, textarea, button {
   resize: vertical;
 }
 .panel-propuestas__presupuesto {
+  font-family: var(--ipd-font-mono);
   font-size: var(--ipd-size-3xs);
+  font-variant-numeric: tabular-nums;
   color: var(--ipd-text-tertiary);
   margin-top: var(--ipd-space-2);
 }

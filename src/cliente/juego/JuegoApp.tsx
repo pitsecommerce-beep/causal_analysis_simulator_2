@@ -5,6 +5,7 @@ import { ModalRol } from './ModalRol';
 import { TransicionFase } from './TransicionFase';
 import { PizarronEquipo } from './PizarronEquipo';
 import { useAmbiente } from './useAmbiente';
+import { useSonidos } from './useSonidos';
 import { CAMARA } from '../escena/camara';
 import { socket } from '../lib/socket';
 import { usePresencia, type EstadoPresencia } from '../lib/presencia';
@@ -46,14 +47,16 @@ export function JuegoApp(props: Props) {
 
   const { pares: presenciaPares } = usePresencia(props.miNombre);
   const { activo: ambienteActivo, alternar: alternarAmbiente } = useAmbiente();
+  const { reproducir } = useSonidos();
 
   useEffect(() => {
     function onFaseCambio(data: { faseNueva: string }) {
       setTransicion(data.faseNueva);
+      reproducir('fase-cambio');
     }
     socket.on('reloj:fase_cambio', onFaseCambio);
     return () => { socket.off('reloj:fase_cambio', onFaseCambio); };
-  }, []);
+  }, [reproducir]);
 
   const companeros = useMemo(() => {
     return props.miembros
@@ -78,20 +81,22 @@ export function JuegoApp(props: Props) {
   }, [companeros, presenciaPares]);
 
   const abrirConsola = useCallback(() => {
+    reproducir('laptop-abrir');
     setAnimando(true);
     setTimeout(() => {
       setVista('consola');
       setAnimando(false);
     }, 400);
-  }, []);
+  }, [reproducir]);
 
   const volverSala = useCallback(() => {
+    reproducir('laptop-cerrar');
     setAnimando(true);
     setTimeout(() => {
       setVista('sala');
       setAnimando(false);
     }, 300);
-  }, []);
+  }, [reproducir]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
