@@ -1333,34 +1333,6 @@ input, select, textarea, button {
   margin-top: var(--ipd-space-1);
 }
 
-/* — UnirseEquipo tabs — */
-.unirse__tabs {
-  display: flex;
-  gap: 0;
-  margin-bottom: var(--ipd-space-6);
-  border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-control);
-  overflow: hidden;
-}
-.unirse__tab {
-  flex: 1;
-  padding: var(--ipd-space-3);
-  background: var(--ipd-bg-muted);
-  color: var(--ipd-text-secondary);
-  border: none;
-  font-weight: var(--ipd-weight-semibold);
-  font-size: var(--ipd-size-xs);
-  cursor: pointer;
-  transition: background var(--ipd-duration-fast) var(--ipd-ease-standard),
-              color var(--ipd-duration-fast) var(--ipd-ease-standard);
-}
-.unirse__tab:not(:last-child) {
-  border-right: var(--ipd-border-hairline) solid var(--ipd-border-default);
-}
-.unirse__tab--activo {
-  background: var(--ipd-interactive-default);
-  color: var(--ipd-text-on-brand);
-}
 .unirse__separador {
   display: flex;
   align-items: center;

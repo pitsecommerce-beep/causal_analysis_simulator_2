@@ -107,6 +107,34 @@ async function main(): Promise<void> {
 
   // --- Auth routes ---
 
+  app.post('/api/auth/identificar', async (req, res) => {
+    const { email } = req.body ?? {};
+    if (!email) {
+      res.json({ tipo: 'participante' });
+      return;
+    }
+    const correo = email.toLowerCase().trim();
+
+    const claveReal = process.env.CLAVE_SUPERADMIN || process.env.CLAVE_PROFESOR;
+    if (claveReal && correo === claveReal) {
+      const info: InfoAuth = { tipo: 'superadmin', profesorId: null, correo: null, nombre: 'Superadmin' };
+      const token = await crearSesionAuth(info, dbConectada);
+      res.cookie(NOMBRE_COOKIE, token, cookieOpts());
+      res.json({ tipo: 'superadmin' });
+      return;
+    }
+
+    if (dbConectada) {
+      const profesor = await db.obtenerProfesorPorCorreo(correo);
+      if (profesor && profesor.activo) {
+        res.json({ tipo: 'profesor', correo: profesor.correo });
+        return;
+      }
+    }
+
+    res.json({ tipo: 'participante' });
+  });
+
   app.post('/api/auth/superadmin', async (req, res) => {
     const { clave } = req.body ?? {};
     const claveReal = process.env.CLAVE_SUPERADMIN || process.env.CLAVE_PROFESOR;

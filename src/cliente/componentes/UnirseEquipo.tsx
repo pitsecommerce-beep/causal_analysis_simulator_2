@@ -22,18 +22,19 @@ interface Props {
   errorReconexion?: string;
 }
 
+type Paso = 'credenciales' | 'profesor' | 'unirse';
+
 export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, errorReconexion }: Props) {
-  const [modo, setModo] = useState<'equipo' | 'profesor' | 'admin'>('equipo');
+  const [paso, setPaso] = useState<Paso>('credenciales');
   const [codigo, setCodigo] = useState('');
   const [email, setEmail] = useState('');
   const [emailProf, setEmailProf] = useState('');
   const [contrasena, setContrasena] = useState('');
-  const [claveAdmin, setClaveAdmin] = useState('');
   const [mostrarReconexion, setMostrarReconexion] = useState(false);
   const [error, setError] = useState(errorReconexion ?? '');
   const [cargando, setCargando] = useState(false);
 
-  const handleUnirse = () => {
+  const handleContinuar = async () => {
     if (!codigo.trim() || !email.trim()) {
       setError('Ingresa el codigo de sala y tu correo electronico.');
       return;
@@ -42,6 +43,37 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
       setError('Ingresa un correo electronico valido.');
       return;
     }
+    setCargando(true);
+    setError('');
+
+    try {
+      const resp = await fetch('/api/auth/identificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await resp.json();
+      setCargando(false);
+
+      if (data.tipo === 'superadmin') {
+        onAdmin();
+        return;
+      }
+
+      if (data.tipo === 'profesor') {
+        setEmailProf(data.correo ?? email.trim());
+        setPaso('profesor');
+        return;
+      }
+
+      handleUnirse();
+    } catch {
+      setCargando(false);
+      setError('Error de conexion');
+    }
+  };
+
+  const handleUnirse = () => {
     setCargando(true);
     setError('');
 
@@ -70,8 +102,8 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
   };
 
   const handleLoginProfesor = async () => {
-    if (!emailProf.trim() || !contrasena.trim()) {
-      setError('Ingresa tu correo y contrasena.');
+    if (!contrasena.trim()) {
+      setError('Ingresa tu contrasena.');
       return;
     }
     setCargando(true);
@@ -80,7 +112,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
       const resp = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: emailProf.trim(), contrasena: contrasena }),
+        body: JSON.stringify({ correo: emailProf.trim(), contrasena }),
       });
       const data = await resp.json();
       setCargando(false);
@@ -89,32 +121,6 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
         return;
       }
       onProfesor();
-    } catch {
-      setCargando(false);
-      setError('Error de conexion');
-    }
-  };
-
-  const handleLoginAdmin = async () => {
-    if (!claveAdmin.trim()) {
-      setError('Ingresa la clave de superadmin.');
-      return;
-    }
-    setCargando(true);
-    setError('');
-    try {
-      const resp = await fetch('/api/auth/superadmin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clave: claveAdmin.trim() }),
-      });
-      const data = await resp.json();
-      setCargando(false);
-      if (!resp.ok) {
-        setError(data.error || 'Clave incorrecta');
-        return;
-      }
-      onAdmin();
     } catch {
       setCargando(false);
       setError('Error de conexion');
@@ -135,34 +141,19 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
     onReconectar(codigo.toUpperCase(), email.trim().toLowerCase());
   };
 
+  const volverInicio = () => {
+    setPaso('credenciales');
+    setContrasena('');
+    setError('');
+  };
+
   return (
     <div className="unirse">
       <div className="unirse__tarjeta">
         <h1 className="unirse__titulo">ETF Bank</h1>
         <p className="unirse__subtitulo">Simulador de Analisis Causal</p>
 
-        <div className="unirse__tabs">
-          <button
-            className={`unirse__tab ${modo === 'equipo' ? 'unirse__tab--activo' : ''}`}
-            onClick={() => { setModo('equipo'); setError(''); }}
-          >
-            Equipo
-          </button>
-          <button
-            className={`unirse__tab ${modo === 'profesor' ? 'unirse__tab--activo' : ''}`}
-            onClick={() => { setModo('profesor'); setError(''); }}
-          >
-            Profesor
-          </button>
-          <button
-            className={`unirse__tab ${modo === 'admin' ? 'unirse__tab--activo' : ''}`}
-            onClick={() => { setModo('admin'); setError(''); }}
-          >
-            Admin
-          </button>
-        </div>
-
-        {modo === 'equipo' && (
+        {paso === 'credenciales' && (
           <>
             <div className="unirse__campo">
               <label>Codigo de sala</label>
@@ -172,7 +163,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
                 value={codigo}
                 onChange={e => setCodigo(e.target.value.toUpperCase())}
                 placeholder="ABC123"
-                onKeyDown={e => e.key === 'Enter' && handleUnirse()}
+                onKeyDown={e => e.key === 'Enter' && handleContinuar()}
               />
             </div>
 
@@ -183,12 +174,12 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="tu.correo@ejemplo.com"
-                onKeyDown={e => e.key === 'Enter' && handleUnirse()}
+                onKeyDown={e => e.key === 'Enter' && handleContinuar()}
               />
             </div>
 
-            <button className="unirse__boton" onClick={handleUnirse} disabled={cargando}>
-              {cargando ? 'Conectando...' : 'Unirse a la sesion'}
+            <button className="unirse__boton" onClick={handleContinuar} disabled={cargando}>
+              {cargando ? 'Verificando...' : 'Continuar'}
             </button>
 
             {!mostrarReconexion ? (
@@ -214,17 +205,15 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
           </>
         )}
 
-        {modo === 'profesor' && (
+        {paso === 'profesor' && (
           <>
+            <p className="unirse__ayuda">
+              Bienvenido, ingresa tu contrasena para continuar.
+            </p>
+
             <div className="unirse__campo">
-              <label>Correo electronico</label>
-              <input
-                type="email"
-                value={emailProf}
-                onChange={e => setEmailProf(e.target.value)}
-                placeholder="profesor@ipade.mx"
-                onKeyDown={e => e.key === 'Enter' && handleLoginProfesor()}
-              />
+              <label>Correo</label>
+              <input type="email" value={emailProf} disabled />
             </div>
 
             <div className="unirse__campo">
@@ -234,6 +223,7 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
                 value={contrasena}
                 onChange={e => setContrasena(e.target.value)}
                 placeholder="Contrasena"
+                autoFocus
                 onKeyDown={e => e.key === 'Enter' && handleLoginProfesor()}
               />
             </div>
@@ -241,24 +231,9 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
             <button className="unirse__boton" onClick={handleLoginProfesor} disabled={cargando}>
               {cargando ? 'Iniciando sesion...' : 'Iniciar sesion'}
             </button>
-          </>
-        )}
 
-        {modo === 'admin' && (
-          <>
-            <div className="unirse__campo">
-              <label>Clave de superadmin</label>
-              <input
-                type="password"
-                value={claveAdmin}
-                onChange={e => setClaveAdmin(e.target.value)}
-                placeholder="Clave"
-                onKeyDown={e => e.key === 'Enter' && handleLoginAdmin()}
-              />
-            </div>
-
-            <button className="unirse__boton" onClick={handleLoginAdmin} disabled={cargando}>
-              {cargando ? 'Verificando...' : 'Entrar como admin'}
+            <button className="unirse__link" onClick={volverInicio}>
+              Volver
             </button>
           </>
         )}
