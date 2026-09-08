@@ -19,10 +19,10 @@
   background: var(--_bg);
   color: var(--_fg);
   border: var(--ipd-border-hairline) solid var(--_border);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-family: var(--ipd-font-sans);
   font-size: var(--ipd-size-sm);
-  font-weight: var(--ipd-weight-semibold);
+  font-weight: var(--ipd-weight-medium);
   letter-spacing: var(--ipd-tracking-wide);
   line-height: 1.2;
   text-decoration: none;
@@ -89,7 +89,7 @@
   background: var(--ipd-bg-page);
   color: var(--ipd-text-primary);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-md);
   transition: border-color var(--ipd-duration-fast) var(--ipd-ease-standard),
               box-shadow var(--ipd-duration-fast) var(--ipd-ease-standard);
@@ -161,7 +161,7 @@
   flex-direction: column;
   background: var(--ipd-bg-page);
   border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   overflow: hidden;
   transition: box-shadow var(--ipd-duration-base) var(--ipd-ease-standard),
               transform var(--ipd-duration-base) var(--ipd-ease-standard),
@@ -458,7 +458,7 @@ details[open] > summary.ipd-accordion__trigger::after { content: "−"; }
 
 /* ---------- Modal ------------------------------------------------------- */
 
-.ipd-modal { border: 0; padding: 0; max-width: min(560px, calc(100vw - 2rem)); width: 100%; border-radius: var(--ipd-radius-md); box-shadow: var(--ipd-shadow-xl); }
+.ipd-modal { border: 0; padding: 0; max-width: min(560px, calc(100vw - 2rem)); width: 100%; border-radius: var(--ipd-radius-superficie); box-shadow: var(--ipd-elev-4); }
 .ipd-modal::backdrop { background: var(--ipd-bg-overlay); }
 .ipd-modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ipd-space-4); padding: var(--ipd-space-6) var(--ipd-space-6) 0; }
 .ipd-modal__body { padding: var(--ipd-space-4) var(--ipd-space-6); color: var(--ipd-text-secondary); }
@@ -559,3 +559,522 @@ details[open] > summary.ipd-accordion__trigger::after { content: "−"; }
 }
 @keyframes ipd-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 @media (prefers-reduced-motion: reduce) { .ipd-skeleton { animation: none; } }
+
+
+/* ==========================================================================
+   SIMULADOR · Componentes v2 (Sección 6)
+   Componentes rediseñados para el simulador de análisis causal.
+   Usan los tokens v2 (radius-control, radius-superficie, elev-*, superficie-*).
+   ========================================================================== */
+
+/* ---------- 6.1 · Tarjeta KPI ------------------------------------------ */
+
+.ipd-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ipd-space-3);
+  padding: var(--ipd-space-6);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-1);
+  transition:
+    box-shadow var(--ipd-duration-base) var(--ipd-ease-standard),
+    transform var(--ipd-duration-base) var(--ipd-ease-standard);
+}
+.ipd-kpi:hover {
+  box-shadow: var(--ipd-elev-2);
+  transform: translateY(-1px);
+}
+
+.ipd-kpi__encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ipd-space-3);
+}
+.ipd-kpi__etiqueta {
+  font-family: var(--ipd-font-sans);
+  font-size: var(--ipd-size-2xs);
+  font-weight: var(--ipd-weight-medium);
+  letter-spacing: var(--ipd-tracking-wide);
+  text-transform: uppercase;
+  color: var(--ipd-text-secondary);
+}
+.ipd-kpi__icono {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ipd-radius-control);
+  background: var(--ipd-superficie-2);
+  color: var(--ipd-text-brand);
+  font-size: var(--ipd-size-md);
+  flex: none;
+}
+
+.ipd-kpi__valor {
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-3xl);
+  font-weight: var(--ipd-weight-semibold);
+  letter-spacing: var(--ipd-tracking-heading);
+  line-height: var(--ipd-leading-none);
+  color: var(--ipd-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ipd-kpi__tendencia {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ipd-space-1);
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-xs);
+  font-weight: var(--ipd-weight-medium);
+}
+.ipd-kpi__tendencia--positiva { color: var(--ipd-feedback-success-fg); }
+.ipd-kpi__tendencia--negativa { color: var(--ipd-feedback-danger-fg); }
+.ipd-kpi__tendencia--neutra { color: var(--ipd-text-tertiary); }
+
+.ipd-kpi__sparkline {
+  height: 32px;
+  margin-top: auto;
+  opacity: 0.6;
+}
+
+/* ---------- 6.2 · Tarjeta de consulta ----------------------------------- */
+
+.ipd-consulta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ipd-space-4);
+  padding: var(--ipd-space-5);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-1);
+  transition:
+    box-shadow var(--ipd-duration-base) var(--ipd-ease-standard),
+    border-color var(--ipd-duration-base) var(--ipd-ease-standard);
+}
+.ipd-consulta:hover {
+  box-shadow: var(--ipd-elev-2);
+}
+.ipd-consulta--seleccionada {
+  box-shadow: var(--ipd-elev-2);
+  outline: 2px solid var(--ipd-border-brand);
+  outline-offset: -2px;
+}
+
+.ipd-consulta__hipotesis {
+  font-family: var(--ipd-font-sans);
+  font-size: var(--ipd-size-md);
+  font-weight: var(--ipd-weight-medium);
+  line-height: var(--ipd-leading-snug);
+  color: var(--ipd-text-primary);
+}
+
+.ipd-consulta__herramientas {
+  display: flex;
+  gap: var(--ipd-space-2);
+  flex-wrap: wrap;
+}
+.ipd-consulta__herramienta {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ipd-radius-control);
+  background: var(--ipd-superficie-2);
+  color: var(--ipd-text-secondary);
+  font-size: var(--ipd-size-sm);
+  cursor: pointer;
+  border: none;
+  transition:
+    background var(--ipd-duration-fast) var(--ipd-ease-standard),
+    color var(--ipd-duration-fast) var(--ipd-ease-standard);
+}
+.ipd-consulta__herramienta:hover {
+  background: var(--ipd-bg-brand-subtle);
+  color: var(--ipd-text-brand);
+}
+.ipd-consulta__herramienta--activa {
+  background: var(--ipd-bg-brand);
+  color: var(--ipd-text-on-brand);
+}
+
+.ipd-consulta__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ipd-space-3);
+  padding-top: var(--ipd-space-3);
+  border-top: 1px solid var(--ipd-superficie-2);
+}
+.ipd-consulta__creditos {
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-xs);
+  font-weight: var(--ipd-weight-medium);
+  color: var(--ipd-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.ipd-consulta__creditos--bajo { color: var(--ipd-feedback-warning-fg); }
+.ipd-consulta__creditos--agotado { color: var(--ipd-feedback-danger-fg); }
+
+/* ---------- 6.3 · Tabla de datos densa ---------------------------------- */
+
+.ipd-tabla-densa {
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-1);
+  background: var(--ipd-superficie-1);
+  overflow: hidden;
+}
+.ipd-tabla-densa__scroll {
+  overflow-x: auto;
+}
+.ipd-tabla-densa table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ipd-size-sm);
+  font-family: var(--ipd-font-sans);
+}
+
+.ipd-tabla-densa thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.ipd-tabla-densa th {
+  padding: var(--ipd-space-3) var(--ipd-space-4);
+  background: var(--ipd-superficie-2);
+  font-size: var(--ipd-size-2xs);
+  font-weight: var(--ipd-weight-semibold);
+  letter-spacing: var(--ipd-tracking-wide);
+  text-transform: uppercase;
+  color: var(--ipd-text-secondary);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: none;
+}
+.ipd-tabla-densa td {
+  padding: var(--ipd-space-3) var(--ipd-space-4);
+  border-bottom: 1px solid var(--ipd-superficie-2);
+  color: var(--ipd-text-primary);
+  vertical-align: middle;
+}
+.ipd-tabla-densa tr {
+  height: 44px;
+  transition: background var(--ipd-duration-fast) var(--ipd-ease-standard);
+}
+.ipd-tabla-densa tbody tr:hover {
+  background: var(--ipd-superficie-2);
+}
+.ipd-tabla-densa tbody tr.ipd-tabla-densa__fila--seleccionada {
+  background: var(--ipd-bg-brand-subtle);
+}
+
+.ipd-tabla-densa__mono {
+  font-family: var(--ipd-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ipd-tabla-densa__vacio {
+  text-align: center;
+  padding: var(--ipd-space-10) var(--ipd-space-6);
+  color: var(--ipd-text-tertiary);
+  font-size: var(--ipd-size-sm);
+}
+
+/* ---------- 6.4 · Tooltip guía (tour guiado) ----------------------------- */
+
+.ipd-tooltip-guia {
+  position: absolute;
+  z-index: var(--ipd-z-tooltip);
+  max-width: 320px;
+  padding: var(--ipd-space-5);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-3);
+  animation: ipd-tooltip-entrada var(--ipd-duration-base) var(--ipd-ease-entrance);
+}
+
+.ipd-tooltip-guia__flecha {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--ipd-superficie-1);
+  transform: rotate(45deg);
+  box-shadow: -1px -1px 0 0 rgba(0, 31, 61, 0.06);
+}
+.ipd-tooltip-guia--arriba .ipd-tooltip-guia__flecha {
+  bottom: -6px;
+  left: 50%;
+  margin-left: -6px;
+}
+.ipd-tooltip-guia--abajo .ipd-tooltip-guia__flecha {
+  top: -6px;
+  left: 50%;
+  margin-left: -6px;
+}
+.ipd-tooltip-guia--izquierda .ipd-tooltip-guia__flecha {
+  right: -6px;
+  top: 50%;
+  margin-top: -6px;
+}
+.ipd-tooltip-guia--derecha .ipd-tooltip-guia__flecha {
+  left: -6px;
+  top: 50%;
+  margin-top: -6px;
+}
+
+.ipd-tooltip-guia__paso {
+  font-family: var(--ipd-font-mono);
+  font-size: var(--ipd-size-2xs);
+  font-weight: var(--ipd-weight-medium);
+  color: var(--ipd-text-brand);
+  letter-spacing: var(--ipd-tracking-wide);
+  margin-bottom: var(--ipd-space-2);
+}
+.ipd-tooltip-guia__titulo {
+  font-family: var(--ipd-font-sans);
+  font-size: var(--ipd-size-md);
+  font-weight: var(--ipd-weight-semibold);
+  color: var(--ipd-text-primary);
+  line-height: var(--ipd-leading-snug);
+  margin-bottom: var(--ipd-space-2);
+}
+.ipd-tooltip-guia__texto {
+  font-size: var(--ipd-size-sm);
+  color: var(--ipd-text-secondary);
+  line-height: var(--ipd-leading-normal);
+}
+.ipd-tooltip-guia__acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ipd-space-3);
+  margin-top: var(--ipd-space-4);
+}
+
+@keyframes ipd-tooltip-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ipd-tooltip-guia { animation: none; }
+}
+
+/* ---------- 6.5 · Modal del simulador ----------------------------------- */
+
+.ipd-modal-sim {
+  border: 0;
+  padding: 0;
+  max-width: min(560px, calc(100vw - 2rem));
+  width: 100%;
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-4);
+  background: var(--ipd-superficie-1);
+  animation: ipd-modal-entrada var(--ipd-duration-base) var(--ipd-ease-entrance);
+}
+.ipd-modal-sim::backdrop {
+  background: rgba(0, 21, 43, 0.60);
+}
+
+.ipd-modal-sim__encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ipd-space-4);
+  padding: var(--ipd-space-6) var(--ipd-space-6) 0;
+}
+.ipd-modal-sim__titulo {
+  font-family: var(--ipd-font-display);
+  font-size: var(--ipd-size-xl);
+  font-weight: var(--ipd-weight-semibold);
+  letter-spacing: var(--ipd-tracking-title);
+  line-height: var(--ipd-leading-snug);
+  color: var(--ipd-text-primary);
+}
+.ipd-modal-sim__cerrar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--ipd-radius-control);
+  background: transparent;
+  color: var(--ipd-text-tertiary);
+  font-size: var(--ipd-size-lg);
+  cursor: pointer;
+  flex: none;
+  transition: background var(--ipd-duration-fast) var(--ipd-ease-standard);
+}
+.ipd-modal-sim__cerrar:hover {
+  background: var(--ipd-superficie-2);
+  color: var(--ipd-text-primary);
+}
+
+.ipd-modal-sim__cuerpo {
+  padding: var(--ipd-space-5) var(--ipd-space-6);
+  color: var(--ipd-text-secondary);
+  font-size: var(--ipd-size-sm);
+  line-height: var(--ipd-leading-normal);
+}
+.ipd-modal-sim__pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ipd-space-3);
+  padding: var(--ipd-space-4) var(--ipd-space-6) var(--ipd-space-6);
+}
+
+@keyframes ipd-modal-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ipd-modal-sim { animation: none; }
+}
+
+/* ---------- 6.6 · Botones del simulador --------------------------------- */
+
+.ipd-btn-sim {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ipd-space-2);
+  height: 40px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--ipd-radius-control);
+  font-family: var(--ipd-font-sans);
+  font-size: var(--ipd-size-sm);
+  font-weight: var(--ipd-weight-medium);
+  letter-spacing: var(--ipd-tracking-normal);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--ipd-duration-fast) var(--ipd-ease-standard),
+    color var(--ipd-duration-fast) var(--ipd-ease-standard),
+    box-shadow var(--ipd-duration-fast) var(--ipd-ease-standard),
+    transform var(--ipd-duration-fast) var(--ipd-ease-standard);
+}
+.ipd-btn-sim:active:not([disabled]) { transform: translateY(1px); }
+.ipd-btn-sim[disabled] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.ipd-btn-sim--primario {
+  background: var(--ipd-color-navy-700);
+  color: var(--ipd-text-on-brand);
+}
+.ipd-btn-sim--primario:hover:not([disabled]) {
+  background: var(--ipd-color-navy-800);
+}
+.ipd-btn-sim--primario:focus-visible {
+  outline: none;
+  box-shadow: var(--ipd-shadow-focus);
+}
+
+.ipd-btn-sim--secundario {
+  background: var(--ipd-superficie-1);
+  color: var(--ipd-text-primary);
+  box-shadow: var(--ipd-elev-1);
+}
+.ipd-btn-sim--secundario:hover:not([disabled]) {
+  box-shadow: var(--ipd-elev-2);
+}
+.ipd-btn-sim--secundario:focus-visible {
+  outline: none;
+  box-shadow: var(--ipd-shadow-focus);
+}
+
+.ipd-btn-sim--terciario {
+  background: transparent;
+  color: var(--ipd-text-brand);
+}
+.ipd-btn-sim--terciario:hover:not([disabled]) {
+  background: var(--ipd-superficie-2);
+}
+.ipd-btn-sim--terciario:focus-visible {
+  outline: none;
+  box-shadow: var(--ipd-shadow-focus);
+}
+
+.ipd-btn-sim--peligro {
+  background: var(--ipd-color-danger-600);
+  color: var(--ipd-color-neutral-0);
+}
+.ipd-btn-sim--peligro:hover:not([disabled]) {
+  background: var(--ipd-color-danger-700);
+}
+.ipd-btn-sim--peligro:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.35);
+}
+
+.ipd-btn-sim--bloque { width: 100%; }
+.ipd-btn-sim--sm { height: 32px; padding: 6px 12px; font-size: var(--ipd-size-xs); }
+.ipd-btn-sim--lg { height: 48px; padding: 12px 28px; font-size: var(--ipd-size-md); }
+
+/* ---------- 6.extra · Tarjeta de login del simulador -------------------- */
+
+.ipd-login {
+  width: 100%;
+  max-width: 420px;
+  padding: var(--ipd-space-8);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-2);
+}
+
+.ipd-login__titulo {
+  font-family: var(--ipd-font-display);
+  font-size: var(--ipd-size-2xl);
+  font-weight: var(--ipd-weight-semibold);
+  letter-spacing: var(--ipd-tracking-title);
+  line-height: var(--ipd-leading-tight);
+  color: var(--ipd-text-primary);
+  text-align: center;
+}
+.ipd-login__subtitulo {
+  font-size: var(--ipd-size-sm);
+  color: var(--ipd-text-secondary);
+  text-align: center;
+  margin-top: var(--ipd-space-2);
+}
+
+/* ---------- Aparición escalonada (máx 5 elementos) ---------------------- */
+
+@keyframes ipd-aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ipd-escalonar > * {
+  animation: ipd-aparecer var(--ipd-duration-base) var(--ipd-ease-entrance) both;
+}
+.ipd-escalonar > :nth-child(1) { animation-delay: 0ms; }
+.ipd-escalonar > :nth-child(2) { animation-delay: 40ms; }
+.ipd-escalonar > :nth-child(3) { animation-delay: 80ms; }
+.ipd-escalonar > :nth-child(4) { animation-delay: 120ms; }
+.ipd-escalonar > :nth-child(5) { animation-delay: 160ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ipd-escalonar > * { animation: none; }
+}
