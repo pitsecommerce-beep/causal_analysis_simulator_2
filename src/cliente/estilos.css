@@ -2076,6 +2076,29 @@ input, select, textarea, button {
 .juego__companero-tag--esperando { color: var(--ipd-feedback-warning-fg); }
 .juego__companero-tag--desconectado { color: var(--ipd-feedback-danger-fg); opacity: 0.6; }
 
+/* — Help button — */
+.juego__btn-ayuda {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: var(--ipd-border-hairline) solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--ipd-text-secondary);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, border-color 0.2s;
+}
+.juego__btn-ayuda:hover { background: rgba(0, 0, 0, 0.6); }
+.juego__btn-ayuda:focus-visible {
+  outline: 2px solid var(--ipd-interactive-default);
+  outline-offset: 2px;
+}
+
 /* — Sound toggle — */
 .juego__hud-controles {
   display: flex;
