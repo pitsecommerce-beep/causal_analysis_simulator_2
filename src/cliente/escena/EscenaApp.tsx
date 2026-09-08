@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { CanvasSala, type SpriteEscena } from './CanvasSala';
-import { MesaRedonda } from './MesaRedonda';
 import { BlocNotas } from './BlocNotas';
 import { CAMARA } from './camara';
 import { socket } from '../lib/socket';
-import type { RolEquipo, MiembroEquipo } from '../lib/tipos';
 
 interface PiezaPersonaje {
   nombre: string;
@@ -29,16 +27,17 @@ interface DatosEscena {
 interface Props {
   codigoSala: string;
   nombreEquipo: string;
-  tamanoEquipo: number;
-  onTerminar: (miembros: MiembroEquipo[], miRol: RolEquipo, miNombre: string, codigoPersonal: string) => void;
+  onTerminar: () => void;
 }
 
-type PantallaEscena = 'cargando' | 'director' | 'adriana' | 'clientes' | 'mesa';
+type PantallaEscena = 'cargando' | 'director' | 'adriana' | 'clientes' | 'terminado';
 
 const VEL_ESCRITURA = 28;
 const POS = CAMARA.posiciones;
 
-export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }: Props) {
+export function EscenaApp({ codigoSala, nombreEquipo, onTerminar }: Props) {
+  const onTerminarRef = useRef(onTerminar);
+  useEffect(() => { onTerminarRef.current = onTerminar; });
   const [escena, setEscena] = useState<DatosEscena | null>(null);
   const [pantalla, setPantalla] = useState<PantallaEscena>('cargando');
   const [indiceCliente, setIndiceCliente] = useState(0);
@@ -67,7 +66,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
         }, 2000);
         return () => clearInterval(poll);
       } else {
-        setPantalla('mesa');
+        setPantalla('terminado');
       }
     });
   }, [codigoSala]);
@@ -188,20 +187,20 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
         setIndiceCliente(0);
         setPantalla('clientes');
       } else {
-        setPantalla('mesa');
+        setPantalla('terminado');
       }
     } else if (pantalla === 'adriana') {
       if (escena && escena.clientes.length > 0) {
         setIndiceCliente(0);
         setPantalla('clientes');
       } else {
-        setPantalla('mesa');
+        setPantalla('terminado');
       }
     } else if (pantalla === 'clientes' && escena) {
       if (indiceCliente < escena.clientes.length - 1) {
         setIndiceCliente(i => i + 1);
       } else {
-        setPantalla('mesa');
+        setPantalla('terminado');
       }
     }
   }
@@ -209,7 +208,7 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
   function saltar() {
     limpiarAudio();
     if (timerRef.current) clearInterval(timerRef.current);
-    setPantalla('mesa');
+    setPantalla('terminado');
   }
 
   // --- Build sprite list for Canvas ---
@@ -230,10 +229,13 @@ export function EscenaApp({ codigoSala, nombreEquipo, tamanoEquipo, onTerminar }
     );
   }
 
-  if (pantalla === 'mesa') {
+  if (pantalla === 'terminado') {
+    onTerminarRef.current();
     return (
       <div className="escena">
-        <MesaRedonda nombreEquipo={nombreEquipo} tamanoEquipo={tamanoEquipo} onIniciar={onTerminar} />
+        <div className="escena__cargando">
+          <div className="escena__spinner" />
+        </div>
       </div>
     );
   }

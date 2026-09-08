@@ -1,0 +1,107 @@
+/* ==========================================================================
+   Recepcion (lobby) styles
+   ========================================================================== */
+
+.recepcion {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--ipd-bg-base);
+  padding: var(--ipd-space-6);
+}
+
+.recepcion__contenido {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ipd-space-5);
+}
+
+.recepcion__marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ipd-space-2);
+}
+
+.recepcion__logo {
+  width: 64px;
+  height: 64px;
+}
+
+.recepcion__institucion {
+  font-family: var(--ipd-font-serif);
+  font-size: var(--ipd-text-sm);
+  color: var(--ipd-text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.recepcion__titulo {
+  font-family: var(--ipd-font-serif);
+  font-weight: 700;
+  font-size: var(--ipd-text-2xl);
+  color: var(--ipd-text-primary);
+  margin: 0;
+}
+
+.recepcion__equipo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ipd-space-3);
+}
+
+.recepcion__equipo-nombre {
+  font-family: var(--ipd-font-serif);
+  font-weight: 600;
+  font-size: var(--ipd-text-lg);
+  color: var(--ipd-text-primary);
+}
+
+.recepcion__conectados {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ipd-space-2);
+}
+
+.recepcion__conectado {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ipd-space-1);
+  padding: var(--ipd-space-1) var(--ipd-space-3);
+  border-radius: var(--ipd-radius-control);
+  background: var(--ipd-bg-surface);
+  border: 1px solid var(--ipd-border-default);
+  font-size: var(--ipd-text-sm);
+  color: var(--ipd-text-primary);
+}
+
+.recepcion__conectado-indicador {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ipd-feedback-success);
+}
+
+.recepcion__esperando {
+  font-size: var(--ipd-text-sm);
+  color: var(--ipd-text-tertiary);
+}
+
+.recepcion__acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ipd-space-3);
+}
+
+.recepcion__pie {
+  margin-top: var(--ipd-space-4);
+  font-size: var(--ipd-text-xs);
+  color: var(--ipd-text-tertiary);
+}
