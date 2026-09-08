@@ -70,13 +70,13 @@ ul[class], ol[class] { list-style: none; padding: 0; }
 .ipd-h1, .ipd-h2, .ipd-h3, .ipd-h4 {
   font-family: var(--ipd-font-display);
   font-weight: var(--ipd-weight-semibold);
-  letter-spacing: var(--ipd-tracking-tight);
+  letter-spacing: var(--ipd-tracking-heading);
   color: var(--ipd-text-primary);
   text-wrap: balance;
 }
 
-.ipd-display-1 { font-size: var(--ipd-size-6xl); line-height: var(--ipd-leading-tight); letter-spacing: var(--ipd-tracking-tighter); }
-.ipd-display-2 { font-size: var(--ipd-size-5xl); line-height: var(--ipd-leading-tight); letter-spacing: var(--ipd-tracking-tighter); }
+.ipd-display-1 { font-size: var(--ipd-size-6xl); line-height: var(--ipd-leading-tight); letter-spacing: var(--ipd-tracking-display); }
+.ipd-display-2 { font-size: var(--ipd-size-5xl); line-height: var(--ipd-leading-tight); letter-spacing: var(--ipd-tracking-display); }
 .ipd-h1 { font-size: var(--ipd-size-4xl); line-height: var(--ipd-leading-tight); }
 .ipd-h2 { font-size: var(--ipd-size-3xl); line-height: var(--ipd-leading-snug); }
 .ipd-h3 { font-size: var(--ipd-size-2xl); line-height: var(--ipd-leading-snug); }
@@ -103,7 +103,7 @@ ul[class], ol[class] { list-style: none; padding: 0; }
 .ipd-overline {
   font-size: var(--ipd-size-2xs);
   font-weight: var(--ipd-weight-semibold);
-  letter-spacing: var(--ipd-tracking-wider);
+  letter-spacing: var(--ipd-tracking-caps);
   text-transform: uppercase;
   color: var(--ipd-text-accent);
 }
@@ -115,7 +115,7 @@ ul[class], ol[class] { list-style: none; padding: 0; }
   gap: var(--ipd-space-3);
   font-size: var(--ipd-size-2xs);
   font-weight: var(--ipd-weight-semibold);
-  letter-spacing: var(--ipd-tracking-wider);
+  letter-spacing: var(--ipd-tracking-caps);
   text-transform: uppercase;
   color: var(--ipd-text-accent);
 }

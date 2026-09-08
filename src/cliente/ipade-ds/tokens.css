@@ -72,7 +72,6 @@
   --ipd-weight-regular: 400;
   --ipd-weight-medium: 500;
   --ipd-weight-semibold: 600;
-  /* OBSOLETO: peso 700 prohibido en la interfaz — usar semibold (600) máximo */
   --ipd-weight-bold: 700;
 
   /* Tipografía · escala fluida (base 16px, razón 1.25 en desktop) */
@@ -97,19 +96,22 @@
   --ipd-leading-relaxed: 1.65;
   --ipd-leading-loose: 1.8;
 
-  /* Tipografía · tracking */
+  /* Tipografía · tracking por tamaño
+     48px+: -0.03em | 32-47: -0.022em | 24-31: -0.015em
+     18-23: -0.008em | 16-: 0 | mayusculas: +0.06em */
+  --ipd-tracking-display: -0.03em;
+  --ipd-tracking-heading: -0.022em;
+  --ipd-tracking-subheading: -0.015em;
+  --ipd-tracking-title: -0.008em;
+  --ipd-tracking-body: 0;
+  --ipd-tracking-caps: 0.06em;
+
+  /* Obsoletos: conservados por compatibilidad */
   --ipd-tracking-tighter: -0.02em;
   --ipd-tracking-tight: -0.01em;
   --ipd-tracking-normal: 0;
   --ipd-tracking-wide: 0.04em;
-  --ipd-tracking-wider: 0.12em;  /* overline / eyebrow */
-
-  /* Tipografía · tracking por tamaño (size-based letter-spacing) */
-  --ipd-tracking-display: -0.03em;   /* ≥48px */
-  --ipd-tracking-heading: -0.02em;   /* 32-47px */
-  --ipd-tracking-title: -0.015em;    /* 24-31px */
-  --ipd-tracking-body: -0.011em;     /* 18-23px */
-  --ipd-tracking-caption: 0;         /* ≤16px */
+  --ipd-tracking-wider: 0.12em;
 
   /* Espaciado · base 4px */
   --ipd-space-0: 0;
@@ -142,12 +144,15 @@
   --ipd-grid-columns: 12;
   --ipd-grid-gap: 1.5rem;
 
-  /* Radio de borde · vocabulario nuevo v2 */
-  --ipd-radius-control: 8px;      /* inputs, botones, badges */
-  --ipd-radius-superficie: 14px;  /* tarjetas, paneles, modales */
-  --ipd-radius-pill: 999px;       /* pills, tags, toggles */
+  /* Radio de borde — vocabulario de tres tokens
+     control = botones, campos, selectores, casillas, badges
+     superficie = tarjetas, paneles, modales, tablas contenidas
+     pill = indicadores de estado, contadores, conmutador de fase */
+  --ipd-radius-control: 8px;
+  --ipd-radius-superficie: 14px;
+  --ipd-radius-pill: 999px;
 
-  /* OBSOLETOS v1 — sustituir progresivamente */
+  /* Obsoletos: conservados por compatibilidad, no usar en interfaz nueva */
   --ipd-radius-none: 0;
   --ipd-radius-xs: 2px;
   --ipd-radius-sm: 4px;
@@ -161,26 +166,30 @@
   --ipd-border-thick: 2px;
   --ipd-border-accent: 4px;
 
-  /* Elevación v2 · contorno primero, difusión después */
-  --ipd-elev-0: none;
+  /* Elevacion — pilas de tres capas: contorno + ambiental + distancia
+     El contorno de 1px va dentro del box-shadow, no como border */
+  --ipd-elev-0: 0 0 0 1px rgba(0, 31, 61, 0.07);
   --ipd-elev-1:
-    0 0 0 1px rgba(0, 31, 61, 0.06),
-    0 1px 3px rgba(0, 31, 61, 0.06),
-    0 2px 8px rgba(0, 31, 61, 0.04);
+    0 0 0 1px rgba(0, 31, 61, 0.07),
+    0 1px 2px rgba(0, 31, 61, 0.04),
+    0 2px 6px rgba(0, 31, 61, 0.03);
   --ipd-elev-2:
-    0 0 0 1px rgba(0, 31, 61, 0.06),
-    0 3px 8px rgba(0, 31, 61, 0.07),
-    0 8px 20px rgba(0, 31, 61, 0.05);
+    0 0 0 1px rgba(0, 31, 61, 0.09),
+    0 2px 4px rgba(0, 31, 61, 0.05),
+    0 8px 20px rgba(0, 31, 61, 0.06);
   --ipd-elev-3:
-    0 0 0 1px rgba(0, 31, 61, 0.05),
-    0 8px 20px rgba(0, 31, 61, 0.08),
-    0 20px 48px rgba(0, 31, 61, 0.06);
+    0 0 0 1px rgba(0, 31, 61, 0.10),
+    0 4px 8px rgba(0, 31, 61, 0.06),
+    0 16px 32px rgba(0, 31, 61, 0.10);
   --ipd-elev-4:
-    0 0 0 1px rgba(0, 31, 61, 0.04),
-    0 16px 40px rgba(0, 31, 61, 0.10),
-    0 40px 80px rgba(0, 31, 61, 0.08);
+    0 0 0 1px rgba(0, 31, 61, 0.12),
+    0 8px 16px rgba(0, 31, 61, 0.08),
+    0 32px 64px rgba(0, 31, 61, 0.16);
 
-  /* Sombras v1 — compatibilidad */
+  /* Foco — anillo de 2px en oro con offset de 2px */
+  --ipd-ring-focus: 0 0 0 2px var(--ipd-color-gold-600);
+
+  /* Sombras — obsoletas, conservadas por compatibilidad */
   --ipd-shadow-none: none;
   --ipd-shadow-xs: 0 1px 2px rgba(0, 31, 61, 0.06);
   --ipd-shadow-sm: 0 2px 6px rgba(0, 31, 61, 0.08);
@@ -189,16 +198,25 @@
   --ipd-shadow-xl: 0 28px 64px rgba(0, 31, 61, 0.18);
   --ipd-shadow-focus: 0 0 0 3px rgba(30, 90, 150, 0.35);
 
-  /* Movimiento · controles 120-180ms, paneles hasta 340ms */
+  /* Superficies con temperatura */
+  --ipd-superficie-fondo: #F7F9FC;
+  --ipd-superficie-1: #FFFFFF;
+  --ipd-superficie-2: #F2F5F9;
+  --ipd-superficie-3: #E8EDF4;
+
+  /* Movimiento — 120-180ms para controles, curvas refinadas */
   --ipd-duration-instant: 80ms;
-  --ipd-duration-fast: 120ms;
+  --ipd-duration-fast: 140ms;
   --ipd-duration-base: 180ms;
   --ipd-duration-slow: 340ms;
-  --ipd-duration-deliberate: 520ms;
+  --ipd-duration-deliberate: 400ms;
   --ipd-ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ipd-ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
   --ipd-ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --ipd-ease-emphasis: cubic-bezier(0.2, 0, 0, 1.2);
+
+  /* Lectura — ancho maximo para prosa */
+  --ipd-measure: 68ch;
 
   /* Capas */
   --ipd-z-base: 0;
@@ -249,16 +267,11 @@
 /* ---------- 2. SEMÁNTICOS · tema claro (default) ------------------------- */
 
 :root {
-  /* Superficies · temperatura (jerarquía de profundidad) */
-  --ipd-superficie-fondo: #F7F9FC;
-  --ipd-superficie-1: #FFFFFF;
-  --ipd-superficie-2: #F2F5F9;
-  --ipd-superficie-3: #E8EDF4;
-
-  /* Superficies · semánticas */
-  --ipd-bg-page: var(--ipd-superficie-fondo);
-  --ipd-bg-subtle: var(--ipd-color-neutral-50);
-  --ipd-bg-muted: var(--ipd-color-neutral-100);
+  /* Superficies */
+  --ipd-bg-page: var(--ipd-superficie-1);
+  --ipd-bg-subtle: var(--ipd-superficie-fondo);
+  --ipd-bg-muted: var(--ipd-superficie-2);
+  --ipd-bg-sunken: var(--ipd-superficie-3);
   --ipd-bg-brand: var(--ipd-color-navy-700);
   --ipd-bg-brand-strong: var(--ipd-color-navy-900);
   --ipd-bg-brand-subtle: var(--ipd-color-navy-50);
