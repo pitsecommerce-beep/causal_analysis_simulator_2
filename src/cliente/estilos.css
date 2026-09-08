@@ -18,7 +18,7 @@ body {
 
 h1, h2, h3, h4 {
   font-family: var(--ipd-font-display);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
 }
 
 input, select, textarea, button {
@@ -35,11 +35,11 @@ input, select, textarea, button {
   background: linear-gradient(135deg, var(--ipd-bg-brand-strong), var(--ipd-bg-brand));
 }
 .unirse__tarjeta {
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-lg);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-12);
   width: 400px;
-  box-shadow: var(--ipd-shadow-lg);
+  box-shadow: var(--ipd-elev-2);
 }
 .unirse__titulo {
   font-size: var(--ipd-size-2xl);
@@ -69,7 +69,7 @@ input, select, textarea, button {
   width: 100%;
   padding: var(--ipd-space-3) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-md);
   transition: border-color var(--ipd-duration-fast) var(--ipd-ease-standard);
 }
@@ -91,7 +91,7 @@ input, select, textarea, button {
   background: var(--ipd-interactive-default);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   font-size: var(--ipd-size-sm);
   cursor: pointer;
@@ -149,7 +149,7 @@ input, select, textarea, button {
 }
 .consola__header h1 {
   font-size: var(--ipd-size-md);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   flex-shrink: 0;
 }
 .consola__header-info {
@@ -241,9 +241,9 @@ input, select, textarea, button {
 }
 .kpi {
   padding: var(--ipd-space-3) var(--ipd-space-3);
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-sm);
-  border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-1);
 }
 .kpi__etiqueta {
   font-size: var(--ipd-size-3xs);
@@ -294,9 +294,9 @@ input, select, textarea, button {
 }
 
 .tarjeta-consulta {
-  background: var(--ipd-bg-page);
-  border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
-  border-radius: var(--ipd-radius-sm);
+  background: var(--ipd-superficie-1);
+  box-shadow: var(--ipd-elev-1);
+  border-radius: var(--ipd-radius-superficie);
   margin-bottom: var(--ipd-space-3);
   overflow: hidden;
 }
@@ -341,7 +341,7 @@ input, select, textarea, button {
   width: 100%;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-xs);
   background: var(--ipd-bg-page);
 }
@@ -355,7 +355,7 @@ input, select, textarea, button {
   background: var(--ipd-interactive-default);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   font-size: var(--ipd-size-xs);
   cursor: pointer;
@@ -376,9 +376,9 @@ input, select, textarea, button {
   align-items: center;
   justify-content: space-between;
   padding: var(--ipd-space-2) var(--ipd-space-3);
-  background: var(--ipd-bg-page);
-  border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
-  border-radius: var(--ipd-radius-sm);
+  background: var(--ipd-superficie-1);
+  box-shadow: var(--ipd-elev-1);
+  border-radius: var(--ipd-radius-superficie);
   margin-bottom: var(--ipd-space-2);
   font-size: var(--ipd-size-2xs);
 }
@@ -395,7 +395,7 @@ input, select, textarea, button {
   background: var(--ipd-feedback-success-fg);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-3xs);
   font-weight: var(--ipd-weight-semibold);
   cursor: pointer;
@@ -427,7 +427,7 @@ input, select, textarea, button {
 .resultado__stat {
   padding: var(--ipd-space-2) var(--ipd-space-4);
   background: var(--ipd-bg-brand-subtle);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   font-family: var(--ipd-font-mono);
   font-variant-numeric: tabular-nums;
 }
@@ -458,14 +458,15 @@ input, select, textarea, button {
   flex: 1;
   height: 32px;
   background: var(--ipd-bg-muted);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   overflow: hidden;
   position: relative;
 }
 .embudo__barra {
   height: 100%;
   background: var(--ipd-interactive-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
+  /* inner bar inherits control radius for consistent rounding */
   transition: width 0.4s var(--ipd-ease-standard);
 }
 .embudo__valor {
@@ -517,7 +518,7 @@ input, select, textarea, button {
   padding: var(--ipd-space-2) var(--ipd-space-3);
   background: var(--ipd-feedback-warning-bg);
   border: var(--ipd-border-hairline) solid var(--ipd-feedback-warning-fg);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   font-size: var(--ipd-size-2xs);
   margin-bottom: var(--ipd-space-1);
 }
@@ -526,7 +527,7 @@ input, select, textarea, button {
 .penalizacion {
   padding: var(--ipd-space-2) var(--ipd-space-3);
   background: var(--ipd-feedback-danger-bg);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   font-size: var(--ipd-size-2xs);
   margin-bottom: var(--ipd-space-1);
 }
@@ -542,11 +543,11 @@ input, select, textarea, button {
   z-index: var(--ipd-z-modal);
 }
 .modal {
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-lg);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-6);
   width: 400px;
-  box-shadow: var(--ipd-shadow-xl);
+  box-shadow: var(--ipd-elev-4);
 }
 .modal h3 {
   margin-bottom: var(--ipd-space-3);
@@ -556,7 +557,7 @@ input, select, textarea, button {
   width: 100%;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   margin-bottom: var(--ipd-space-3);
 }
 .modal__botones {
@@ -566,7 +567,7 @@ input, select, textarea, button {
 }
 .modal__botones button {
   padding: var(--ipd-space-2) var(--ipd-space-4);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   cursor: pointer;
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
@@ -613,7 +614,6 @@ input, select, textarea, button {
 .escena--canvas .escena__subtitulos {
   margin-top: 0;
   max-width: 720px;
-  backdrop-filter: blur(4px);
 }
 .escena--canvas .escena__controles {
   max-width: 720px;
@@ -659,7 +659,7 @@ input, select, textarea, button {
   aspect-ratio: 16/9;
   background: var(--ipd-color-navy-800);
   border: var(--ipd-border-thick) solid var(--ipd-color-navy-600);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   overflow: hidden;
   image-rendering: pixelated;
 }
@@ -721,7 +721,7 @@ input, select, textarea, button {
   height: 16%;
   background: linear-gradient(180deg, #6b5340 0%, #4a3828 100%);
   border: 2px solid #3a2818;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   box-shadow: var(--ipd-shadow-md);
 }
 .escena__personaje {
@@ -791,7 +791,7 @@ input, select, textarea, button {
   width: 120px;
   height: 160px;
   background: radial-gradient(ellipse at center bottom, var(--ipd-color-navy-800) 0%, var(--ipd-color-navy-950) 70%);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -805,7 +805,7 @@ input, select, textarea, button {
 .escena__avatar-cabeza {
   width: 32px;
   height: 32px;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   background: #d4a574;
   border: var(--ipd-border-thick) solid #b8956a;
   box-shadow: 0 0 12px 4px var(--ipd-color-gold-600);
@@ -813,7 +813,7 @@ input, select, textarea, button {
 .escena__avatar-cuerpo {
   width: 40px;
   height: 48px;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   margin-top: var(--ipd-space-1);
 }
 .escena__avatar-cuerpo--F {
@@ -831,7 +831,7 @@ input, select, textarea, button {
   right: -4px;
   bottom: -4px;
   border: var(--ipd-border-thick) solid var(--ipd-color-gold-600);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   animation: pulso 2s ease-in-out infinite;
   opacity: 0;
 }
@@ -843,7 +843,7 @@ input, select, textarea, button {
 .escena__ficha {
   background: var(--ipd-color-navy-950);
   border: var(--ipd-border-thick) solid var(--ipd-color-navy-600);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-5) var(--ipd-space-6);
   min-width: 200px;
 }
@@ -907,7 +907,7 @@ input, select, textarea, button {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at center, var(--ipd-color-navy-800) 0%, var(--ipd-color-navy-950) 100%);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
 }
 .escena__mesa-redonda-circulo {
   position: absolute;
@@ -980,7 +980,7 @@ input, select, textarea, button {
   color: var(--ipd-text-on-brand);
   padding: var(--ipd-space-2) var(--ipd-space-6);
   background: var(--ipd-interactive-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   display: inline-block;
   margin-bottom: var(--ipd-space-4);
 }
@@ -1003,7 +1003,7 @@ input, select, textarea, button {
   max-width: 800px;
   margin-top: var(--ipd-space-4);
   background: rgba(0, 21, 43, 0.9);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   padding: var(--ipd-space-4) var(--ipd-space-6);
   min-height: 80px;
   display: flex;
@@ -1052,7 +1052,7 @@ input, select, textarea, button {
   background: var(--ipd-interactive-default);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   font-size: var(--ipd-size-xs);
   cursor: pointer;
@@ -1127,7 +1127,7 @@ input, select, textarea, button {
   padding: var(--ipd-space-2) var(--ipd-space-3);
   background: var(--ipd-color-navy-950);
   border: var(--ipd-border-hairline) solid var(--ipd-color-navy-600);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   color: var(--ipd-text-on-brand);
   font-size: var(--ipd-size-sm);
   font-family: var(--ipd-font-sans);
@@ -1145,7 +1145,7 @@ input, select, textarea, button {
   padding: var(--ipd-space-3) var(--ipd-space-4);
   background: var(--ipd-color-navy-950);
   border: var(--ipd-border-thick) solid var(--ipd-color-navy-600);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   color: var(--ipd-text-on-brand);
   cursor: pointer;
   text-align: left;
@@ -1199,7 +1199,7 @@ input, select, textarea, button {
   color: var(--ipd-color-gold-400);
   background: var(--ipd-color-navy-900);
   padding: var(--ipd-space-2) var(--ipd-space-4);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   margin-bottom: var(--ipd-space-4);
   text-align: center;
 }
@@ -1210,7 +1210,7 @@ input, select, textarea, button {
   gap: var(--ipd-space-1);
   background: var(--ipd-color-navy-900);
   border: var(--ipd-border-hairline) solid var(--ipd-color-gold-600);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   padding: var(--ipd-space-3) var(--ipd-space-4);
   margin-bottom: var(--ipd-space-4);
 }
@@ -1236,7 +1236,7 @@ input, select, textarea, button {
 }
 .roles__roster--live {
   border: var(--ipd-border-hairline) solid var(--ipd-color-navy-800);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   padding: var(--ipd-space-3);
   background: rgba(0, 21, 43, 0.5);
 }
@@ -1254,7 +1254,7 @@ input, select, textarea, button {
   justify-content: space-between;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   background: var(--ipd-color-navy-950);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   margin-bottom: var(--ipd-space-1);
 }
 .roles__roster-miembro--nuevo {
@@ -1299,7 +1299,7 @@ input, select, textarea, button {
   justify-content: space-between;
   align-items: center;
   padding: var(--ipd-space-1) var(--ipd-space-2);
-  border-radius: var(--ipd-radius-xs);
+  border-radius: var(--ipd-radius-control);
   margin-bottom: 2px;
   font-size: var(--ipd-size-2xs);
 }
@@ -1339,7 +1339,7 @@ input, select, textarea, button {
   gap: 0;
   margin-bottom: var(--ipd-space-6);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   overflow: hidden;
 }
 .unirse__tab {
@@ -1439,7 +1439,7 @@ input, select, textarea, button {
   background: var(--ipd-feedback-success-fg);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   font-size: var(--ipd-size-sm);
   cursor: pointer;
@@ -1457,9 +1457,9 @@ input, select, textarea, button {
 .tablero__header {
   text-align: center;
   padding: var(--ipd-space-6);
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-lg);
-  box-shadow: var(--ipd-shadow-md);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-2);
   margin-bottom: var(--ipd-space-5);
 }
 .tablero__header h2 {
@@ -1476,13 +1476,13 @@ input, select, textarea, button {
 }
 .tablero__medalla {
   font-size: var(--ipd-size-3xl);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-text-brand);
 }
 .tablero__puntos {
   font-family: var(--ipd-font-mono);
   font-size: var(--ipd-size-6xl);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-text-brand);
   font-variant-numeric: tabular-nums;
 }
@@ -1508,10 +1508,10 @@ input, select, textarea, button {
 .tablero__final--h { background: var(--ipd-feedback-danger-bg); color: var(--ipd-feedback-danger-fg); }
 
 .tablero__desglose {
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-lg);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-5);
-  box-shadow: var(--ipd-shadow-xs);
+  box-shadow: var(--ipd-elev-1);
   margin-bottom: var(--ipd-space-5);
 }
 .tablero__desglose h3 {
@@ -1560,10 +1560,10 @@ input, select, textarea, button {
 }
 
 .tablero__trayectoria {
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-lg);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-5);
-  box-shadow: var(--ipd-shadow-xs);
+  box-shadow: var(--ipd-elev-1);
   margin-bottom: var(--ipd-space-5);
 }
 .tablero__trayectoria h3 {
@@ -1592,10 +1592,10 @@ input, select, textarea, button {
 }
 
 .tablero__consejo {
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-lg);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-5);
-  box-shadow: var(--ipd-shadow-xs);
+  box-shadow: var(--ipd-elev-1);
   margin-bottom: var(--ipd-space-5);
 }
 .tablero__consejo h3 {
@@ -1609,13 +1609,13 @@ input, select, textarea, button {
   margin-bottom: var(--ipd-space-4);
   padding: var(--ipd-space-3);
   background: var(--ipd-bg-brand-subtle);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   border-left: 3px solid var(--ipd-border-brand);
 }
 .tablero__pregunta-num {
   font-family: var(--ipd-font-mono);
   font-size: var(--ipd-size-lg);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-text-brand);
   flex-shrink: 0;
   width: 28px;
@@ -1634,10 +1634,10 @@ input, select, textarea, button {
 }
 
 .tablero__detalles {
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-lg);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-4) var(--ipd-space-5);
-  box-shadow: var(--ipd-shadow-xs);
+  box-shadow: var(--ipd-elev-1);
   margin-bottom: var(--ipd-space-5);
 }
 .tablero__detalles summary {
@@ -1733,7 +1733,7 @@ input, select, textarea, button {
   background: var(--ipd-interactive-default);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   font-size: var(--ipd-size-xs);
   cursor: pointer;
@@ -1765,10 +1765,10 @@ input, select, textarea, button {
   font-size: var(--ipd-size-md);
 }
 .profesor__equipo {
-  background: var(--ipd-bg-page);
-  border-radius: var(--ipd-radius-md);
+  background: var(--ipd-superficie-1);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-4);
-  box-shadow: var(--ipd-shadow-xs);
+  box-shadow: var(--ipd-elev-1);
   border: var(--ipd-border-thick) solid transparent;
 }
 .profesor__equipo--terminado {
@@ -1783,7 +1783,7 @@ input, select, textarea, button {
 .profesor__posicion {
   font-family: var(--ipd-font-mono);
   font-size: var(--ipd-size-lg);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-text-brand);
 }
 .profesor__equipo-header h3 {
@@ -1812,7 +1812,7 @@ input, select, textarea, button {
   align-items: center;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   background: var(--ipd-bg-subtle);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   min-width: 50px;
 }
 .profesor__kpi-label {
@@ -1849,13 +1849,13 @@ input, select, textarea, button {
   gap: var(--ipd-space-3);
   padding: var(--ipd-space-3);
   background: var(--ipd-feedback-success-bg);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   margin-bottom: var(--ipd-space-3);
 }
 .profesor__total {
   font-family: var(--ipd-font-mono);
   font-size: var(--ipd-size-xl);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-text-brand);
 }
 .profesor__final {
@@ -1903,7 +1903,7 @@ input, select, textarea, button {
 }
 .profesor__equipo-config {
   background: var(--ipd-bg-subtle);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-3) var(--ipd-space-4);
   margin-bottom: var(--ipd-space-3);
 }
@@ -1917,7 +1917,7 @@ input, select, textarea, button {
   flex: 1;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-sm);
   font-weight: var(--ipd-weight-semibold);
   background: var(--ipd-bg-page);
@@ -1927,7 +1927,7 @@ input, select, textarea, button {
   background: var(--ipd-feedback-danger-fg);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-2xs);
   cursor: pointer;
 }
@@ -1935,7 +1935,7 @@ input, select, textarea, button {
   width: 100%;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-family: var(--ipd-font-mono);
   font-size: var(--ipd-size-xs);
   resize: vertical;
@@ -2002,14 +2002,13 @@ input, select, textarea, button {
   display: flex;
   align-items: center;
   gap: var(--ipd-space-3);
-  background: rgba(0, 21, 43, 0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 21, 43, 0.92);
   padding: var(--ipd-space-2) var(--ipd-space-5);
   border-radius: var(--ipd-radius-pill);
 }
 .juego__hud-nombre {
   font-family: var(--ipd-font-display);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   font-size: var(--ipd-size-sm);
   color: var(--ipd-text-on-brand);
 }
@@ -2026,13 +2025,13 @@ input, select, textarea, button {
   background: var(--ipd-interactive-default);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   font-size: var(--ipd-size-sm);
   cursor: pointer;
   transition: background var(--ipd-duration-fast) var(--ipd-ease-standard),
               transform var(--ipd-duration-fast) var(--ipd-ease-standard);
-  box-shadow: var(--ipd-shadow-lg);
+  box-shadow: var(--ipd-elev-2);
 }
 .juego__btn-laptop:hover {
   background: var(--ipd-interactive-hover);
@@ -2093,7 +2092,6 @@ input, select, textarea, button {
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
   transition: background 0.2s, border-color 0.2s;
 }
 .juego__btn-sonido:hover { background: rgba(0, 0, 0, 0.6); }
@@ -2113,7 +2111,6 @@ input, select, textarea, button {
   font-family: var(--ipd-font-mono);
   font-size: var(--ipd-size-3xs);
   cursor: pointer;
-  backdrop-filter: blur(4px);
   transition: background 0.2s, color 0.2s;
 }
 .juego__btn-abandonar:hover {
@@ -2124,7 +2121,7 @@ input, select, textarea, button {
 .consola__btn-abandonar {
   margin-left: auto;
   padding: var(--ipd-space-1) var(--ipd-space-4);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.08);
   color: var(--ipd-text-secondary);
@@ -2167,7 +2164,7 @@ input, select, textarea, button {
 .transicion-fase__nombre {
   font-family: var(--ipd-font-display);
   font-size: clamp(28px, 6vw, 56px);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-color-gold-300);
   text-shadow: 0 2px 20px rgba(184, 146, 48, 0.3);
   letter-spacing: 0.04em;
@@ -2251,7 +2248,7 @@ input, select, textarea, button {
   padding: var(--ipd-space-1) var(--ipd-space-4);
   background: transparent;
   border: var(--ipd-border-hairline) solid var(--ipd-color-navy-500);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   color: var(--ipd-color-navy-300);
   font-size: var(--ipd-size-2xs);
   font-weight: var(--ipd-weight-semibold);
@@ -2301,7 +2298,7 @@ input, select, textarea, button {
 .modal-rol__detalles li {
   padding: var(--ipd-space-2) var(--ipd-space-3);
   background: var(--ipd-bg-brand-subtle);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
   font-size: var(--ipd-size-xs);
   line-height: var(--ipd-leading-normal);
   border-left: 3px solid var(--ipd-border-brand);
@@ -2327,7 +2324,7 @@ input, select, textarea, button {
   flex: 1 1 160px;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-xs);
   background: var(--ipd-bg-page);
   box-sizing: border-box;
@@ -2336,7 +2333,7 @@ input, select, textarea, button {
   flex: 0 1 140px;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-xs);
   background: var(--ipd-bg-page);
   box-sizing: border-box;
@@ -2349,8 +2346,8 @@ input, select, textarea, button {
   color: var(--ipd-text-secondary);
   margin-bottom: var(--ipd-space-3);
   padding: var(--ipd-space-2);
-  background: var(--ipd-surface-secondary, rgba(255,255,255,0.05));
-  border-radius: var(--ipd-radius-sm);
+  background: var(--ipd-superficie-2);
+  border-radius: var(--ipd-radius-superficie);
 }
 .comentarios__dist-item {
   font-variant-numeric: tabular-nums;
@@ -2360,7 +2357,7 @@ input, select, textarea, button {
   overflow-y: auto;
   overflow-x: auto;
   border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-superficie);
 }
 .comentarios__tabla {
   width: 100%;
@@ -2439,10 +2436,10 @@ input, select, textarea, button {
 .comentarios__detalle {
   margin-top: var(--ipd-space-3);
   padding: var(--ipd-space-3);
-  background: var(--ipd-bg-page);
+  background: var(--ipd-superficie-1);
   border: var(--ipd-border-hairline) solid var(--ipd-border-focus);
-  border-radius: var(--ipd-radius-sm);
-  box-shadow: var(--ipd-shadow-focus);
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-2);
 }
 .comentarios__detalle-header {
   display: flex;
@@ -2498,7 +2495,7 @@ input, select, textarea, button {
   width: 100%;
   padding: var(--ipd-space-2) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-xs);
   font-family: inherit;
   background: var(--ipd-bg-page);
@@ -2513,7 +2510,7 @@ input, select, textarea, button {
   background: var(--ipd-feedback-success-fg);
   color: var(--ipd-text-on-brand);
   border: none;
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   font-size: var(--ipd-size-xs);
   cursor: pointer;
@@ -2536,9 +2533,9 @@ input, select, textarea, button {
 .indicadores {
   margin-top: var(--ipd-space-3);
   padding: var(--ipd-space-3);
-  background: var(--ipd-surface-secondary, rgba(255,255,255,0.05));
-  border-radius: var(--ipd-radius-sm);
-  border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
+  background: var(--ipd-superficie-2);
+  border-radius: var(--ipd-radius-superficie);
+  box-shadow: var(--ipd-elev-1);
 }
 .indicadores__titulo {
   font-size: var(--ipd-size-xs);
@@ -2558,7 +2555,7 @@ input, select, textarea, button {
   align-items: center;
   gap: var(--ipd-space-2);
   padding: var(--ipd-space-2);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
   background: var(--ipd-bg-page);
   transition: border-color var(--ipd-duration-fast) var(--ipd-ease-standard),
@@ -2597,7 +2594,7 @@ input, select, textarea, button {
 .panel-objetivos {
   background: var(--ipd-surface-secondary, rgba(255,255,255,0.05));
   border: 1px solid var(--ipd-color-info-600);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-3) var(--ipd-space-4);
   margin-bottom: var(--ipd-space-4);
 }
@@ -2640,7 +2637,7 @@ input, select, textarea, button {
 }
 .panel-propuestas__titulo {
   font-size: var(--ipd-size-xs);
-  font-weight: var(--ipd-weight-bold);
+  font-weight: var(--ipd-weight-semibold);
   color: var(--ipd-text-primary);
   margin-bottom: var(--ipd-space-3);
 }
@@ -2666,8 +2663,8 @@ input, select, textarea, button {
 }
 
 .propuesta {
-  background: var(--ipd-surface-secondary, rgba(255,255,255,0.05));
-  border-radius: var(--ipd-radius-sm);
+  background: var(--ipd-superficie-2);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-2) var(--ipd-space-3);
   margin-bottom: var(--ipd-space-2);
   border-left: 3px solid var(--ipd-color-gold-500);
@@ -2713,7 +2710,7 @@ input, select, textarea, button {
 .propuesta__btn {
   flex: 1;
   padding: var(--ipd-space-1) var(--ipd-space-2);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   border: none;
   font-size: var(--ipd-size-3xs);
   font-weight: var(--ipd-weight-semibold);
@@ -2764,7 +2761,7 @@ input, select, textarea, button {
 .panel-solicitudes__btn-enviar {
   width: 100%;
   padding: var(--ipd-space-1) var(--ipd-space-3);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   border: none;
   background: var(--ipd-color-navy-500);
   color: #fff;
@@ -2775,8 +2772,8 @@ input, select, textarea, button {
 .panel-solicitudes__btn-enviar:disabled { opacity: 0.5; cursor: default; }
 
 .solicitud-accion {
-  background: var(--ipd-surface-secondary, rgba(255,255,255,0.05));
-  border-radius: var(--ipd-radius-sm);
+  background: var(--ipd-superficie-2);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-2) var(--ipd-space-3);
   margin-bottom: var(--ipd-space-2);
 }
@@ -2806,7 +2803,7 @@ input, select, textarea, button {
 .solicitud-accion__btn {
   flex: 1;
   padding: var(--ipd-space-1);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   border: none;
   font-size: var(--ipd-size-3xs);
   font-weight: var(--ipd-weight-semibold);
@@ -2828,7 +2825,7 @@ input, select, textarea, button {
 .seccion-bloqueada {
   background: var(--ipd-surface-secondary, rgba(255,255,255,0.03));
   border: 1px dashed var(--ipd-border-subtle, rgba(255,255,255,0.15));
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-3) var(--ipd-space-4);
   margin-bottom: var(--ipd-space-3);
   opacity: 0.7;
@@ -2851,7 +2848,7 @@ input, select, textarea, button {
 }
 .seccion-bloqueada__btn {
   padding: var(--ipd-space-1) var(--ipd-space-3);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   border: 1px solid var(--ipd-color-navy-500);
   background: transparent;
   color: var(--ipd-color-navy-400);
@@ -2873,7 +2870,7 @@ input, select, textarea, button {
 }
 .seccion-bloqueada__pedir button {
   padding: var(--ipd-space-1) var(--ipd-space-3);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   border: none;
   background: var(--ipd-color-navy-500);
   color: #fff;
@@ -2934,7 +2931,7 @@ input, select, textarea, button {
 .banner-conexion__btn {
   margin-left: var(--ipd-space-3);
   padding: var(--ipd-space-1) var(--ipd-space-3);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   border: 1px solid rgba(255, 255, 255, 0.4);
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
@@ -2994,9 +2991,9 @@ input, select, textarea, button {
 /* -- Bloc de notas (participant companion during Act 1) -- */
 
 .bloc-notas {
-  background: var(--ipd-bg-page);
-  border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-md);
+  background: var(--ipd-superficie-1);
+  box-shadow: var(--ipd-elev-1);
+  border-radius: var(--ipd-radius-superficie);
   padding: var(--ipd-space-4);
   width: 100%;
   max-width: 480px;
@@ -3014,7 +3011,7 @@ input, select, textarea, button {
 .bloc-notas__area {
   width: 100%;
   border: var(--ipd-border-hairline) solid var(--ipd-border-subtle);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   padding: var(--ipd-space-3);
   font-family: var(--ipd-font-sans);
   font-size: var(--ipd-size-sm);
@@ -3436,7 +3433,7 @@ input, select, textarea, button {
   background: var(--ipd-feedback-success-bg);
   color: var(--ipd-feedback-success-fg);
   padding: var(--ipd-space-3) var(--ipd-space-4);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   margin-bottom: var(--ipd-space-4);
 }
 
@@ -3444,7 +3441,7 @@ input, select, textarea, button {
   background: var(--ipd-feedback-danger-bg);
   color: var(--ipd-feedback-danger-fg);
   padding: var(--ipd-space-3) var(--ipd-space-4);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   margin-bottom: var(--ipd-space-4);
 }
 
@@ -3469,7 +3466,7 @@ input, select, textarea, button {
 .admin__form input {
   padding: var(--ipd-space-2) var(--ipd-space-3);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-sm);
   flex: 1;
   min-width: 180px;
@@ -3478,7 +3475,7 @@ input, select, textarea, button {
 .admin__btn {
   padding: var(--ipd-space-2) var(--ipd-space-4);
   border: var(--ipd-border-hairline) solid var(--ipd-border-default);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   background: var(--ipd-bg-brand);
   color: var(--ipd-text-on-brand);
   cursor: pointer;
@@ -3544,27 +3541,25 @@ input, select, textarea, button {
 }
 .pizarron__toggle {
   padding: var(--ipd-space-2) var(--ipd-space-4);
-  background: rgba(0, 20, 50, 0.75);
+  background: rgba(0, 20, 50, 0.88);
   color: var(--ipd-text-on-brand, #fff);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--ipd-radius-sm, 4px);
+  border-radius: var(--ipd-radius-control, 8px);
   font-size: var(--ipd-size-xs, 13px);
   font-weight: var(--ipd-weight-semibold, 600);
   cursor: pointer;
-  backdrop-filter: blur(8px);
 }
 .pizarron__toggle:hover {
   background: rgba(0, 20, 50, 0.9);
 }
 .pizarron--abierto .pizarron__toggle {
-  border-radius: var(--ipd-radius-sm, 4px) var(--ipd-radius-sm, 4px) 0 0;
+  border-radius: var(--ipd-radius-control, 8px) var(--ipd-radius-control, 8px) 0 0;
 }
 .pizarron__contenido {
-  background: rgba(0, 20, 50, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(0, 20, 50, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-top: none;
-  border-radius: 0 var(--ipd-radius-sm, 4px) var(--ipd-radius-sm, 4px) var(--ipd-radius-sm, 4px);
+  border-radius: 0 var(--ipd-radius-control, 8px) var(--ipd-radius-control, 8px) var(--ipd-radius-control, 8px);
   padding: var(--ipd-space-3, 12px);
   min-width: 220px;
   max-width: 280px;
@@ -3590,11 +3585,11 @@ input, select, textarea, button {
   align-items: center;
   padding: var(--ipd-space-2, 8px);
   background: rgba(255, 255, 255, 0.06);
-  border-radius: var(--ipd-radius-sm, 4px);
+  border-radius: var(--ipd-radius-control, 8px);
 }
 .pizarron__metrica-valor {
   font-size: var(--ipd-size-lg, 18px);
-  font-weight: var(--ipd-weight-bold, 700);
+  font-weight: var(--ipd-weight-semibold, 600);
   font-variant-numeric: tabular-nums;
   color: #fff;
 }
@@ -3666,7 +3661,7 @@ input, select, textarea, button {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.6);
   border: var(--ipd-border-hairline) solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-size: var(--ipd-size-xs);
   cursor: pointer;
   transition: background var(--ipd-duration-fast) var(--ipd-ease-standard);
@@ -3707,7 +3702,7 @@ input, select, textarea, button {
   padding: var(--ipd-space-3) var(--ipd-space-5);
   background: rgba(255, 255, 255, 0.04);
   border: var(--ipd-border-hairline) solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--ipd-radius-md);
+  border-radius: var(--ipd-radius-superficie);
   opacity: 0;
   transform: translateX(-20px);
   transition: opacity 0.6s ease, transform 0.6s ease, background 0.5s ease, box-shadow 0.5s ease;
@@ -3754,7 +3749,7 @@ input, select, textarea, button {
 .reveal__final {
   font-size: var(--ipd-size-xs);
   padding: var(--ipd-space-1) var(--ipd-space-3);
-  border-radius: var(--ipd-radius-sm);
+  border-radius: var(--ipd-radius-control);
   font-weight: var(--ipd-weight-semibold);
   text-transform: uppercase;
   letter-spacing: var(--ipd-tracking-wide);
@@ -3815,7 +3810,7 @@ input, select, textarea, button {
   padding: var(--ipd-space-5) var(--ipd-space-10);
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.04));
   border: var(--ipd-border-thick) solid rgba(212, 175, 55, 0.3);
-  border-radius: var(--ipd-radius-xl);
+  border-radius: var(--ipd-radius-superficie);
 }
 .reveal__campeon-label {
   font-size: var(--ipd-size-2xs);
