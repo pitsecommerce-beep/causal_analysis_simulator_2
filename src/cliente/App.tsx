@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
 import { BannerConexion } from './componentes/BannerConexion';
+import { MesaRedonda } from './escena/MesaRedonda';
 import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico, RolEquipo, MiembroEquipo, PropuestaIntervencion, SolicitudAccion } from './lib/tipos';
 import { socket } from './lib/socket';
 
@@ -33,6 +34,7 @@ function borrarSesion(): void {
   try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
 }
 
+const Recepcion = lazy(() => import('./recepcion/Recepcion').then(m => ({ default: m.Recepcion })));
 const EscenaApp = lazy(() => import('./escena/EscenaApp').then(m => ({ default: m.EscenaApp })));
 const ConsolaApp = lazy(() => import('./consola/ConsolaApp').then(m => ({ default: m.ConsolaApp })));
 const JuegoApp = lazy(() => import('./juego/JuegoApp').then(m => ({ default: m.JuegoApp })));
@@ -60,7 +62,7 @@ interface DatosRol {
   codigoPersonal?: string;
 }
 
-type Pantalla = 'cargando' | 'unirse' | 'reconectando' | 'escena' | 'juego' | 'consola' | 'profesor' | 'admin' | 'proyeccion';
+type Pantalla = 'cargando' | 'unirse' | 'reconectando' | 'recepcion' | 'roles' | 'escena' | 'juego' | 'consola' | 'profesor' | 'admin' | 'proyeccion';
 
 export function App() {
   const [sesion, setSesion] = useState<DatosSesion | null>(null);
@@ -224,7 +226,7 @@ export function App() {
     if (datos.email) setEmailParticipante(datos.email);
     const faseActual = datos.reloj.fase;
     if (faseActual === 'sala_juntas' || faseActual === 'voz_cliente' || faseActual === 'espera') {
-      setPantalla('escena');
+      setPantalla('recepcion');
     } else {
       setPantalla('consola');
     }
@@ -324,14 +326,26 @@ export function App() {
     );
   }
 
-  if (pantalla === 'escena') {
+  if (pantalla === 'recepcion') {
     return (
       <Suspense fallback={cargando}>
-        <EscenaApp
-          codigoSala={sesion.codigoSala}
+        <Recepcion
           nombreEquipo={sesion.nombreEquipo}
           tamanoEquipo={sesion.tamanoEquipo}
-          onTerminar={(miembros, miRol, miNombre, codigoPersonal) => {
+          codigoSala={sesion.codigoSala}
+          onComenzar={() => setPantalla('roles')}
+        />
+      </Suspense>
+    );
+  }
+
+  if (pantalla === 'roles') {
+    return (
+      <div className="escena">
+        <MesaRedonda
+          nombreEquipo={sesion.nombreEquipo}
+          tamanoEquipo={sesion.tamanoEquipo}
+          onIniciar={(miembros, miRol, miNombre, codigoPersonal) => {
             setDatosRol({ miembros, miRol, miNombre, codigoPersonal });
             if (emailParticipante) {
               guardarSesion({
@@ -342,8 +356,20 @@ export function App() {
                 miRol,
               });
             }
-            setPantalla('juego');
+            setPantalla('escena');
           }}
+        />
+      </div>
+    );
+  }
+
+  if (pantalla === 'escena') {
+    return (
+      <Suspense fallback={cargando}>
+        <EscenaApp
+          codigoSala={sesion.codigoSala}
+          nombreEquipo={sesion.nombreEquipo}
+          onTerminar={() => setPantalla('juego')}
         />
       </Suspense>
     );

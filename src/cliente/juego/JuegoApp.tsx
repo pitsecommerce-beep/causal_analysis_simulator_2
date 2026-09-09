@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
 import { CanvasSala, type SpriteEscena } from '../escena/CanvasSala';
 import { ConsolaApp } from '../consola/ConsolaApp';
 import { ModalRol } from './ModalRol';
@@ -9,6 +9,8 @@ import { useSonidos } from './useSonidos';
 import { CAMARA } from '../escena/camara';
 import { socket } from '../lib/socket';
 import { usePresencia, type EstadoPresencia } from '../lib/presencia';
+
+const ComoJugar = lazy(() => import('../recepcion/ComoJugar').then(m => ({ default: m.ComoJugar })));
 import type {
   EstadoMotorCliente,
   EstadoReloj,
@@ -44,6 +46,7 @@ export function JuegoApp(props: Props) {
   const [mostrarModal, setMostrarModal] = useState(true);
   const [animando, setAnimando] = useState(false);
   const [transicion, setTransicion] = useState<string | null>(null);
+  const [mostrarAyuda, setMostrarAyuda] = useState(false);
 
   const { pares: presenciaPares } = usePresencia(props.miNombre);
   const { activo: ambienteActivo, alternar: alternarAmbiente } = useAmbiente();
@@ -129,6 +132,13 @@ export function JuegoApp(props: Props) {
           </button>
 
           <div className="juego__hud-controles">
+            <button
+              className="juego__btn-ayuda"
+              onClick={() => setMostrarAyuda(true)}
+              title="Cómo jugar"
+            >
+              ?
+            </button>
             <button
               className={`juego__btn-sonido ${ambienteActivo ? 'juego__btn-sonido--activo' : ''}`}
               onClick={alternarAmbiente}
@@ -218,6 +228,12 @@ export function JuegoApp(props: Props) {
           nombre={props.miNombre}
           onCerrar={() => setMostrarModal(false)}
         />
+      )}
+
+      {mostrarAyuda && (
+        <Suspense fallback={null}>
+          <ComoJugar onCerrar={() => setMostrarAyuda(false)} />
+        </Suspense>
       )}
     </div>
   );
