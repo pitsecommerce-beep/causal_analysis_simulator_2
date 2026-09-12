@@ -6,7 +6,8 @@ import { existsSync } from 'fs';
 import * as XLSX from 'xlsx';
 import { cargarConfig } from './motor/dag.js';
 import { cargarTodosDatos } from './datos/cargador.js';
-import { conectarDB, ejecutarMigraciones, cerrarDB } from './db/conexion.js';
+import { ejecutarMigraciones, cerrarDB } from './db/conexion.js';
+import { estadoDB, infoEstadoDB, iniciarConexionDB, registrarIO, forzarReintento } from './db/estado.js';
 import * as db from './db/consultas.js';
 import { configurarSockets, recuperarSesionesDB } from './sockets/sala.js';
 import { DISCURSO_DIRECTOR, DISCURSO_ADRIANA } from './voz/guiones.js';
@@ -40,17 +41,28 @@ async function main(): Promise<void> {
     cors: { origin: '*', methods: ['GET', 'POST'] },
   });
 
-  let dbConectada = false;
-
   app.get('/api/salud', async (_req, res) => {
     const variablesFaltantes = verificarVariables();
+    const info = infoEstadoDB();
     res.json({
       servidor: 'activo',
-      baseDatos: dbConectada ? 'conectada' : 'desconectada',
+      baseDatos: {
+        conectada: info.conectada,
+        ultimoError: info.ultimoError,
+        intentos: info.intentos,
+        ultimoExito: info.ultimoExito,
+        ultimoIntento: info.ultimoIntento,
+        reconectando: info.reconectando,
+      },
       variablesFaltantes,
       solicitudesCargadas: datos.solicitudes.length,
       comentariosCargados: datos.comentarios.length,
     });
+  });
+
+  app.post('/api/salud/reintentar', async (_req, res) => {
+    forzarReintento();
+    res.json({ ok: true, mensaje: 'Reintento de conexion iniciado' });
   });
 
   app.get('/api/descargar/solicitudes', (_req, res) => {
@@ -102,7 +114,7 @@ async function main(): Promise<void> {
     const cookies = parsearCookies(req.headers.cookie);
     const token = cookies[NOMBRE_COOKIE];
     if (!token) return null;
-    return verificarAuth(token, dbConectada);
+    return verificarAuth(token);
   }
 
   // --- Auth routes ---
@@ -115,7 +127,7 @@ async function main(): Promise<void> {
       return;
     }
     const info: InfoAuth = { tipo: 'superadmin', profesorId: null, correo: null, nombre: 'Superadmin' };
-    const token = await crearSesionAuth(info, dbConectada);
+    const token = await crearSesionAuth(info);
     res.cookie(NOMBRE_COOKIE, token, cookieOpts());
     res.json({ ok: true, tipo: 'superadmin', nombre: 'Superadmin' });
   });
@@ -126,8 +138,11 @@ async function main(): Promise<void> {
       res.status(400).json({ error: 'Correo y contrasena requeridos' });
       return;
     }
-    if (!dbConectada) {
-      res.status(503).json({ error: 'Base de datos no disponible' });
+    if (!estadoDB()) {
+      res.status(503).json({
+        error: 'Base de datos no disponible. Reintentando conexion automaticamente.',
+        codigo: 'DB_NO_DISPONIBLE',
+      });
       return;
     }
     const profesor = await db.obtenerProfesorPorCorreo(correo);
@@ -146,7 +161,7 @@ async function main(): Promise<void> {
       correo: profesor.correo,
       nombre: profesor.nombre,
     };
-    const token = await crearSesionAuth(info, dbConectada);
+    const token = await crearSesionAuth(info);
     res.cookie(NOMBRE_COOKIE, token, cookieOpts());
     res.json({
       ok: true,
@@ -160,7 +175,7 @@ async function main(): Promise<void> {
   app.post('/api/auth/logout', async (req, res) => {
     const cookies = parsearCookies(req.headers.cookie);
     const token = cookies[NOMBRE_COOKIE];
-    if (token) await invalidarAuth(token, dbConectada);
+    if (token) await invalidarAuth(token);
     res.clearCookie(NOMBRE_COOKIE, { path: '/' });
     res.json({ ok: true });
   });
@@ -182,8 +197,11 @@ async function main(): Promise<void> {
       res.status(403).json({ error: 'Solo superadmin' });
       return;
     }
-    if (!dbConectada) {
-      res.status(503).json({ error: 'Base de datos no disponible' });
+    if (!estadoDB()) {
+      res.status(503).json({
+        error: 'Base de datos no disponible. Reintentando conexion automaticamente.',
+        codigo: 'DB_NO_DISPONIBLE',
+      });
       return;
     }
     const profesores = await db.listarProfesores();
@@ -196,8 +214,11 @@ async function main(): Promise<void> {
       res.status(403).json({ error: 'Solo superadmin' });
       return;
     }
-    if (!dbConectada) {
-      res.status(503).json({ error: 'Base de datos no disponible' });
+    if (!estadoDB()) {
+      res.status(503).json({
+        error: 'Base de datos no disponible. Reintentando conexion automaticamente.',
+        codigo: 'DB_NO_DISPONIBLE',
+      });
       return;
     }
     const { correo, nombre, contrasena } = req.body ?? {};
@@ -228,8 +249,11 @@ async function main(): Promise<void> {
       res.status(403).json({ error: 'Solo superadmin' });
       return;
     }
-    if (!dbConectada) {
-      res.status(503).json({ error: 'Base de datos no disponible' });
+    if (!estadoDB()) {
+      res.status(503).json({
+        error: 'Base de datos no disponible. Reintentando conexion automaticamente.',
+        codigo: 'DB_NO_DISPONIBLE',
+      });
       return;
     }
     const id = parseInt(req.params.id, 10);
@@ -257,8 +281,11 @@ async function main(): Promise<void> {
       res.status(403).json({ error: 'No autorizado' });
       return;
     }
-    if (!dbConectada) {
-      res.status(503).json({ error: 'Base de datos no disponible' });
+    if (!estadoDB()) {
+      res.status(503).json({
+        error: 'Base de datos no disponible. Reintentando conexion automaticamente.',
+        codigo: 'DB_NO_DISPONIBLE',
+      });
       return;
     }
     const { actual, nueva } = req.body ?? {};
@@ -292,7 +319,7 @@ async function main(): Promise<void> {
       res.status(403).json({ error: 'No autorizado' });
       return;
     }
-    if (!dbConectada || !auth.profesorId) {
+    if (!estadoDB() || !auth.profesorId) {
       res.json({ sesiones: [] });
       return;
     }
@@ -406,22 +433,16 @@ async function main(): Promise<void> {
   await new Promise<void>((res) => httpServer.listen(PORT, HOST, res));
   console.log(`  Servidor escuchando en puerto ${PORT} (healthcheck listo)`);
 
-  if (process.env.DATABASE_URL) {
-    console.log('Conectando a base de datos...');
-    dbConectada = await conectarDB();
-    if (dbConectada) {
-      await ejecutarMigraciones();
-      console.log('  Base de datos lista ✓');
-    } else {
-      console.warn('  ⚠ No se pudo conectar a Postgres. Estado solo en memoria.');
-    }
-  } else {
-    console.warn('⚠ DATABASE_URL no configurada. Estado solo en memoria.');
+  registrarIO(io, config);
+  const dbOk = await iniciarConexionDB();
+
+  if (dbOk) {
+    await ejecutarMigraciones();
   }
 
-  configurarSockets(io, config, datos, dbConectada);
+  configurarSockets(io, config, datos);
 
-  if (dbConectada) {
+  if (dbOk) {
     const n = await recuperarSesionesDB(io, config);
     if (n > 0) console.log(`  ${n} sesion(es) recuperada(s) de Postgres`);
   }
@@ -431,7 +452,7 @@ async function main(): Promise<void> {
   console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
   console.log(`║   SIMULADOR DE ANALISIS CAUSAL — ETF Bank                  ║`);
   console.log(`║   Servidor escuchando en puerto ${String(PORT).padEnd(29)}║`);
-  console.log(`║   Base de datos: ${(dbConectada ? 'conectada' : 'solo memoria').padEnd(40)}║`);
+  console.log(`║   Base de datos: ${(estadoDB() ? 'conectada' : 'solo memoria').padEnd(40)}║`);
   console.log(`║   IA consejo:  ${modeloPensar.padEnd(42)}║`);
   console.log(`║   Acto 1:      texto fijo + Deepgram en vivo${' '.padEnd(14)}║`);
   console.log(`╚══════════════════════════════════════════════════════════════╝`);

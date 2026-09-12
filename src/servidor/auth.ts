@@ -1,5 +1,6 @@
-import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { randomBytes, scryptSync, timingSafeEqual, createHmac } from 'crypto';
 import { obtenerPool } from './db/conexion.js';
+import { estadoDB } from './db/estado.js';
 
 const SALT_LEN = 16;
 const KEY_LEN = 64;
@@ -37,14 +38,48 @@ const DURACION_TOKEN_MS = 8 * 60 * 60 * 1000;
 
 const tokensMemoria = new Map<string, InfoAuth & { expiraEn: number }>();
 
+function obtenerClaveSuperadmin(): string | undefined {
+  return process.env.CLAVE_SUPERADMIN || process.env.CLAVE_PROFESOR;
+}
+
+function firmarTokenSuperadmin(payload: { exp: number }): string {
+  const clave = obtenerClaveSuperadmin();
+  if (!clave) throw new Error('CLAVE_SUPERADMIN no configurada');
+  const datos = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const firma = createHmac('sha256', clave).update(datos).digest('base64url');
+  return `sa.${datos}.${firma}`;
+}
+
+function verificarTokenSuperadmin(token: string): InfoAuth | null {
+  if (!token.startsWith('sa.')) return null;
+  const clave = obtenerClaveSuperadmin();
+  if (!clave) return null;
+  const partes = token.split('.');
+  if (partes.length !== 3) return null;
+  const [, datos, firma] = partes;
+  const firmaEsperada = createHmac('sha256', clave).update(datos).digest('base64url');
+  if (firma.length !== firmaEsperada.length) return null;
+  if (!timingSafeEqual(Buffer.from(firma), Buffer.from(firmaEsperada))) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(datos, 'base64url').toString());
+    if (typeof payload.exp !== 'number' || Date.now() > payload.exp) return null;
+    return { tipo: 'superadmin', profesorId: null, correo: null, nombre: 'Superadmin' };
+  } catch {
+    return null;
+  }
+}
+
 export async function crearSesionAuth(
   info: InfoAuth,
-  dbDisponible: boolean,
 ): Promise<string> {
+  if (info.tipo === 'superadmin') {
+    return firmarTokenSuperadmin({ exp: Date.now() + DURACION_TOKEN_MS });
+  }
+
   const token = generarToken();
   const expiraEn = new Date(Date.now() + DURACION_TOKEN_MS);
 
-  if (dbDisponible) {
+  if (estadoDB()) {
     try {
       const pool = obtenerPool();
       await pool.query(
@@ -63,9 +98,11 @@ export async function crearSesionAuth(
 
 export async function verificarAuth(
   token: string,
-  dbDisponible: boolean,
 ): Promise<InfoAuth | null> {
-  if (dbDisponible) {
+  const saAuth = verificarTokenSuperadmin(token);
+  if (saAuth) return saAuth;
+
+  if (estadoDB()) {
     try {
       const pool = obtenerPool();
       const { rows } = await pool.query(
@@ -99,10 +136,9 @@ export async function verificarAuth(
 
 export async function invalidarAuth(
   token: string,
-  dbDisponible: boolean,
 ): Promise<void> {
   tokensMemoria.delete(token);
-  if (dbDisponible) {
+  if (estadoDB()) {
     try {
       const pool = obtenerPool();
       await pool.query('DELETE FROM tokens_sesion WHERE token = $1', [token]);
