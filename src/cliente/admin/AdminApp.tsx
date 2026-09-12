@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { LogoIPADE } from '../componentes/LogoIPADE';
 
 interface Props {
   onCerrarSesion: () => void;
@@ -132,6 +133,7 @@ export function AdminApp({ onCerrarSesion }: Props) {
   return (
     <div className="admin">
       <header className="admin__header">
+        <LogoIPADE variante="navy" alto={28} enlace />
         <h1>Panel de Administracion</h1>
         <button className="admin__btn admin__btn--cerrar" onClick={onCerrarSesion}>
           Cerrar sesion

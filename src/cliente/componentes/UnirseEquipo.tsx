@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { socket } from '../lib/socket';
+import { LogoIPADE } from './LogoIPADE';
 import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico, PropuestaIntervencion, SolicitudAccion } from '../lib/tipos';
 
 interface Props {
@@ -138,6 +139,9 @@ export function UnirseEquipo({ onUnido, onProfesor, onAdmin, onReconectar, error
   return (
     <div className="unirse">
       <div className="unirse__tarjeta">
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <LogoIPADE variante="navy" alto={40} />
+        </div>
         <h1 className="unirse__titulo">ETF Bank</h1>
         <p className="unirse__subtitulo">Simulador de Analisis Causal</p>
 

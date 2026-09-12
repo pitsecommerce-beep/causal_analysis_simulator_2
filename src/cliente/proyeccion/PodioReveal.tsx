@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { EquipoTablero } from '../lib/tipos';
+import { LogoIPADE } from '../componentes/LogoIPADE';
 import { NOMBRES_FINALES } from '../lib/tipos';
 
 interface Props {
@@ -114,6 +115,9 @@ export function PodioReveal({ equipos, onSaltar }: Props) {
 
   return (
     <div className={`reveal ${paso === 'oscuro' ? 'reveal--oscuro' : ''}`}>
+      <div style={{ position: 'absolute', top: 16, left: 24, zIndex: 10 }}>
+        <LogoIPADE variante="blanco" alto={64} />
+      </div>
       {onSaltar && paso !== 'completo' && (
         <button
           className="reveal__saltar"

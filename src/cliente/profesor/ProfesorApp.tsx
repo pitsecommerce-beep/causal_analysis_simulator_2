@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { socket } from '../lib/socket';
+import { LogoIPADE } from '../componentes/LogoIPADE';
 import type {
   EstadoReloj, EquipoTablero, ResultadoPuntuacion,
 } from '../lib/tipos';
@@ -176,6 +177,7 @@ export function ProfesorApp({ codigoSala, onCerrarSesion }: Props) {
   return (
     <div className="profesor">
       <header className="profesor__header">
+        <LogoIPADE variante="navy" alto={28} enlace />
         <h1>Panel del profesor</h1>
         <span className="profesor__sala">Sala: {codigoSala}</span>
         {reloj && (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { socket } from '../lib/socket';
+import { LogoIPADE } from '../componentes/LogoIPADE';
 import type {
   EstadoMotorCliente, EstadoReloj, IntervencionCatalogo,
   SolicitudCliente, ComentarioClientePublico, ResultadoConsulta,
@@ -194,6 +195,7 @@ export function ConsolaApp({
     return (
       <div className="consola consola--tablero">
         <header className="consola__header">
+          <LogoIPADE variante="navy" alto={24} />
           <h1>{nombreEquipo}</h1>
           <Reloj reloj={reloj} />
         </header>
@@ -212,6 +214,7 @@ export function ConsolaApp({
   return (
     <div className="consola">
       <header className="consola__header">
+        <LogoIPADE variante="navy" alto={24} />
         <h1>{nombreEquipo}</h1>
         <div className="consola__header-info">
           <span>Sala: {codigoSala}</span>
