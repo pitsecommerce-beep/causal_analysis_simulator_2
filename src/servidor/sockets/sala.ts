@@ -482,6 +482,24 @@ export function configurarSockets(
       ack?.({ equipos });
     });
 
+    socket.on('profesor:debrief', async (payload, ack) => {
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
+      }
+      const codigoSala = payload?.codigoSala;
+      if (!codigoSala) return ack?.({ error: 'Código de sala requerido' });
+
+      if (!estadoDB()) return ack?.({ error: 'Base de datos no disponible' });
+
+      const sesionDB = await db.obtenerSesion(codigoSala);
+      if (!sesionDB) return ack?.({ error: 'Sesión no encontrada' });
+
+      const datos = await db.obtenerDebrief(sesionDB.id);
+      if (!datos) return ack?.({ error: 'Datos de debrief no disponibles' });
+
+      ack?.({ datos });
+    });
+
     socket.on('equipo:unirse', async (payload, ack) => {
       const codigo = payload?.codigoSala?.toUpperCase();
       const email = payload?.email?.toLowerCase()?.trim();
@@ -1305,6 +1323,10 @@ function manejarCambioFase(
   io: SocketServer,
   config: ConfigSimulador,
 ): void {
+  if (nueva === 'finalizado') {
+    persistirDebrief(sesion, config).catch(() => {});
+  }
+
   const trimestreObjetivo = FASES_TRIMESTRE[nueva];
   if (trimestreObjetivo === undefined) return;
 
@@ -1319,6 +1341,66 @@ function manejarCambioFase(
       estadoMotor: equipo.estadoMotor,
       intervencionesCatalogo: listarIntervencionesDisponibles(equipo.estadoMotor, config),
     });
+  }
+}
+
+async function persistirDebrief(sesion: SesionActiva, config: ConfigSimulador): Promise<void> {
+  if (!estadoDB() || !sesion.dbId) return;
+
+  const equipos = [];
+  for (const eq of sesion.equipos.values()) {
+    if (!eq.resultado) continue;
+    const historial = [0, 1, 2, 3].map(t => {
+      const kpis = eq.estadoMotor.historialKPIs?.[t] ?? eq.estadoMotor;
+      return {
+        trimestre: t,
+        ventanaCapturaMediana: kpis.ventanaCapturaMediana ?? 11,
+        quejas: kpis.quejas ?? 100,
+        conversion: kpis.tasaConversion ?? 100,
+        erroresCaptura: kpis.erroresCaptura ?? 659,
+        atoradosPct: kpis.atoradosPct ?? 16,
+      };
+    });
+
+    equipos.push({
+      nombre: eq.nombre,
+      diagnostico: eq.resultado.desglose ?? {},
+      rigor: {},
+      intervenciones: eq.estadoMotor.intervenciones ?? [],
+      resultado: eq.resultado,
+      historialKPIs: historial,
+      creditosUsados: eq.estadoMotor.creditosUsados ?? 0,
+      creditosTotales: config.creditosIndagacion ?? 12,
+      hipotesisEscritas: eq.consultasRealizadas.size,
+      minutoDiagnostico: Math.round((eq.resultado as any)?.minutoDeclaracion ?? 30),
+      presupuestoRestante: eq.estadoMotor.presupuesto ?? 0,
+      decisiones: (eq.estadoMotor.intervenciones ?? []).map((i: any, idx: number) => ({
+        minuto: (eq.resultado as any)?.minutoDeclaracion ? (eq.resultado as any).minutoDeclaracion - 5 + idx * 3 : idx * 5,
+        tipo: i.nombre ?? `Intervencion ${i.id}`,
+      })),
+      penalizaciones: [],
+    });
+  }
+
+  if (equipos.length === 0) return;
+
+  const datosDebrief = {
+    equipos,
+    dagVerdadero: config.causasVerdaderas?.map((c: any) => ({
+      id: c.id ?? c,
+      nombre: c.nombre ?? c,
+      esCausa: true,
+      equiposIdentificaron: 0,
+    })) ?? [],
+    trampas: [],
+    lineaBase: { trimestre: 0, ventanaCapturaMediana: 11, quejas: 100, conversion: 100, erroresCaptura: 659, atoradosPct: 16 },
+  };
+
+  try {
+    await db.guardarDebrief(sesion.dbId, datosDebrief);
+    console.log(`  Debrief guardado para sesion ${sesion.codigoSala}`);
+  } catch (err) {
+    console.warn(`  Error guardando debrief: ${(err as Error).message}`);
   }
 }
 
