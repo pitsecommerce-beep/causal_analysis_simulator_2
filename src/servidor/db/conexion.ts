@@ -1,7 +1,6 @@
 import pg from 'pg';
 import { readFileSync, readdirSync, existsSync } from 'fs';
-import { resolve, join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { resolve, join } from 'path';
 
 const { Pool } = pg;
 
@@ -58,7 +57,7 @@ export async function ejecutarMigraciones(): Promise<void> {
     )
   `);
 
-  const thisDir = dirname(fileURLToPath(import.meta.url));
+  const thisDir = __dirname;
   let dir = resolve(thisDir, 'migraciones');
   if (!existsSync(dir)) {
     dir = resolve('src/servidor/db/migraciones');
