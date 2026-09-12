@@ -1356,7 +1356,7 @@ async function persistirDebrief(sesion: SesionActiva, config: ConfigSimulador): 
         trimestre: t,
         ventanaCapturaMediana: kpis.ventanaCapturaMediana ?? 11,
         quejas: kpis.quejas ?? 100,
-        conversion: kpis.tasaConversion ?? 100,
+        conversion: kpis.conversion ?? 100,
         erroresCaptura: kpis.erroresCaptura ?? 659,
         atoradosPct: kpis.atoradosPct ?? 16,
       };
@@ -1369,8 +1369,8 @@ async function persistirDebrief(sesion: SesionActiva, config: ConfigSimulador): 
       intervenciones: eq.estadoMotor.intervenciones ?? [],
       resultado: eq.resultado,
       historialKPIs: historial,
-      creditosUsados: eq.estadoMotor.creditosUsados ?? 0,
-      creditosTotales: config.creditosIndagacion ?? 12,
+      creditosUsados: (config.equipo.creditos_indagacion ?? 12) - (eq.estadoMotor.creditosIndagacion ?? 0),
+      creditosTotales: config.equipo.creditos_indagacion ?? 12,
       hipotesisEscritas: eq.consultasRealizadas.size,
       minutoDiagnostico: Math.round((eq.resultado as any)?.minutoDeclaracion ?? 30),
       presupuestoRestante: eq.estadoMotor.presupuesto ?? 0,
@@ -1386,12 +1386,12 @@ async function persistirDebrief(sesion: SesionActiva, config: ConfigSimulador): 
 
   const datosDebrief = {
     equipos,
-    dagVerdadero: config.causasVerdaderas?.map((c: any) => ({
-      id: c.id ?? c,
-      nombre: c.nombre ?? c,
-      esCausa: true,
-      equiposIdentificaron: 0,
-    })) ?? [],
+    dagVerdadero: [
+      { id: 'ventanaCapturaEsCuello', nombre: 'Ventana de captura', esCausa: true, equiposIdentificaron: 0 },
+      { id: 'reprocesoEsMecanismo', nombre: 'Reproceso', esCausa: true, equiposIdentificaron: 0 },
+      { id: 'fugaPlastico', nombre: 'Fuga de aprobados sin plastico', esCausa: true, equiposIdentificaron: 0 },
+      { id: 'trabajoPerdidoBuro', nombre: 'Secuencia del buro', esCausa: true, equiposIdentificaron: 0 },
+    ],
     trampas: [],
     lineaBase: { trimestre: 0, ventanaCapturaMediana: 11, quejas: 100, conversion: 100, erroresCaptura: 659, atoradosPct: 16 },
   };
