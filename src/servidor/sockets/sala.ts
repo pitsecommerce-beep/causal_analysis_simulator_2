@@ -13,6 +13,7 @@ import * as db from '../db/consultas.js';
 import { precalentarEscena, estadoEscena, obtenerEscena, limpiarCache } from '../voz/escena.js';
 import { generarPreguntasConsejo, type PreguntaConsejo } from '../voz/anthropic.js';
 import { verificarAuth, parsearCookies, NOMBRE_COOKIE, type InfoAuth } from '../auth.js';
+import { estadoDB } from '../db/estado.js';
 
 const ROLES_VALIDOS: RolEquipo[] = ['patrocinador', 'lider', 'analista', 'voz_cliente'];
 
@@ -70,7 +71,6 @@ interface SesionActiva {
 }
 
 const sesiones = new Map<string, SesionActiva>();
-let dbDisponible = false;
 
 const CHARS_SIN_AMBIGUOS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -162,9 +162,7 @@ export function configurarSockets(
   io: SocketServer,
   config: ConfigSimulador,
   datos: DatosCargados,
-  conDB: boolean,
 ): void {
-  dbDisponible = conDB;
 
   function tomarSocketActivo(
     equipo: EquipoActivo,
@@ -190,7 +188,7 @@ export function configurarSockets(
     const cookies = parsearCookies(socket.handshake.headers.cookie);
     const authToken = cookies[NOMBRE_COOKIE];
     if (authToken) {
-      const auth = await verificarAuth(authToken, dbDisponible);
+      const auth = await verificarAuth(authToken);
       if (auth) (socket as any).__auth = auth;
     }
 
@@ -207,7 +205,7 @@ export function configurarSockets(
         equipos: new Map(),
         asignaciones: [],
       };
-      if (dbDisponible) {
+      if (estadoDB()) {
         try {
           const row = await db.crearSesion(codigo, undefined, auth?.profesorId);
           sesion.dbId = row.id;
@@ -437,7 +435,7 @@ export function configurarSockets(
             dbId: null, nombre, estadoMotor, miembros: [], evidencias: [],
             consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(), socketsActivos: new Map(), propuestas: [], solicitudesAccion: [],
           };
-          if (dbDisponible && sesion.dbId) {
+          if (estadoDB() && sesion.dbId) {
             try {
               const row = await db.crearEquipo(sesion.dbId, nombre, estadoMotor);
               equipo.dbId = row.id;
@@ -447,7 +445,7 @@ export function configurarSockets(
         }
       }
 
-      if (dbDisponible && sesion.dbId) {
+      if (estadoDB() && sesion.dbId) {
         try {
           await db.guardarAsignaciones(sesion.dbId, equipos.map(eq => ({
             nombre: eq.nombre.trim(),
@@ -484,6 +482,24 @@ export function configurarSockets(
       ack?.({ equipos });
     });
 
+    socket.on('profesor:debrief', async (payload, ack) => {
+      if (!esProfesorOAdmin(obtenerAuthSocket(socket))) {
+        return ack?.({ error: 'No autorizado' });
+      }
+      const codigoSala = payload?.codigoSala;
+      if (!codigoSala) return ack?.({ error: 'Código de sala requerido' });
+
+      if (!estadoDB()) return ack?.({ error: 'Base de datos no disponible' });
+
+      const sesionDB = await db.obtenerSesion(codigoSala);
+      if (!sesionDB) return ack?.({ error: 'Sesión no encontrada' });
+
+      const datos = await db.obtenerDebrief(sesionDB.id);
+      if (!datos) return ack?.({ error: 'Datos de debrief no disponibles' });
+
+      ack?.({ datos });
+    });
+
     socket.on('equipo:unirse', async (payload, ack) => {
       const codigo = payload?.codigoSala?.toUpperCase();
       const email = payload?.email?.toLowerCase()?.trim();
@@ -512,7 +528,7 @@ export function configurarSockets(
       if (!equipo) {
         const estadoMotor = crearEstadoInicial(config);
         equipo = { dbId: null, nombre: nombreEquipo, estadoMotor, miembros: [], evidencias: [], consultasRealizadas: new Set(), resultado: null, preguntasConsejo: null, codigosPersonales: new Map(), socketsActivos: new Map(), propuestas: [], solicitudesAccion: [] };
-        if (dbDisponible && sesion.dbId) {
+        if (estadoDB() && sesion.dbId) {
           try {
             const row = await db.crearEquipo(sesion.dbId, nombreEquipo, estadoMotor);
             equipo.dbId = row.id;
@@ -583,7 +599,7 @@ export function configurarSockets(
 
       equipo.miembros = miembros.map(m => ({ nombre: m.nombre.trim(), rol: m.rol }));
 
-      if (dbDisponible && equipo.dbId) {
+      if (estadoDB() && equipo.dbId) {
         try {
           await db.guardarMiembros(equipo.dbId, equipo.miembros);
         } catch (_) { /* sin persistencia */ }
@@ -628,7 +644,7 @@ export function configurarSockets(
         equipo.codigosPersonales.set(participante, codigoPersonal);
       }
 
-      if (dbDisponible && equipo.dbId) {
+      if (estadoDB() && equipo.dbId) {
         try {
           await db.guardarMiembroConEmail(equipo.dbId, info.email ?? '', participante, rol);
           await db.guardarCodigoPersonal(equipo.dbId, participante, codigoPersonal);
@@ -688,7 +704,7 @@ export function configurarSockets(
         rol: rolEncontrado,
       };
 
-      if (dbDisponible && equipoEncontrado.dbId) {
+      if (estadoDB() && equipoEncontrado.dbId) {
         db.actualizarConexionMiembro(equipoEncontrado.dbId, nombreEncontrado, socket.id).catch(() => {});
       }
 
@@ -738,7 +754,7 @@ export function configurarSockets(
       let rolEncontrado: RolEquipo | null = null;
       let codigoPersonal: string | undefined;
 
-      if (dbDisponible && sesion.dbId) {
+      if (estadoDB() && sesion.dbId) {
         const resultado = await db.buscarMiembroPorEmail(sesion.dbId, email);
         if (resultado) {
           equipoEncontrado = sesion.equipos.get(resultado.equipoNombre) ?? null;
@@ -785,7 +801,7 @@ export function configurarSockets(
         email,
       };
 
-      if (dbDisponible && equipoEncontrado.dbId) {
+      if (estadoDB() && equipoEncontrado.dbId) {
         db.actualizarConexionMiembro(equipoEncontrado.dbId, nombreEncontrado, socket.id).catch(() => {});
       }
 
@@ -1057,7 +1073,7 @@ export function configurarSockets(
       equipo.estadoMotor.creditosIndagacion -= costo;
       equipo.consultasRealizadas.add(tipo);
 
-      if (dbDisponible && equipo.dbId) {
+      if (estadoDB() && equipo.dbId) {
         try {
           await db.registrarConsulta(equipo.dbId, tipo, hipotesis, parametros, equipo.estadoMotor.trimestre);
         } catch (_) { /* sin persistencia */ }
@@ -1096,13 +1112,13 @@ export function configurarSockets(
 
       equipo.evidencias.push({ comentarioId, hipotesis, registradoPor });
 
-      if (dbDisponible && equipo.dbId) {
+      if (estadoDB() && equipo.dbId) {
         try {
           await db.registrarEvidencia(equipo.dbId, comentarioId, hipotesis, registradoPor);
         } catch (_) { /* sin persistencia */ }
       }
 
-      if (dbDisponible && equipo.dbId) {
+      if (estadoDB() && equipo.dbId) {
         try {
           await db.registrarConsulta(equipo.dbId, 'evidencia', hipotesis,
             { comentarioId, registradoPor }, equipo.estadoMotor.trimestre);
@@ -1154,7 +1170,7 @@ export function configurarSockets(
       const resultado = calcularPuntuacion(estado, diagnostico, rigor, config);
       equipo.resultado = resultado;
 
-      if (dbDisponible && equipo.dbId) {
+      if (estadoDB() && equipo.dbId) {
         try {
           await db.guardarDiagnostico(equipo.dbId, diagnostico, rigor, resultado, minuto);
           await db.actualizarEstadoMotor(equipo.dbId, estado);
@@ -1307,6 +1323,10 @@ function manejarCambioFase(
   io: SocketServer,
   config: ConfigSimulador,
 ): void {
+  if (nueva === 'finalizado') {
+    persistirDebrief(sesion, config).catch(() => {});
+  }
+
   const trimestreObjetivo = FASES_TRIMESTRE[nueva];
   if (trimestreObjetivo === undefined) return;
 
@@ -1324,8 +1344,68 @@ function manejarCambioFase(
   }
 }
 
+async function persistirDebrief(sesion: SesionActiva, config: ConfigSimulador): Promise<void> {
+  if (!estadoDB() || !sesion.dbId) return;
+
+  const equipos = [];
+  for (const eq of sesion.equipos.values()) {
+    if (!eq.resultado) continue;
+    const historial = [0, 1, 2, 3].map(t => {
+      const kpis = eq.estadoMotor.historialKPIs?.[t] ?? eq.estadoMotor;
+      return {
+        trimestre: t,
+        ventanaCapturaMediana: kpis.ventanaCapturaMediana ?? 11,
+        quejas: kpis.quejas ?? 100,
+        conversion: kpis.tasaConversion ?? 100,
+        erroresCaptura: kpis.erroresCaptura ?? 659,
+        atoradosPct: kpis.atoradosPct ?? 16,
+      };
+    });
+
+    equipos.push({
+      nombre: eq.nombre,
+      diagnostico: eq.resultado.desglose ?? {},
+      rigor: {},
+      intervenciones: eq.estadoMotor.intervenciones ?? [],
+      resultado: eq.resultado,
+      historialKPIs: historial,
+      creditosUsados: eq.estadoMotor.creditosUsados ?? 0,
+      creditosTotales: config.creditosIndagacion ?? 12,
+      hipotesisEscritas: eq.consultasRealizadas.size,
+      minutoDiagnostico: Math.round((eq.resultado as any)?.minutoDeclaracion ?? 30),
+      presupuestoRestante: eq.estadoMotor.presupuesto ?? 0,
+      decisiones: (eq.estadoMotor.intervenciones ?? []).map((i: any, idx: number) => ({
+        minuto: (eq.resultado as any)?.minutoDeclaracion ? (eq.resultado as any).minutoDeclaracion - 5 + idx * 3 : idx * 5,
+        tipo: i.nombre ?? `Intervencion ${i.id}`,
+      })),
+      penalizaciones: [],
+    });
+  }
+
+  if (equipos.length === 0) return;
+
+  const datosDebrief = {
+    equipos,
+    dagVerdadero: config.causasVerdaderas?.map((c: any) => ({
+      id: c.id ?? c,
+      nombre: c.nombre ?? c,
+      esCausa: true,
+      equiposIdentificaron: 0,
+    })) ?? [],
+    trampas: [],
+    lineaBase: { trimestre: 0, ventanaCapturaMediana: 11, quejas: 100, conversion: 100, erroresCaptura: 659, atoradosPct: 16 },
+  };
+
+  try {
+    await db.guardarDebrief(sesion.dbId, datosDebrief);
+    console.log(`  Debrief guardado para sesion ${sesion.codigoSala}`);
+  } catch (err) {
+    console.warn(`  Error guardando debrief: ${(err as Error).message}`);
+  }
+}
+
 async function persistirReloj(sesion: SesionActiva): Promise<void> {
-  if (!dbDisponible || !sesion.dbId) return;
+  if (!estadoDB() || !sesion.dbId) return;
   try {
     await db.actualizarRelojSesion(sesion.dbId, {
       fase_actual: sesion.reloj.faseActual,
@@ -1341,7 +1421,7 @@ async function persistirReloj(sesion: SesionActiva): Promise<void> {
 }
 
 async function persistirEquipo(sesion: SesionActiva, equipo: EquipoActivo): Promise<void> {
-  if (!dbDisponible || !equipo.dbId) return;
+  if (!estadoDB() || !equipo.dbId) return;
   try {
     await db.actualizarEstadoMotor(equipo.dbId, equipo.estadoMotor);
   } catch (_) { /* silently continue */ }
@@ -1356,7 +1436,7 @@ export async function recuperarSesionesDB(
   io: SocketServer,
   config: ConfigSimulador,
 ): Promise<number> {
-  if (!dbDisponible) return 0;
+  if (!estadoDB()) return 0;
   let recuperadas = 0;
   try {
     const sesionesDB = await db.obtenerSesionesActivas();

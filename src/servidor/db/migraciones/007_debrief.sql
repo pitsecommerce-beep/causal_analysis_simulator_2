@@ -1,0 +1,1 @@
+ALTER TABLE sesiones ADD COLUMN IF NOT EXISTS debrief_datos JSONB;

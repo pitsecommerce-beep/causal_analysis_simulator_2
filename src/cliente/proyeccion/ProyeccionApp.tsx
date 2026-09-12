@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { socket } from '../lib/socket';
+import { LogoIPADE } from '../componentes/LogoIPADE';
 import type { EstadoReloj, EquipoTablero } from '../lib/tipos';
 import { NOMBRES_FASES } from '../lib/tipos';
 import { PodioReveal } from './PodioReveal';
@@ -248,6 +249,9 @@ export function ProyeccionApp({ codigoSala, onCerrarSesion }: Props) {
 
   return (
     <div className="proy" data-fase={faseProyeccion}>
+      <div style={{ position: 'absolute', top: 16, left: 24, zIndex: 10 }}>
+        <LogoIPADE variante="blanco" alto={48} />
+      </div>
       {/* Waiting for participants */}
       {faseProyeccion === 'esperando' && (
         <div className="proy__espera">

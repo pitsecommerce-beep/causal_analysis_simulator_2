@@ -11,12 +11,14 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         demo: resolve(__dirname, 'demo.html'),
+        debrief: resolve(__dirname, 'debrief-demo.html'),
       },
       output: {
         manualChunks(id: string) {
           if (id.includes('/assets/sprites/')) return 'sprites';
           if (id.includes('/escena/')) return 'escena';
           if (id.includes('/profesor/')) return 'profesor';
+          if (id.includes('/debrief/')) return 'debrief';
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'recharts';
         },
       },

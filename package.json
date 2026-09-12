@@ -15,6 +15,7 @@
     "build": "npx tsc && npx vite build && mkdir -p dist/src/servidor/db/migraciones && cp src/servidor/db/migraciones/*.sql dist/src/servidor/db/migraciones/ && mkdir -p dist/src/servidor/voz/guiones && cp src/servidor/voz/guiones/*.txt dist/src/servidor/voz/guiones/",
     "start": "node dist/src/servidor/index.js",
     "salud": "npx tsx src/servidor/consola/salud.ts",
+    "db:diagnostico": "npx tsx src/servidor/consola/db-diagnostico.ts",
     "voz:respaldo": "npx tsx src/servidor/consola/generar-respaldo.ts",
     "voz:probar": "npx tsx src/servidor/consola/probar-voz.ts",
     "tablero:demo": "npx tsx src/servidor/consola/tablero-demo.ts",
@@ -24,6 +25,7 @@
     "resiliencia:probar": "npx tsx src/servidor/consola/resiliencia.ts",
     "acentos:revisar": "bash herramientas/acentos-revisar.sh",
     "contraste:revisar": "npx tsx herramientas/contraste-revisar.ts",
+    "debrief:demo": "npx tsx src/servidor/consola/debrief-demo.ts",
     "proyeccion:demo": "npx tsx src/servidor/consola/proyeccion-demo.ts",
     "journey:probar": "npx tsx src/servidor/consola/journey-probar.ts"
   },

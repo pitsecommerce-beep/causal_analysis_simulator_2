@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import {
   hashContrasena,
   verificarContrasena,
@@ -65,27 +65,56 @@ describe('parsearCookies', () => {
 });
 
 describe('sesion en memoria (sin DB)', () => {
-  it('crea, verifica e invalida un token', async () => {
+  it('crea, verifica e invalida un token de profesor', async () => {
     const info = { tipo: 'profesor' as const, profesorId: 1, correo: 'a@b.com', nombre: 'Test' };
-    const token = await crearSesionAuth(info, false);
+    const token = await crearSesionAuth(info);
     expect(token).toMatch(/^[0-9a-f]{64}$/);
 
-    const auth = await verificarAuth(token, false);
+    const auth = await verificarAuth(token);
     expect(auth).not.toBeNull();
     expect(auth!.tipo).toBe('profesor');
     expect(auth!.correo).toBe('a@b.com');
 
-    await invalidarAuth(token, false);
-    const auth2 = await verificarAuth(token, false);
+    await invalidarAuth(token);
+    const auth2 = await verificarAuth(token);
     expect(auth2).toBeNull();
   });
+});
 
-  it('token de superadmin funciona sin profesorId', async () => {
-    const info = { tipo: 'superadmin' as const, profesorId: null, correo: null, nombre: null };
-    const token = await crearSesionAuth(info, false);
-    const auth = await verificarAuth(token, false);
+describe('superadmin con token HMAC', () => {
+  beforeAll(() => {
+    process.env.CLAVE_SUPERADMIN = 'test-clave-segura-123';
+  });
+
+  it('token de superadmin es HMAC firmado, no random', async () => {
+    const info = { tipo: 'superadmin' as const, profesorId: null, correo: null, nombre: 'Superadmin' };
+    const token = await crearSesionAuth(info);
+    expect(token.startsWith('sa.')).toBe(true);
+  });
+
+  it('superadmin se verifica sin base de datos', async () => {
+    const info = { tipo: 'superadmin' as const, profesorId: null, correo: null, nombre: 'Superadmin' };
+    const token = await crearSesionAuth(info);
+    const auth = await verificarAuth(token);
     expect(auth).not.toBeNull();
     expect(auth!.tipo).toBe('superadmin');
-    await invalidarAuth(token, false);
+    expect(auth!.nombre).toBe('Superadmin');
+  });
+
+  it('token de superadmin manipulado es rechazado', async () => {
+    const info = { tipo: 'superadmin' as const, profesorId: null, correo: null, nombre: 'Superadmin' };
+    const token = await crearSesionAuth(info);
+    const manipulado = token.slice(0, -4) + 'XXXX';
+    const auth = await verificarAuth(manipulado);
+    expect(auth).toBeNull();
+  });
+
+  it('token con clave incorrecta es rechazado', async () => {
+    const info = { tipo: 'superadmin' as const, profesorId: null, correo: null, nombre: 'Superadmin' };
+    const token = await crearSesionAuth(info);
+    process.env.CLAVE_SUPERADMIN = 'otra-clave-diferente';
+    const auth = await verificarAuth(token);
+    expect(auth).toBeNull();
+    process.env.CLAVE_SUPERADMIN = 'test-clave-segura-123';
   });
 });

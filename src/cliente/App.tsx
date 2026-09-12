@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { UnirseEquipo } from './componentes/UnirseEquipo';
 import { BannerConexion } from './componentes/BannerConexion';
+import { BannerDB } from './componentes/BannerDB';
 import { MesaRedonda } from './escena/MesaRedonda';
 import type { EstadoMotorCliente, EstadoReloj, IntervencionCatalogo, SolicitudCliente, ComentarioClientePublico, RolEquipo, MiembroEquipo, PropuestaIntervencion, SolicitudAccion } from './lib/tipos';
 import { socket } from './lib/socket';
@@ -264,6 +265,7 @@ export function App() {
   if (pantalla === 'admin') {
     return (
       <Suspense fallback={cargando}>
+        <BannerDB />
         <AdminApp onCerrarSesion={cerrarSesionAuth} />
       </Suspense>
     );
@@ -289,6 +291,7 @@ export function App() {
   if (pantalla === 'profesor' && profesorCodigoSala) {
     return (
       <Suspense fallback={cargando}>
+        <BannerDB />
         <ProfesorApp codigoSala={profesorCodigoSala} onCerrarSesion={cerrarSesionAuth} />
       </Suspense>
     );

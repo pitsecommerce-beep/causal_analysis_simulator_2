@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { LogoIPADE } from '../componentes/LogoIPADE';
 
 interface Props {
   onCerrarSesion: () => void;
@@ -28,9 +29,20 @@ export function AdminApp({ onCerrarSesion }: Props) {
   const cargarProfesores = useCallback(async () => {
     try {
       const resp = await fetch('/api/admin/profesores');
-      if (!resp.ok) throw new Error('Error al cargar profesores');
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        if (resp.status === 503) {
+          setError('Base de datos no disponible. Reintentando conexion automaticamente.');
+        } else if (resp.status === 403) {
+          setError('Tu sesion de superadmin expiro. Vuelve a entrar.');
+        } else {
+          setError(data.error || 'Error al cargar profesores');
+        }
+        return;
+      }
       const data = await resp.json();
       setProfesores(data);
+      setError('');
     } catch {
       setError('No se pudieron cargar los profesores');
     } finally {
@@ -70,7 +82,13 @@ export function AdminApp({ onCerrarSesion }: Props) {
       });
       const data = await resp.json();
       if (!resp.ok) {
-        setError(data.error || 'Error al crear profesor');
+        if (resp.status === 503) {
+          setError('Base de datos no disponible. Reintentando conexion automaticamente.');
+        } else if (resp.status === 403) {
+          setError('Tu sesion de superadmin expiro. Vuelve a entrar.');
+        } else {
+          setError(data.error || 'Error al crear profesor');
+        }
         return;
       }
       setMensaje(`Profesor ${data.nombre} creado`);
@@ -115,6 +133,7 @@ export function AdminApp({ onCerrarSesion }: Props) {
   return (
     <div className="admin">
       <header className="admin__header">
+        <LogoIPADE variante="navy" alto={28} enlace />
         <h1>Panel de Administracion</h1>
         <button className="admin__btn admin__btn--cerrar" onClick={onCerrarSesion}>
           Cerrar sesion

@@ -473,6 +473,23 @@ export async function obtenerSesionesProfesor(profesorId: number): Promise<Sesio
 
 // --- end professor CRUD ---
 
+export async function guardarDebrief(sesionId: number, datos: unknown): Promise<void> {
+  const pool = obtenerPool();
+  await pool.query(
+    'UPDATE sesiones SET debrief_datos = $1 WHERE id = $2',
+    [JSON.stringify(datos), sesionId],
+  );
+}
+
+export async function obtenerDebrief(sesionId: number): Promise<unknown | null> {
+  const pool = obtenerPool();
+  const { rows } = await pool.query(
+    'SELECT debrief_datos FROM sesiones WHERE id = $1',
+    [sesionId],
+  );
+  return rows[0]?.debrief_datos ?? null;
+}
+
 export async function obtenerEquipoCompletoPorEmail(
   sesionId: number,
   email: string,
